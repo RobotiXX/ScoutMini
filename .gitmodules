@@ -7,9 +7,6 @@
 [submodule "ros2_ws/src/scout_ros2"]
 	path = ros2_ws/src/scout_ros2
 	url = https://github.com/RobotiXX/scout_ros2.git
-[submodule "ros2_ws/src/ugv_sdk"]
-	path = ros2_ws/src/ugv_sdk
-	url = https://github.com/westonrobot/ugv_sdk.git
 [submodule "ros2_ws/src/velodyne"]
 	path = ros2_ws/src/velodyne
 	url = https://github.com/ros-drivers/velodyne.git
@@ -22,3 +19,6 @@
 [submodule "ros2_ws/src/insta360_camera_ros"]
 	path = ros2_ws/src/insta360_camera_ros
 	url = git@github.com:RobotiXX/insta360_camera_ros.git
+[submodule "ros2_ws/src/ugv_sdk"]
+	path = ros2_ws/src/ugv_sdk
+	url = git@github.com:RobotiXX/ugv_sdk.git
