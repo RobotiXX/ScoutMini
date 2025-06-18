@@ -1,0 +1,24 @@
+[submodule "ros2_ws/src/ds4drv"]
+	path = ros2_ws/src/ds4drv
+	url = https://github.com/RobotiXX/ds4drv.git
+[submodule "ros2_ws/src/ds4_driver"]
+	path = ros2_ws/src/ds4_driver
+	url = https://github.com/RobotiXX/ds4_driver.git
+[submodule "ros2_ws/src/scout_ros2"]
+	path = ros2_ws/src/scout_ros2
+	url = https://github.com/RobotiXX/scout_ros2.git
+[submodule "ros2_ws/src/ugv_sdk"]
+	path = ros2_ws/src/ugv_sdk
+	url = https://github.com/westonrobot/ugv_sdk.git
+[submodule "ros2_ws/src/velodyne"]
+	path = ros2_ws/src/velodyne
+	url = https://github.com/ros-drivers/velodyne.git
+[submodule "ros2_ws/src/witmotion_ros"]
+	path = ros2_ws/src/witmotion_ros
+	url = https://github.com/daeunSong/witmotion_IMU_ros.git
+[submodule "ros2_ws/src/zed-ros2-wrapper"]
+	path = ros2_ws/src/zed-ros2-wrapper
+	url = https://github.com/stereolabs/zed-ros2-wrapper.git
+[submodule "ros2_ws/src/insta360_camera_ros"]
+	path = ros2_ws/src/insta360_camera_ros
+	url = git@github.com:RobotiXX/insta360_camera_ros.git
