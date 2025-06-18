@@ -1,9 +1,9 @@
 [submodule "ros2_ws/src/ds4drv"]
 	path = ros2_ws/src/ds4drv
-	url = https://github.com/RobotiXX/ds4drv.git
+	url = git@github.com:RobotiXX/ds4drv.git
 [submodule "ros2_ws/src/ds4_driver"]
 	path = ros2_ws/src/ds4_driver
-	url = https://github.com/RobotiXX/ds4_driver.git
+	url = git@github.com:RobotiXX/ds4_driver.git
 [submodule "ros2_ws/src/scout_ros2"]
 	path = ros2_ws/src/scout_ros2
 	url = https://github.com/RobotiXX/scout_ros2.git

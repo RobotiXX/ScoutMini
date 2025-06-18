@@ -1,5 +1,0 @@
-include HISTORY.rst
-include README.rst
-include LICENSE
-include systemd/*
-include ds4drv.conf
