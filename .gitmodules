@@ -12,10 +12,13 @@
 	url = https://github.com/daeunSong/witmotion_IMU_ros.git
 [submodule "ros2_ws/src/zed-ros2-wrapper"]
 	path = ros2_ws/src/zed-ros2-wrapper
-	url = https://github.com/stereolabs/zed-ros2-wrapper.git
+	url = git@github.com:RobotiXX/zed-ros2-wrapper.git
 [submodule "ros2_ws/src/insta360_camera_ros"]
 	path = ros2_ws/src/insta360_camera_ros
 	url = git@github.com:RobotiXX/insta360_camera_ros.git
 [submodule "ros2_ws/src/ugv_sdk"]
 	path = ros2_ws/src/ugv_sdk
 	url = git@github.com:RobotiXX/ugv_sdk.git
+[submodule "ros2_ws/src/witmotion_IMU_ros"]
+	path = ros2_ws/src/witmotion_IMU_ros
+	url = git@github.com:RobotiXX/witmotion_IMU_ros.git
