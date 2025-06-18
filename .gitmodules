@@ -6,7 +6,7 @@
 	url = git@github.com:RobotiXX/ds4_driver.git
 [submodule "ros2_ws/src/scout_ros2"]
 	path = ros2_ws/src/scout_ros2
-	url = https://github.com/RobotiXX/scout_ros2.git
+	url = git@github.com:RobotiXX/scout_ros2.git
 [submodule "ros2_ws/src/witmotion_ros"]
 	path = ros2_ws/src/witmotion_ros
 	url = https://github.com/daeunSong/witmotion_IMU_ros.git
