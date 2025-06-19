@@ -10,8 +10,8 @@ Flashing a Jetson AGX Orin with a clean **JetPack 6.X** via **NVIDIA SDK Manager
 | Sub-system | Symptom |
 |------------|---------|
 | **CAN interface** | `sudo modprobe gs_usb` →<br>`FATAL: Module gs_usb not found in /lib/modules/5.15.136-tegra` |
-| **USB-to-Serial (CH340)** | CH340 adapters are not enumerated as `/dev/ttyUSB*`, breaking udev rules and serial comms |
-| **Joystick & Userinput** | Input and joy command from PS4 DualShock controller cannot be accessed with `ds4drv`|
+| **USB-to-Serial (CH340)** | CH340 adapters are not enumerated as `/dev/ttyUSB*`, breaking udev rules and serial communication |
+| **Joystick & Userinput** | Input and joy commands from PS4 DualShock controller cannot be accessed with `ds4drv`|
 
 
 ---
