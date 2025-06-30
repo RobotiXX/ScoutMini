@@ -25,7 +25,7 @@ See official guide [[5]](#5) if needed.
 
 
 ```bash
-cd <install-path>/source
+cd <install-path>/Linux_for_Tegra/source
 ./source_sync.sh -k -t jetson_36.4.3      # release tag
 # JetPack -> release tag pairs: 6.1 -> 36.4, 6.2 -> 36.4.3 
 ```
