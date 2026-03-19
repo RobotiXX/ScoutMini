@@ -7,12 +7,14 @@
 [submodule "ros2_ws/src/scout_ros2"]
 	path = ros2_ws/src/scout_ros2
 	url = git@github.com:RobotiXX/scout_ros2.git
+	branch = nle/scout_mini
 [submodule "ros2_ws/src/witmotion_ros"]
 	path = ros2_ws/src/witmotion_ros
 	url = https://github.com/daeunSong/witmotion_IMU_ros.git
 [submodule "ros2_ws/src/zed-ros2-wrapper"]
 	path = ros2_ws/src/zed-ros2-wrapper
 	url = git@github.com:RobotiXX/zed-ros2-wrapper.git
+	branch = nle/scout_mini
 [submodule "ros2_ws/src/insta360_camera_ros"]
 	path = ros2_ws/src/insta360_camera_ros
 	url = git@github.com:RobotiXX/insta360_camera_ros.git
