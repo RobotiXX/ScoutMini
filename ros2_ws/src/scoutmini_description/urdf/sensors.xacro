@@ -67,13 +67,14 @@
     <joint name="velodyne_joint" type="fixed">
       <parent link="sensor_link"/>
       <child link="velodyne"/>
-      <origin xyz="0.08 0.0 0.18" rpy="0 0 0"/>
+      <origin xyz="0.08 0.0 0.21" rpy="0 0 0"/>
     </joint>
 
 
     <!-- Intermediate link to represent the geometry between sensor_link and cameras -->
     <link name="sensor_to_cams_link">
       <visual>
+        <origin xyz="0 0 0.25" rpy="0 0 0"/>
         <geometry>
           <box size="0.04 0.04 0.51"/>  <!-- Adjust size as needed -->
         </geometry>
@@ -82,6 +83,7 @@
         </material>
       </visual>
       <collision>
+        <origin xyz="0 0 0.25" rpy="0 0 0"/>
         <geometry>
           <box size="0.04 0.04 0.51"/>
         </geometry>
@@ -93,27 +95,18 @@
       </inertial>
     </link>
 
-    <!-- ZED -->
     <!-- Joint connecting sensor_link to intermediate link -->
     <joint name="sensor_to_zed_joint" type="fixed">
       <parent link="sensor_link"/>
       <child link="sensor_to_cams_link"/>
-      <origin xyz="-0.16 0 0.25" rpy="0 0 0"/>  <!-- Adjust position -->
+      <origin xyz="-0.16 0 0.0" rpy="0 0 0"/>  <!-- Adjust position -->
     </joint>
 
     <!-- Add a joint to connect the ZED Camera to the robot -->
     <joint name="$(arg camera_name)_joint" type="fixed">
       <parent link="sensor_to_cams_link"/>
       <child link="$(arg camera_name)_camera_link"/>
-      <origin xyz="0.055 0.0 0.16" rpy="0 0 0"/>  <!--42.5 - 26 -->
-    </joint>
-
-    <!-- 360 cam -->
-    <!-- Joint connecting sensor_link to intermediate link -->
-    <joint name="sensor_to_360_joint" type="fixed">
-      <parent link="sensor_link"/>
-      <child link="sensor_to_cams_link"/>
-      <origin xyz="0.0 0 0.35" rpy="0 0 0"/>  <!-- Adjust position -->
+      <origin xyz="0.055 0.0 0.415" rpy="0 0 0"/> 
     </joint>
 
     <link name="360_link">
@@ -127,7 +120,7 @@
     <joint name="360_joint" type="fixed">
       <parent link="sensor_to_cams_link"/>
       <child link="360_link"/>
-      <origin xyz="0.0 0.0 0.35" rpy="0 0 0"/>
+      <origin xyz="0.0 0.0 0.60" rpy="0 0 0"/>
     </joint>
     
   </xacro:macro>

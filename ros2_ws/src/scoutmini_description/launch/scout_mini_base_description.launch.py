@@ -1,24 +1,18 @@
-import os
 import launch
 import launch_ros
 
-from ament_index_python.packages import get_package_share_directory
-from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, ExecuteProcess
+from launch.actions import DeclareLaunchArgument
 from launch_ros.substitutions import FindPackageShare
 from launch.substitutions import FindExecutable, PathJoinSubstitution
 from launch.substitutions import LaunchConfiguration, Command
-from launch_ros.actions import Node
 
 
 def generate_launch_description():
     model_name = 'scout_mini.xacro'
-    # model_path = os.path.join(get_package_share_directory('scout_description'), "urdf", model_name)
-    # print(model_path)
     robot_description_content = Command([
         PathJoinSubstitution([FindExecutable(name="xacro")]), " ",
         PathJoinSubstitution(
-            [FindPackageShare("scoutmini_description"), "urdf", "scoutmini", model_name]
+            [FindPackageShare("scoutmini_description"), "urdf", "scout_mini", model_name]
         ),
     ])
 
