@@ -3,9 +3,21 @@
 <package format="3">
   <name>scoutmini_nav2</name>
   <version>0.0.0</version>
-  <description>TODO: Package description</description>
+  <description>Nav2 bringup for Scout Mini</description>
+
   <maintainer email="nhatleminh1997@gmail.com">nle</maintainer>
   <license>Apache-2.0</license>
+
+  <exec_depend>nav2_common</exec_depend>
+  <exec_depend>nav2_bringup</exec_depend>
+  <exec_depend>nav2_bt_navigator</exec_depend>
+
+  <exec_depend>slam_toolbox</exec_depend>
+  <exec_depend>pointcloud_to_laserscan</exec_depend>
+  <exec_depend>pcl_ros</exec_depend>
+  <exec_depend>rviz2</exec_depend>
+
+  <exec_depend>scoutmini_bringup</exec_depend>
 
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>
