@@ -1,7 +1,7 @@
 from launch import LaunchDescription
-from launch_ros.actions import Node
 from launch.actions import IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource, AnyLaunchDescriptionSource
+from launch.substitutions import LaunchConfiguration
 from ament_index_python.packages import get_package_share_directory
 import os
 
@@ -11,8 +11,6 @@ def generate_launch_description():
     witmotion_pkg = get_package_share_directory('witmotion_ros')
     velodyne_pkg = get_package_share_directory('velodyne')
     ds4_pkg = get_package_share_directory('ds4_driver')
-    # TODO: change Insta360 X4 usage
-    # bev_pkg = get_package_share_directory('bev_cameras')
     scout_pkg = get_package_share_directory('scout_base')
     scout_description_pkg = get_package_share_directory('scout_description')
 
@@ -26,6 +24,14 @@ def generate_launch_description():
         # Scout Mini Base State Publisher
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(os.path.join(scout_description_pkg, 'launch', 'scout_mini_base_description.launch.py')),
+                launch_arguments={
+                'use_sim_time': LaunchConfiguration('use_sim_time'),
+                'port_name': LaunchConfiguration('port_name'),
+                'base_frame': LaunchConfiguration('base_frame'),
+                'odom_topic_name': LaunchConfiguration('odom_topic_name'),
+                'publish_odom_topic': LaunchConfiguration('publish_odom_topic'),
+                'publish_odom_tf': LaunchConfiguration('publish_odom_tf'),
+            }.items(),
         ),
 
         # ZED camera
@@ -49,14 +55,5 @@ def generate_launch_description():
             AnyLaunchDescriptionSource(os.path.join(ds4_pkg, 'launch', 'scout_controller.launch.xml')),
         ),
 
-        # 360 Camera
-        # IncludeLaunchDescription(
-        #     PythonLaunchDescriptionSource(
-        #         os.path.join(bev_pkg, 'launch', 'cam360_launch.py')),
-        #     launch_arguments={
-        #         'insta360_x4': '0',
-        #         'format'      : '',
-        #     }.items(),
-        # ),
 
     ])
