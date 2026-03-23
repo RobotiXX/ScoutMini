@@ -70,7 +70,11 @@ if [[ ! -f "${ROS_SETUP}" ]]; then
   exit 1
 fi
 
+# ROS setup scripts may read unset shell variables internally, so relax
+# nounset only while sourcing them.
+set +u
 source "${ROS_SETUP}"
+set -u
 
 if [[ ${CLEAN} -eq 1 ]]; then
   rm -rf "${WS_DIR}/build" "${WS_DIR}/install" "${WS_DIR}/log"
