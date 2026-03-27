@@ -22,3 +22,7 @@
 	path = ros2_ws/src/witmotion_IMU_ros
 	url = git@github.com:RobotiXX/witmotion_IMU_ros.git
 	branch = nle/scout_mini
+[submodule "ros2_ws/src/insta360_ros_driver"]
+	path = ros2_ws/src/insta360_ros_driver
+	url = git@github.com:RobotiXX/insta360_ros_driver.git
+	branch = nle/dev-jetson
