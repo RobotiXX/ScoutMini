@@ -35,10 +35,10 @@ def generate_launch_description():
         ),
 
         # ZED camera
-        IncludeLaunchDescription(
-            PythonLaunchDescriptionSource(os.path.join(zed_pkg, 'launch', 'zed_camera.launch.py')),
-            launch_arguments={'camera_model': 'zed2', 'camera_name': 'zed2'}.items(),
-        ),
+        #IncludeLaunchDescription(
+        #    PythonLaunchDescriptionSource(os.path.join(zed_pkg, 'launch', 'zed_camera.launch.py')),
+        #    launch_arguments={'camera_model': 'zed2', 'camera_name': 'zed2'}.items(),
+        #),
 
         # IMU (Witmotion)
         IncludeLaunchDescription(
@@ -51,9 +51,9 @@ def generate_launch_description():
         ),
 
         # PS4 Controller
-        IncludeLaunchDescription(
-            AnyLaunchDescriptionSource(os.path.join(ds4_pkg, 'launch', 'scout_controller.launch.xml')),
-        ),
+        #IncludeLaunchDescription(
+        #    AnyLaunchDescriptionSource(os.path.join(ds4_pkg, 'launch', 'scout_controller.launch.xml')),
+        #),
 
 
     ])

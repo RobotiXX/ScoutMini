@@ -3,11 +3,11 @@
 # to use this config with the launch file, you will still have to pass it with
 # `config_file:=<full_or_relative_path_to>/ros_default.yaml`
 # #############################################################################
-# base_frame: base_link
+base_frame: base_link
 imu_topic: /witmotion_imu/imu
-# imu_frame: imu # <leave empty if tf is well defined>
-lidar_topic: /velodyne_points_filtered
-# lidar_frame: velodyne <leave empty if tf is well defined>
+imu_frame: imu # <leave empty if tf is well defined>
+lidar_topic: /velodyne_points
+lidar_frame: velodyne # <leave empty if tf is well defined>
 # extrinsic_lidar2base_quat_xyzw_xyz: [qxyzw_xyz as a list, unnecessary if tf is well defined]
 # extrinsic_imu2base_quat_xyzw_xyz: [qxyzw_xyz as a list, unnecessary if tf is well defined]
 odom_topic: /rko_lio/odometry

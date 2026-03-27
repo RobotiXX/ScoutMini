@@ -51,14 +51,15 @@ def generate_launch_description():
 
     return LaunchDescription([
         DeclareLaunchArgument('use_sim_time', default_value='false'),
-        DeclareLaunchArgument('port_name', default_value='can0'),
+        DeclareLaunchArgument('port_name', default_value='can2'),
         DeclareLaunchArgument('rviz', default_value='true'),
         DeclareLaunchArgument(
             'slam_params_file',
             default_value=PathJoinSubstitution([
                 FindPackageShare('scoutmini_nav2'),
                 'config',
-                'slam_toolbox_online_async.yaml',
+                # 'slam_toolbox_online_async.yaml',
+                'mapper_params_online_async.yaml'
             ])
         ),
         sensors_odometry,
