@@ -43,7 +43,7 @@ def generate_launch_description():
             'base_frame': base_frame,
             'odom_topic_name': 'wheel_odom',
             'publish_odom_topic': 'true',
-            'publish_odom_tf': 'false',
+            'publish_odom_tf': 'false', # rko_lio will publish odom -> base_link TF, so disable wheel_odom TF publishing in scout_base
         }.items(),
     )
 
@@ -70,6 +70,7 @@ def generate_launch_description():
     #         'keep_organized': False,
     #     }],
     # )
+
     rko_lio = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             PathJoinSubstitution([
