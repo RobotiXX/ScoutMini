@@ -24,6 +24,7 @@ def generate_launch_description():
         launch_arguments={
             'use_sim_time': use_sim_time,
             'port_name': port_name,
+            'output': 'both'
         }.items(),
     )
 
@@ -38,6 +39,7 @@ def generate_launch_description():
         launch_arguments={
             'use_sim_time': use_sim_time,
             'slam_params_file': slam_params_file,
+            'output': 'both'
         }.items(),
     )
 
@@ -46,7 +48,7 @@ def generate_launch_description():
         package='rviz2',
         executable='rviz2',
         name='rviz2',
-        output='screen',
+        output='both',
     )
 
     return LaunchDescription([
