@@ -12,7 +12,7 @@ def generate_launch_description():
     velodyne_pkg = get_package_share_directory('velodyne')
     ds4_pkg = get_package_share_directory('ds4_driver')
     scout_pkg = get_package_share_directory('scout_base')
-    scout_description_pkg = get_package_share_directory('scout_description')
+    scout_description_pkg = get_package_share_directory('scoutmini_description')
 
     return LaunchDescription([
 
