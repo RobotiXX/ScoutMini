@@ -71,7 +71,7 @@ def generate_launch_description():
 
     return LaunchDescription([
         DeclareLaunchArgument('use_sim_time', default_value='false'),
-        DeclareLaunchArgument('port_name', default_value='can0'),
+        DeclareLaunchArgument('port_name', default_value='can2'),
         DeclareLaunchArgument(
             'map',
             description='Absolute path to the occupancy-grid yaml map file'
@@ -84,7 +84,7 @@ def generate_launch_description():
                 'nav2.yaml',
             ])
         ),
-        DeclareLaunchArgument('rviz', default_value='true'),
+        DeclareLaunchArgument('rviz', default_value='false'),
         DeclareLaunchArgument(
             'rviz_config_file',
             default_value=PathJoinSubstitution([
