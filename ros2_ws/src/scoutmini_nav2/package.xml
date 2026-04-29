@@ -11,6 +11,7 @@
   <exec_depend>nav2_common</exec_depend>
   <exec_depend>nav2_bringup</exec_depend>
   <exec_depend>nav2_bt_navigator</exec_depend>
+  <exec_depend>map_tools</exec_depend>
 
   <exec_depend>slam_toolbox</exec_depend>
   <exec_depend>pointcloud_to_laserscan</exec_depend>

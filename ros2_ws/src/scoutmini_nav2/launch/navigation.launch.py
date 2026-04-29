@@ -12,9 +12,11 @@ def generate_launch_description():
     use_sim_time = LaunchConfiguration('use_sim_time')
     port_name = LaunchConfiguration('port_name')
     map_file = LaunchConfiguration('map')
+    map_name = LaunchConfiguration('map_name')
     params_file = LaunchConfiguration('params_file')
     rviz = LaunchConfiguration('rviz')
     rviz_config_file = LaunchConfiguration('rviz_config_file')
+    # route loop runner is launched separately in the `scoutmini_tasks` package
     nav_to_pose_bt_xml = LaunchConfiguration('nav_to_pose_bt_xml')
     nav_through_poses_bt_xml = LaunchConfiguration('nav_through_poses_bt_xml')
 
@@ -69,12 +71,43 @@ def generate_launch_description():
         arguments=['-d', rviz_config_file],
     )
 
+    # Publish the current map name so that other nodes (waypoint_server, route_loop_runner)
+    # can dynamically locate map-specific assets
+    map_name_publisher_node = Node(
+        package='map_tools',
+        executable='map_name_publisher',
+        name='map_name_publisher',
+        output='screen',
+        parameters=[{
+            'map_name': map_name,
+            'use_sim_time': use_sim_time,
+        }],
+    )
+
+    # Start the waypoint server to provide waypoint lookup service
+    # Route runners and other nodes query this service instead of loading JSON directly
+    waypoint_server_node = Node(
+        package='map_tools',
+        executable='waypoint_server',
+        name='waypoint_server',
+        output='screen',
+        parameters=[{
+            'initial_map_name': map_name,
+            'use_sim_time': use_sim_time,
+        }],
+    )
+
     return LaunchDescription([
         DeclareLaunchArgument('use_sim_time', default_value='false'),
         DeclareLaunchArgument('port_name', default_value='can2'),
         DeclareLaunchArgument(
             'map',
             description='Absolute path to the occupancy-grid yaml map file'
+        ),
+        DeclareLaunchArgument(
+            'map_name',
+            default_value='fuse_3rd',
+            description='Map folder name under map_tools/maps/<map_name> used for route resolution',
         ),
         DeclareLaunchArgument(
             'params_file',
@@ -109,7 +142,11 @@ def generate_launch_description():
                 'navigate_through_poses_w_replanning_and_recovery.xml',
             ])
         ),
+        # Route runner is not auto-launched here; run `route_loop_runner` from the
+        # `scoutmini_tasks` package separately when desired.
         sensors_odometry,
         nav2,
+        map_name_publisher_node,
+        waypoint_server_node,
         rviz_node,
     ])

@@ -1,6 +1,7 @@
 import os
 from glob import glob
 from setuptools import find_packages, setup
+from rosidl_cmake import generate_dds_cpp
 
 package_name = 'map_tools'
 
@@ -26,7 +27,8 @@ setup(
         ('share/' + package_name + '/launch', glob('launch/*.launch.py')),
         ('share/' + package_name + '/rviz', glob('rviz/*.rviz')),
         ('share/' + package_name + '/waypoints', glob('waypoints/*')),
-    ] + collect_data_files('maps', 'share/' + package_name + '/maps'),
+    ] + collect_data_files('maps', 'share/' + package_name + '/maps')
+      + collect_data_files('srv', 'share/' + package_name + '/srv'),
     install_requires=['setuptools'],
     zip_safe=True,
     maintainer='nhat-m-le',
@@ -36,6 +38,7 @@ setup(
     entry_points={
         'console_scripts': [
             'map_name_publisher = map_tools.map_name_publisher:main',
+            'waypoint_server = map_tools.waypoint_server:main',
             'waypoint_collector = map_tools.waypoint_collector:main',
         ],
     },

@@ -69,6 +69,30 @@ Change which map is used:
 ros2 launch map_tools waypoint_collector.launch.py map_name:=your_map_name
 ```
 
+### Route Looping
+
+To drive a loop over named waypoints, create a YAML route file like this:
+
+```yaml
+map_name: fuse_3rd
+loop: true
+repeat_delay_sec: 1.0
+waypoints:
+   - 3401
+   - 3302
+   - 3304
+```
+
+Then start Nav2 with the route loop enabled:
+
+```bash
+ros2 launch scoutmini_nav2 navigation.launch.py \
+   map:=/absolute/path/to/fuse_3rd.yaml \
+   map_name:=fuse_3rd \
+   use_route_loop:=true \
+   route_file:=/home/nle/repos/ScoutMini/ros2_ws/src/map_tools/maps/fuse_3rd/routes/route.yaml
+```
+
 ## Launch File Parameters
 
 | Parameter | Default | Description |

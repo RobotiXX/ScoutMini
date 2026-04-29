@@ -1,0 +1,12 @@
+# Request to retrieve waypoint data by name list
+# The waypoint server will look up each name in its loaded waypoint JSON
+# and return the corresponding pose/metadata or skip if not found
+
+string[] waypoint_names
+
+---
+
+# Response containing waypoint data for requested names, in order
+# Each entry corresponds to the request order; missing waypoints are skipped
+geometry_msgs/PoseStamped[] poses
+string[] found_names
