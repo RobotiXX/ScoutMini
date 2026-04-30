@@ -102,6 +102,12 @@ def generate_launch_description():
         DeclareLaunchArgument('port_name', default_value='can2'),
         DeclareLaunchArgument(
             'map',
+            default_value=PathJoinSubstitution([
+                FindPackageShare('scoutmini_nav2'),
+                'maps',
+                'fuse_3rd',
+                'fuse_3rd.yaml',
+            ]),
             description='Absolute path to the occupancy-grid yaml map file'
         ),
         DeclareLaunchArgument(
@@ -145,8 +151,8 @@ def generate_launch_description():
         # Route runner is not auto-launched here; run `route_loop_runner` from the
         # `scoutmini_tasks` package separately when desired.
         sensors_odometry,
-        nav2,
+        # nav2,
         map_name_publisher_node,
-        waypoint_server_node,
-        rviz_node,
+        # waypoint_server_node,
+        # rviz_node,
     ])
