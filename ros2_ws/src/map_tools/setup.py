@@ -1,7 +1,6 @@
 import os
 from glob import glob
 from setuptools import find_packages, setup
-from rosidl_cmake import generate_dds_cpp
 
 package_name = 'map_tools'
 
