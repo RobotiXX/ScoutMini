@@ -43,7 +43,7 @@ def generate_launch_description():
             'port_name': port_name,
         }.items(),
     )
-
+    print(map_file)
     nav2 = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             PathJoinSubstitution([
@@ -99,11 +99,11 @@ def generate_launch_description():
 
     return LaunchDescription([
         DeclareLaunchArgument('use_sim_time', default_value='false'),
-        DeclareLaunchArgument('port_name', default_value='can2'),
+        DeclareLaunchArgument('port_name', default_value='can0'),
         DeclareLaunchArgument(
             'map',
             default_value=PathJoinSubstitution([
-                FindPackageShare('scoutmini_nav2'),
+                FindPackageShare('map_tools'),
                 'maps',
                 'fuse_3rd',
                 'fuse_3rd.yaml',
@@ -151,8 +151,8 @@ def generate_launch_description():
         # Route runner is not auto-launched here; run `route_loop_runner` from the
         # `scoutmini_tasks` package separately when desired.
         sensors_odometry,
-        # nav2,
-        map_name_publisher_node,
+        nav2,
+        # map_name_publisher_node,
         # waypoint_server_node,
         # rviz_node,
     ])

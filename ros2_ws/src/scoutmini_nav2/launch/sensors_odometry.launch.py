@@ -46,7 +46,7 @@ def generate_launch_description():
 
     return LaunchDescription([
         DeclareLaunchArgument('use_sim_time', default_value='false'),
-        DeclareLaunchArgument('port_name', default_value='can2'),
+        DeclareLaunchArgument('port_name', default_value='can0'),
         DeclareLaunchArgument('base_frame', default_value='base_link'),
         DeclareLaunchArgument('config_file', default_value=PathJoinSubstitution([FindPackageShare('scoutmini_nav2'),'config','rko_lio_vlp16_indoor.yaml'])),
 	scoutmini_bringup,

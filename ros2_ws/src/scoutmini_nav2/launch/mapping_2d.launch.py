@@ -53,7 +53,7 @@ def generate_launch_description():
 
     return LaunchDescription([
         DeclareLaunchArgument('use_sim_time', default_value='false'),
-        DeclareLaunchArgument('port_name', default_value='can2'),
+        DeclareLaunchArgument('port_name', default_value='can0'),
         DeclareLaunchArgument('rviz', default_value='false'),
         DeclareLaunchArgument(
             'slam_params_file',
