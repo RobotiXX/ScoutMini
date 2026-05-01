@@ -11,7 +11,7 @@ class MapNamePublisher(Node):
         super().__init__('map_name_publisher')
 
         self.declare_parameter('map_name', 'fuse_3rd')
-        self.declare_parameter('map_name_topic', '/map_tools/map_name')
+        self.declare_parameter('map_name_topic', '/map_name')
 
         self.map_name = self.get_parameter('map_name').get_parameter_value().string_value
         self.map_name_topic = self.get_parameter('map_name_topic').get_parameter_value().string_value

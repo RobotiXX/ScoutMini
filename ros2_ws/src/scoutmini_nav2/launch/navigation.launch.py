@@ -120,10 +120,10 @@ def generate_launch_description():
     return LaunchDescription([
         DeclareLaunchArgument('use_sim_time', default_value='false'),
         DeclareLaunchArgument('port_name', default_value='can0'),
-        DeclareLaunchArgument('initial_pose_x', default_value='1.2254828214645386'),
-        DeclareLaunchArgument('initial_pose_y', default_value='-0.4905072748661041'),
+        DeclareLaunchArgument('initial_pose_x', default_value='0.15'),
+        DeclareLaunchArgument('initial_pose_y', default_value='0.5'),
         DeclareLaunchArgument('initial_pose_z', default_value='-0.001373291015625'),
-        DeclareLaunchArgument('initial_pose_yaw', default_value='0.0'),
+        DeclareLaunchArgument('initial_pose_yaw', default_value='-0.45'),
         DeclareLaunchArgument(
             'map',
             default_value=PathJoinSubstitution([
@@ -177,7 +177,7 @@ def generate_launch_description():
         sensors_odometry,
         initial_pose_publisher,
         nav2,
-        # map_name_publisher_node,
-        # waypoint_server_node,
+        map_name_publisher_node,
+        waypoint_server_node,
         # rviz_node,
     ])

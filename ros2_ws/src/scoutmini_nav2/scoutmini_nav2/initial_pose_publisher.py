@@ -14,7 +14,6 @@ class InitialPosePublisher(Node):
         self.declare_parameter('y', 0.0)
         self.declare_parameter('z', 0.0)
         self.declare_parameter('yaw', 0.0)
-        self.declare_parameter('use_sim_time', False)
 
         self.publisher = self.create_publisher(PoseWithCovarianceStamped, '/initialpose', 10)
         self.timer = self.create_timer(0.5, self._publish_once)
