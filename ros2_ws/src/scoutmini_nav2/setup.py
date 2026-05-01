@@ -29,6 +29,7 @@ setup(
     },
     entry_points={
         'console_scripts': [
+            'initial_pose_publisher = scoutmini_nav2.initial_pose_publisher:main',
         ],
     },
 )

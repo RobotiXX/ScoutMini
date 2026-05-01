@@ -14,6 +14,10 @@ def generate_launch_description():
     map_file = LaunchConfiguration('map')
     map_name = LaunchConfiguration('map_name')
     params_file = LaunchConfiguration('params_file')
+    initial_pose_x = LaunchConfiguration('initial_pose_x')
+    initial_pose_y = LaunchConfiguration('initial_pose_y')
+    initial_pose_z = LaunchConfiguration('initial_pose_z')
+    initial_pose_yaw = LaunchConfiguration('initial_pose_yaw')
     rviz = LaunchConfiguration('rviz')
     rviz_config_file = LaunchConfiguration('rviz_config_file')
     # route loop runner is launched separately in the `scoutmini_tasks` package
@@ -43,6 +47,22 @@ def generate_launch_description():
             'port_name': port_name,
         }.items(),
     )
+
+    initial_pose_publisher = Node(
+        package='scoutmini_nav2',
+        executable='initial_pose_publisher',
+        name='initial_pose_publisher',
+        output='screen',
+        parameters=[{
+            'frame_id': 'map',
+            'x': initial_pose_x,
+            'y': initial_pose_y,
+            'z': initial_pose_z,
+            'yaw': initial_pose_yaw,
+            'use_sim_time': use_sim_time,
+        }],
+    )
+
     print(map_file)
     nav2 = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -100,6 +120,10 @@ def generate_launch_description():
     return LaunchDescription([
         DeclareLaunchArgument('use_sim_time', default_value='false'),
         DeclareLaunchArgument('port_name', default_value='can0'),
+        DeclareLaunchArgument('initial_pose_x', default_value='1.2254828214645386'),
+        DeclareLaunchArgument('initial_pose_y', default_value='-0.4905072748661041'),
+        DeclareLaunchArgument('initial_pose_z', default_value='-0.001373291015625'),
+        DeclareLaunchArgument('initial_pose_yaw', default_value='0.0'),
         DeclareLaunchArgument(
             'map',
             default_value=PathJoinSubstitution([
@@ -151,6 +175,7 @@ def generate_launch_description():
         # Route runner is not auto-launched here; run `route_loop_runner` from the
         # `scoutmini_tasks` package separately when desired.
         sensors_odometry,
+        initial_pose_publisher,
         nav2,
         # map_name_publisher_node,
         # waypoint_server_node,
