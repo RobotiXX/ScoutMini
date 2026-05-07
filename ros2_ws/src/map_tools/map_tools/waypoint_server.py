@@ -3,7 +3,7 @@
 
 The waypoint_server node subscribes to the /map_name topic to determine the
 current map, loads the corresponding waypoint JSON file from map_tools, and
-provides a GetWaypoints service so that other nodes (e.g., route_loop_runner)
+provides a GetWaypointsByName service so that other nodes (e.g., route_loop_runner)
 can query waypoint coordinates without managing file I/O themselves.
 """
 
@@ -17,7 +17,7 @@ from typing import Dict, List, Optional
 import rclpy
 from ament_index_python.packages import get_package_share_directory
 from geometry_msgs.msg import PoseStamped
-from map_tools.srv import GetWaypoints
+from map_interfaces.srv import GetWaypointsByName
 from rclpy.node import Node
 from std_msgs.msg import String
 
@@ -26,7 +26,7 @@ class WaypointServer(Node):
     """ROS 2 node that manages waypoint storage and lookup via a service.
 
     This node loads waypoint JSON files for the current map (determined via
-    /map_name topic subscription) and provides a GetWaypoints service interface
+    /map_name topic subscription) and provides a GetWaypointsByName service interface
     for other nodes to query waypoints by name, eliminating the need for direct
     file I/O across multiple nodes.
 
@@ -54,7 +54,7 @@ class WaypointServer(Node):
         )
 
         # Create service to query waypoints
-        self.service = self.create_service(GetWaypoints, 'get_waypoints', self._handle_get_waypoints)
+        self.service = self.create_service(GetWaypointsByName, 'get_waypoints', self._handle_get_waypoints)
 
         # Load initial map waypoints
         self._load_waypoints_for_map(self.current_map_name)
@@ -121,16 +121,16 @@ class WaypointServer(Node):
                 self.waypoints = []
 
     def _handle_get_waypoints(
-        self, request: GetWaypoints.Request, response: GetWaypoints.Response
-    ) -> GetWaypoints.Response:
+        self, request: GetWaypointsByName.Request, response: GetWaypointsByName.Response
+    ) -> GetWaypointsByName.Response:
         """Service callback to retrieve waypoints by name.
 
         Args:
-            request: GetWaypoints.Request with a list of waypoint names.
-            response: GetWaypoints.Response to populate with results.
+            request: GetWaypointsByName.Request with a list of waypoint names.
+            response: GetWaypointsByName.Response to populate with results.
 
         Returns:
-            Populated GetWaypoints.Response with poses and found names.
+            Populated GetWaypointsByName.Response with poses and found names.
         """
         with self.waypoint_lock:
             waypoint_by_name = {

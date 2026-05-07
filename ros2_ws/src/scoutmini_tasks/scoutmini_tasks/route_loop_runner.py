@@ -15,7 +15,7 @@ from typing import Dict, List, Optional
 import rclpy
 from ament_index_python.packages import get_package_share_directory
 from geometry_msgs.msg import PoseStamped
-from map_tools.srv import GetWaypoints
+from map_interfaces.srv import GetWaypointsByName
 from nav2_msgs.action import NavigateThroughPoses
 from rclpy.action import ActionClient
 from rclpy.node import Node
@@ -90,7 +90,7 @@ class RouteLoopRunner(Node):
         self._action_client = ActionClient(self, NavigateThroughPoses, self.action_name)
 
         # Service client for waypoint lookup
-        self._waypoint_client = self.create_client(GetWaypoints, 'get_waypoints')
+        self._waypoint_client = self.create_client(GetWaypointsByName, 'get_waypoints')
 
         # Internal state for goal tracking
         self._goal_active = False
@@ -184,7 +184,7 @@ class RouteLoopRunner(Node):
             return
 
         try:
-            request = GetWaypoints.Request()
+            request = GetWaypointsByName.Request()
             request.waypoint_names = self._route_waypoint_names
 
             future = self._waypoint_client.call_async(request)
@@ -198,7 +198,7 @@ class RouteLoopRunner(Node):
         """Handle response from waypoint_server service.
 
         Args:
-            future: Service call future with GetWaypoints.Response.
+            future: Service call future with GetWaypointsByName.Response.
         """
         try:
             response = future.result()

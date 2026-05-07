@@ -60,7 +60,6 @@ def generate_launch_description():
             default_value=PathJoinSubstitution([
                 FindPackageShare('scoutmini_nav2'),
                 'config',
-                # 'slam_toolbox_online_async.yaml',
                 'mapper_params_online_async.yaml'
             ])
         ),

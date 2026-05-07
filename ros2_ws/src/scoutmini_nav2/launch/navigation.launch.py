@@ -11,8 +11,14 @@ from nav2_common.launch import RewrittenYaml
 def generate_launch_description():
     use_sim_time = LaunchConfiguration('use_sim_time')
     port_name = LaunchConfiguration('port_name')
-    map_file = LaunchConfiguration('map')
     map_name = LaunchConfiguration('map_name')
+    # Compose the map file path from the map name to avoid two sources of truth
+    map_file = PathJoinSubstitution([
+        FindPackageShare('map_tools'),
+        'maps',
+        map_name,
+        map_name + '.yaml',
+    ])
     params_file = LaunchConfiguration('params_file')
     initial_pose_x = LaunchConfiguration('initial_pose_x')
     initial_pose_y = LaunchConfiguration('initial_pose_y')
@@ -125,19 +131,9 @@ def generate_launch_description():
         DeclareLaunchArgument('initial_pose_z', default_value='-0.001373291015625'),
         DeclareLaunchArgument('initial_pose_yaw', default_value='-0.45'),
         DeclareLaunchArgument(
-            'map',
-            default_value=PathJoinSubstitution([
-                FindPackageShare('map_tools'),
-                'maps',
-                'fuse_3rd',
-                'fuse_3rd.yaml',
-            ]),
-            description='Absolute path to the occupancy-grid yaml map file'
-        ),
-        DeclareLaunchArgument(
             'map_name',
             default_value='fuse_3rd',
-            description='Map folder name under map_tools/maps/<map_name> used for route resolution',
+            description='Map name for corresponding map at map_tools/maps/<map_name>/<map_name>.yaml',
         ),
         DeclareLaunchArgument(
             'params_file',
