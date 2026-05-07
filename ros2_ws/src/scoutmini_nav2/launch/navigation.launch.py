@@ -125,7 +125,7 @@ def generate_launch_description():
 
     return LaunchDescription([
         DeclareLaunchArgument('use_sim_time', default_value='false'),
-        DeclareLaunchArgument('port_name', default_value='can0'),
+        DeclareLaunchArgument('port_name', default_value='can2'),
         DeclareLaunchArgument('initial_pose_x', default_value='0.15'),
         DeclareLaunchArgument('initial_pose_y', default_value='0.5'),
         DeclareLaunchArgument('initial_pose_z', default_value='-0.001373291015625'),
