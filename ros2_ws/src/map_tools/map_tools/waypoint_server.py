@@ -141,6 +141,7 @@ class WaypointServer(Node):
 
         response.poses = []
         response.found_names = []
+        self.get_logger().info(f'Handling waypoint query for names: {request.waypoint_names}')
 
         for waypoint_name in request.waypoint_names:
             waypoint_name = waypoint_name.strip()
@@ -165,7 +166,7 @@ class WaypointServer(Node):
 
             response.poses.append(pose)
             response.found_names.append(waypoint_name)
-
+        self.get_logger().info(f'Found {len(response.poses)}/{len(request.waypoint_names)} waypoints for query' )
         return response
 
 

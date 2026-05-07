@@ -69,7 +69,6 @@ def generate_launch_description():
         }],
     )
 
-    print(map_file)
     nav2 = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             PathJoinSubstitution([

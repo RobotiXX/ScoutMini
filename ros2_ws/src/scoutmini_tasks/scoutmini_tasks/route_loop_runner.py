@@ -19,7 +19,7 @@ from map_interfaces.srv import GetWaypointsByName
 from nav2_msgs.action import NavigateThroughPoses
 from rclpy.action import ActionClient
 from rclpy.node import Node
-from rclpy.qos import QoSPresetProfiles
+from rclpy.qos import QoSProfile
 from std_msgs.msg import String
 
 import yaml
@@ -84,7 +84,7 @@ class RouteLoopRunner(Node):
 
         # Subscribe to /map_name to detect map changes
         self.map_name_sub = self.create_subscription(
-            String, '/map_name', self._map_name_sub_cb, qos_profile=QoSPresetProfiles.TRANSIENT_LOCAL.value
+            String, '/map_name', self._map_name_sub_cb, qos_profile=QoSProfile(depth=10, reliability=rclpy.qos.QoSReliabilityPolicy.RELIABLE, durability=rclpy.qos.QoSDurabilityPolicy.TRANSIENT_LOCAL)
         )
 
         # Action client for navigate_through_poses
@@ -162,7 +162,7 @@ class RouteLoopRunner(Node):
                 elif isinstance(entry, dict) and isinstance(entry.get('name'), str):
                     if entry['name'].strip():
                         route_names.append(entry['name'].strip())
-
+            self.get_logger().info(f"{route_names=}")
             self._route_waypoint_names = route_names
 
             # Query the waypoint service to resolve names to poses
@@ -187,8 +187,9 @@ class RouteLoopRunner(Node):
         try:
             request = GetWaypointsByName.Request()
             request.waypoint_names = self._route_waypoint_names
-
+            self.get_logger().info(f'Querying waypoint service to resolve {len(request.waypoint_names)} waypoint(s)')
             future = self._waypoint_client.call_async(request)
+            self.get_logger().info('Waypoint service call sent; waiting for response...')
             future.add_done_callback(self._waypoint_service_cb)
 
         except Exception as exc:
@@ -201,6 +202,7 @@ class RouteLoopRunner(Node):
         Args:
             future: Service call future with GetWaypointsByName.Response.
         """
+        self.get_logger().info('Waypoint service response received; processing results...')
         try:
             response = future.result()
             self._route_poses = list(response.poses)
@@ -212,10 +214,12 @@ class RouteLoopRunner(Node):
                     self.get_logger().warn(msg)
                 else:
                     self.get_logger().error(msg)
+            self.get_logger().info(f'Waypoint service resolved {len(self._route_poses)}/{len(self._route_waypoint_names)} waypoint(s) to poses')
 
         except Exception as exc:
             self.get_logger().error(f'Waypoint service call failed: {exc}')
             self._route_poses = []
+        self.get_logger().info(f'Resolved {len(self._route_poses)}/{len(self._route_waypoint_names)} waypoints to poses')   
 
     def _tick(self) -> None:
         """Main loop tick; checks conditions and sends route goal if ready."""
