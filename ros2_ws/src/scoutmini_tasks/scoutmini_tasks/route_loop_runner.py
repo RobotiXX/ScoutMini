@@ -19,6 +19,7 @@ from map_interfaces.srv import GetWaypointsByName
 from nav2_msgs.action import NavigateThroughPoses
 from rclpy.action import ActionClient
 from rclpy.node import Node
+from rclpy.qos import QoSPresetProfiles
 from std_msgs.msg import String
 
 import yaml
@@ -83,7 +84,7 @@ class RouteLoopRunner(Node):
 
         # Subscribe to /map_name to detect map changes
         self.map_name_sub = self.create_subscription(
-            String, '/map_name', self._map_name_sub_cb, qos_profile=10
+            String, '/map_name', self._map_name_sub_cb, qos_profile=QoSPresetProfiles.TRANSIENT_LOCAL.value
         )
 
         # Action client for navigate_through_poses
