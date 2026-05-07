@@ -2,7 +2,7 @@ from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
 from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
+from launch.substitutions import LaunchConfiguration, PathJoinSubstitution, TextSubstitution
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
 from nav2_common.launch import RewrittenYaml
@@ -17,7 +17,7 @@ def generate_launch_description():
         FindPackageShare('map_tools'),
         'maps',
         map_name,
-        map_name + '.yaml',
+        [map_name, TextSubstitution(text='.yaml')],
     ])
     params_file = LaunchConfiguration('params_file')
     initial_pose_x = LaunchConfiguration('initial_pose_x')
