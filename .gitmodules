@@ -26,3 +26,7 @@
 	path = ros2_ws/src/insta360_ros_driver
 	url = git@github.com:RobotiXX/insta360_ros_driver.git
 	branch = nle/dev-jetson
+[submodule "ros2_ws/src/apriltag_ros"]
+	path = ros2_ws/src/apriltag_ros
+	url = git@github.com:RobotiXX/apriltag_ros.git
+	branch = scout_mini
