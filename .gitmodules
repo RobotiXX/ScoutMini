@@ -30,3 +30,7 @@
 	path = ros2_ws/src/apriltag_ros
 	url = git@github.com:RobotiXX/apriltag_ros.git
 	branch = scout_mini
+[submodule "ros2_ws/src/apriltag"]
+	path = ros2_ws/src/apriltag
+	url = git@github.com:RobotiXX/apriltag.git
+	branch = v3.4.5
