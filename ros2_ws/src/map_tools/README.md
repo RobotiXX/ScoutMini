@@ -29,6 +29,22 @@ source install/setup.bash
 ros2 run map_tools waypoint_collector
 ```
 
+**AprilTag collection** - start the detector against your ZED2 image stream:
+```bash
+cd ~/repos/ScoutMini/ros2_ws
+source install/setup.bash
+ros2 launch map_tools zed_apriltag_36h11.launch.py \
+   image_topic:=/zed/zed_node/left/image_rect_color \
+   camera_info_topic:=/zed/zed_node/left/camera_info
+```
+
+Then, in a separate terminal, run the collector and press Enter whenever the robot is in front of a tag:
+```bash
+cd ~/repos/ScoutMini/ros2_ws
+source install/setup.bash
+ros2 run map_tools apriltag_tag_collector
+```
+
 ## Usage
 
 ### Collecting Waypoints
@@ -42,6 +58,16 @@ ros2 run map_tools waypoint_collector
    - Enter a custom name or press Enter to use the default (e.g., `wp_001`, `wp_002`)
    - The waypoint will be saved and appear on the map as a red sphere with a label
    - The node reads the active `map_name` from the latched `/map_tools/map_name` topic published by Terminal 1
+
+### Collecting AprilTag Anchors
+
+1. Launch the detector with `ros2 launch map_tools zed_apriltag_36h11.launch.py`.
+2. Make sure `/map_name` is being published for the localized map you are driving on.
+3. Run `ros2 run map_tools apriltag_tag_collector` in a terminal.
+4. Drive the robot until the tag is centered and stable in view.
+5. Press Enter in the collector terminal to buffer the next 10 detections.
+6. When the pose is stable enough, enter a human-readable description.
+7. The collector writes the tag entry to `src/map_tools/maps/<map_name>/tags.json`.
 
 ### Viewing Waypoints
 
