@@ -592,7 +592,7 @@ class ApriltagTagCollector(Node):
         Returns:
             str: Frame name such as tag36h11:5.
         """
-        return f'tag{family}:{tag_id}'
+        return f'{family}:{tag_id}'
 
 
 def main(args: Optional[List[str]] = None) -> None:

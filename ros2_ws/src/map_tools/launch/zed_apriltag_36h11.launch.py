@@ -29,13 +29,13 @@ def generate_launch_description() -> LaunchDescription:
 
     image_topic_arg = DeclareLaunchArgument(
         'image_topic',
-        default_value='/zed/zed_node/left/image_rect_color',
+        default_value='/zed2/zed_node/rgb/color/rect/image',
         description='Rectified ZED image topic to subscribe to',
     )
 
     camera_info_topic_arg = DeclareLaunchArgument(
         'camera_info_topic',
-        default_value='/zed/zed_node/left/camera_info',
+        default_value='/zed2/zed_node/rgb/color/rect/image/camera_info',
         description='CameraInfo topic matching the selected ZED image stream',
     )
 
