@@ -1,5 +1,5 @@
 from launch import LaunchDescription
-from launch.actions import IncludeLaunchDescription
+from launch.actions import IncludeLaunchDescription, DeclareLaunchArgument
 from launch.launch_description_sources import PythonLaunchDescriptionSource, AnyLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
 from ament_index_python.packages import get_package_share_directory
@@ -15,7 +15,7 @@ def generate_launch_description():
     scout_description_pkg = get_package_share_directory('scoutmini_description')
 
     return LaunchDescription([
-
+        DeclareLaunchArgument('port_name', default_value='can2'),
         # Scout Mini Base
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(os.path.join(scout_pkg, 'launch', 'scout_mini_base.launch.py')),
@@ -35,10 +35,10 @@ def generate_launch_description():
         ),
 
         # ZED camera
-        #IncludeLaunchDescription(
-        #    PythonLaunchDescriptionSource(os.path.join(zed_pkg, 'launch', 'zed_camera.launch.py')),
-        #    launch_arguments={'camera_model': 'zed2', 'camera_name': 'zed2'}.items(),
-        #),
+        IncludeLaunchDescription(
+           PythonLaunchDescriptionSource(os.path.join(zed_pkg, 'launch', 'zed_camera.launch.py')),
+           launch_arguments={'camera_model': 'zed2', 'camera_name': 'zed2'}.items(),
+        ),
 
         # IMU (Witmotion)
         IncludeLaunchDescription(
