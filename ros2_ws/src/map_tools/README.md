@@ -29,6 +29,13 @@ source install/setup.bash
 ros2 run map_tools waypoint_collector
 ```
 
+**Waypoint Collector 2** - show waypoints and AprilTag anchors together:
+```bash
+cd ~/repos/ScoutMini/ros2_ws
+source install/setup.bash
+ros2 run map_tools waypoint_collector_2
+```
+
 **AprilTag collection** - start the detector against your ZED2 image stream:
 ```bash
 cd ~/repos/ScoutMini/ros2_ws
@@ -68,6 +75,10 @@ ros2 run map_tools apriltag_tag_collector
 5. Press Enter in the collector terminal to buffer the next 10 detections.
 6. When the pose is stable enough, enter a human-readable description.
 7. The collector writes the tag entry to `src/map_tools/maps/<map_name>/tags.json`.
+
+### Visualizing Tags with Waypoints
+
+Run `ros2 run map_tools waypoint_collector_2` to load the normal waypoint JSON and the map's `tags.json` at the same time. Waypoints stay interactive and editable, while tags appear as blue markers with labels so you can see the collected AprilTag anchors on the same map.
 
 ### Viewing Waypoints
 

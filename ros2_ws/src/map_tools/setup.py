@@ -40,6 +40,7 @@ setup(
             'map_name_publisher = map_tools.map_name_publisher:main',
             'waypoint_server = map_tools.waypoint_server:main',
             'waypoint_collector = map_tools.waypoint_collector:main',
+            'waypoint_collector_2 = map_tools.waypoint_collector_2:main',
             'apriltag_tag_collector = map_tools.apriltag_tag_collector:main',
         ],
     },
