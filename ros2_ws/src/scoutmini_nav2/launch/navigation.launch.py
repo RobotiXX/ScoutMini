@@ -125,10 +125,21 @@ def generate_launch_description():
     return LaunchDescription([
         DeclareLaunchArgument('use_sim_time', default_value='false'),
         DeclareLaunchArgument('port_name', default_value='can2'),
-        DeclareLaunchArgument('initial_pose_x', default_value='0.15'),
-        DeclareLaunchArgument('initial_pose_y', default_value='0.5'),
-        DeclareLaunchArgument('initial_pose_z', default_value='-0.001373291015625'),
-        DeclareLaunchArgument('initial_pose_yaw', default_value='-0.45'),
+        # # Initial pose in 3401
+        # DeclareLaunchArgument('initial_pose_x', default_value='0.15'),
+        # DeclareLaunchArgument('initial_pose_y', default_value='0.5'),
+        # DeclareLaunchArgument('initial_pose_z', default_value='-0.001373291015625'),
+        # DeclareLaunchArgument('initial_pose_yaw', default_value='-0.45'),
+        # # Initial pose in 3403 near fire extinguisher
+        # DeclareLaunchArgument('initial_pose_x', default_value='7.5'),
+        # DeclareLaunchArgument('initial_pose_y', default_value='13.5'),
+        # DeclareLaunchArgument('initial_pose_z', default_value='0.0'),
+        # DeclareLaunchArgument('initial_pose_yaw', default_value='-0.45'),
+        # Initial pose in 3404 near TV
+        DeclareLaunchArgument('initial_pose_x', default_value='13.7'),
+        DeclareLaunchArgument('initial_pose_y', default_value='26.0'),
+        DeclareLaunchArgument('initial_pose_z', default_value='0.0'),
+        DeclareLaunchArgument('initial_pose_yaw', default_value='-2.02'),
         DeclareLaunchArgument(
             'map_name',
             default_value='fuse_3rd',
