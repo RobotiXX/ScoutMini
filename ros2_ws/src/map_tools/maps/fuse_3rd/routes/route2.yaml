@@ -1,0 +1,10 @@
+map_name: fuse_3rd
+loop: true
+repeat_delay_sec: 1.0
+waypoints:
+  - "lab_front"
+  - "wc_women"
+  - "wc_men"
+  - "main_elevator"
+  - "3343"
+  - "3339"
