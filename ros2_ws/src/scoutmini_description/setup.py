@@ -13,7 +13,7 @@ setup(
         ('share/' + package_name, ['package.xml']),
         ('share/' + package_name + '/launch', glob('launch/*.launch.py')),
         ('share/' + package_name + '/config', glob('config/*.yaml')),
-        ('share/' + package_name + '/urdf/scout_mini', glob('urdf/scout_mini/*.xacro')),
+        ('share/' + package_name + '/urdf/scout_mini', glob('urdf/scout_mini/*')),
         ('share/' + package_name + '/urdf', glob('urdf/*.xacro')),
         ('share/' + package_name + '/rviz', glob('rviz/*.rviz')),
         ('share/' + package_name + '/meshes', glob('meshes/*.*')),
