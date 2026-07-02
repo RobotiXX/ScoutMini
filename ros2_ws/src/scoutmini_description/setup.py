@@ -16,6 +16,7 @@ setup(
         ('share/' + package_name + '/urdf/scout_mini', glob('urdf/scout_mini/*')),
         ('share/' + package_name + '/urdf', glob('urdf/*.xacro')),
         ('share/' + package_name + '/rviz', glob('rviz/*.rviz')),
+        ('share/' + package_name + '/worlds', glob('worlds/*.sdf')),
         ('share/' + package_name + '/meshes', glob('meshes/*.*')),
     ],
     install_requires=['setuptools'],

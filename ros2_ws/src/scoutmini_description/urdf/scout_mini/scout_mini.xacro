@@ -44,10 +44,13 @@
             </geometry>
         </visual>
         <collision>
-            <origin xyz="0 0 0" rpy="0 0 0" />
-            <geometry>
-                <box size="${base_x_size} ${base_y_size} ${base_z_size}" />
-            </geometry>
+            <origin
+                    xyz="0 0 0"
+                    rpy="1.5707 0 -1.5707" />
+          <geometry>
+            <mesh
+              filename="file://$(find scoutmini_description)/meshes/scout_mini_base_link.dae" />
+          </geometry>
         </collision>
     </link>
 

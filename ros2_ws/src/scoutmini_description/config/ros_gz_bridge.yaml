@@ -15,3 +15,27 @@
   ros_type_name: sensor_msgs/msg/Imu
   gz_type_name: gz.msgs.IMU
   direction: GZ_TO_ROS
+
+- ros_topic_name: /zed2/zed_node/rgb/color/rect/image
+  gz_topic_name: /zed2/zed_node/rgb/color/rect/image
+  ros_type_name: sensor_msgs/msg/Image
+  gz_type_name: gz.msgs.Image
+  direction: GZ_TO_ROS
+
+- ros_topic_name: /zed2/zed_node/rgb/color/rect/image/camera_info
+  gz_topic_name: /zed2/zed_node/rgb/color/rect/image/camera_info
+  ros_type_name: sensor_msgs/msg/CameraInfo
+  gz_type_name: gz.msgs.CameraInfo
+  direction: GZ_TO_ROS
+
+- ros_topic_name: /equirectangular/image
+  gz_topic_name: /equirectangular/image
+  ros_type_name: sensor_msgs/msg/Image
+  gz_type_name: gz.msgs.Image
+  direction: GZ_TO_ROS
+
+- ros_topic_name: /equirectangular/camera_info
+  gz_topic_name: /equirectangular/image/camera_info
+  ros_type_name: sensor_msgs/msg/CameraInfo
+  gz_type_name: gz.msgs.CameraInfo
+  direction: GZ_TO_ROS
