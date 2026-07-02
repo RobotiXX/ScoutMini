@@ -31,6 +31,7 @@ setup(
     },
     entry_points={
         'console_scripts': [
+            'scoutmini_topic_relay = scoutmini_description.topic_relay:main',
         ],
     },
 )

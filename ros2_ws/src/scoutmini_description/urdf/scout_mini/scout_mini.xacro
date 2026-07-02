@@ -24,6 +24,15 @@
     <xacro:property name="wheel_length" value="0.8e-01" />
     <xacro:property name="wheel_radius" value="1.600e-01" />
 
+    <!-- Nav2 uses base_footprint as the planar ground frame. -->
+    <link name="base_footprint"/>
+
+    <joint name="base_footprint_joint" type="fixed">
+        <origin xyz="0 0 ${wheel_radius - wheel_vertical_offset}" rpy="0 0 0" />
+        <parent link="base_footprint" />
+        <child link="base_link" />
+    </joint>
+
     <!-- Base link -->
     <link name="base_link">
         <visual>
@@ -31,17 +40,14 @@
                     xyz="0 0 0"
                     rpy="1.5707 0 -1.5707" />
             <geometry>
-                <mesh filename="package://scoutmini_description/meshes/scout_mini_base_link.dae" />
+                <mesh filename="file://$(find scoutmini_description)/meshes/scout_mini_base_link.dae" />
             </geometry>
         </visual>
         <collision>
-            <origin
-                    xyz="0 0 0"
-                    rpy="1.5707 0 -1.5707" />
-          <geometry>
-            <mesh
-              filename="package://scoutmini_description/meshes/scout_mini_base_link.dae" />
-          </geometry>
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <geometry>
+                <box size="${base_x_size} ${base_y_size} ${base_z_size}" />
+            </geometry>
         </collision>
     </link>
 
@@ -65,10 +71,10 @@
     <xacro:scout_mini_wheel wheel_prefix="front_right">
         <origin xyz="${wheelbase/2} ${-track/2} ${wheel_vertical_offset}" rpy="1.57 0 0" />
     </xacro:scout_mini_wheel>
-    <xacro:scout_mini_wheel wheel_prefix="front_left">
+    <xacro:scout_mini_wheel wheel_prefix="front_left" wheel_axis="0 0 1">
         <origin xyz="${wheelbase/2} ${track/2} ${wheel_vertical_offset}" rpy="-1.57 0 0" />
     </xacro:scout_mini_wheel>
-    <xacro:scout_mini_wheel wheel_prefix="rear_left">
+    <xacro:scout_mini_wheel wheel_prefix="rear_left" wheel_axis="0 0 1">
         <origin xyz="${-wheelbase/2} ${track/2} ${wheel_vertical_offset}" rpy="-1.57 0 0" />
     </xacro:scout_mini_wheel>
     <xacro:scout_mini_wheel wheel_prefix="rear_right">
@@ -102,33 +108,33 @@
     <xacro:include filename="$(find scoutmini_description)/urdf/scout_mini/scout_mini.gazebo" />
     
     <ros2_control name="ScoutMiniSystem" type="system">
-  <hardware>
-    <plugin>gazebo_ros2_control/GazeboSystem</plugin>
-  </hardware>
+        <hardware>
+            <plugin>gz_ros2_control/GazeboSimSystem</plugin>
+        </hardware>
 
-  <joint name="front_left_wheel">
-    <command_interface name="velocity"/>
-    <state_interface name="position"/>
-    <state_interface name="velocity"/>
-  </joint>
+        <joint name="front_left_wheel">
+            <command_interface name="velocity"/>
+            <state_interface name="position"/>
+            <state_interface name="velocity"/>
+        </joint>
 
-  <joint name="front_right_wheel">
-    <command_interface name="velocity"/>
-    <state_interface name="position"/>
-    <state_interface name="velocity"/>
-  </joint>
+        <joint name="front_right_wheel">
+            <command_interface name="velocity"/>
+            <state_interface name="position"/>
+            <state_interface name="velocity"/>
+        </joint>
 
-  <joint name="rear_left_wheel">
-    <command_interface name="velocity"/>
-    <state_interface name="position"/>
-    <state_interface name="velocity"/>
-  </joint>
+        <joint name="rear_left_wheel">
+            <command_interface name="velocity"/>
+            <state_interface name="position"/>
+            <state_interface name="velocity"/>
+        </joint>
 
-  <joint name="rear_right_wheel">
-    <command_interface name="velocity"/>
-    <state_interface name="position"/>
-    <state_interface name="velocity"/>
-  </joint>
-</ros2_control>
+        <joint name="rear_right_wheel">
+            <command_interface name="velocity"/>
+            <state_interface name="position"/>
+            <state_interface name="velocity"/>
+        </joint>
+    </ros2_control>
 
 </robot>

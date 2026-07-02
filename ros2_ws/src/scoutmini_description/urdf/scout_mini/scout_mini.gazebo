@@ -24,18 +24,20 @@ Reference:
 
     <!-- Controller configurations -->
     <gazebo>
-        <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
-            <robotNamespace>$(arg robot_namespace)</robotNamespace>
+        <plugin name="gz_ros2_control::GazeboSimROS2ControlPlugin" filename="libgz_ros2_control-system.so">
+            <ros>
+                <namespace>$(arg robot_namespace)</namespace>
+            </ros>
+            <parameters>$(find scoutmini_description)/config/diff_drive.yaml</parameters>
         </plugin>
     </gazebo>
 
-    <!-- kp spring constant, kd damping constant -->
+    <!-- Contact tuning for four-wheel skid steering. Do not pin fdir1 to world axes. -->
     <gazebo>
-        <mu1 value="1.0"/>
-        <mu2 value="0.9"/>
-        <kp value="10000000.0" />
-        <kd value="1.0" />
-        <fdir1 value="1 0 0"/>
+        <mu1 value="0.9"/>
+        <mu2 value="0.6"/>
+        <kp value="1000000.0" />
+        <kd value="5.0" />
         <minDepth value="0.001" />
         <maxContacts value="64"/>
     </gazebo>

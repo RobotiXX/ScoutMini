@@ -22,8 +22,9 @@
         </material>
       </visual>
       <collision>
+        <origin xyz="0 0 0.06" rpy="0 0 0"/>
         <geometry>
-          <mesh filename="file://$(find scoutmini_description)/meshes/sensors.dae" scale="1 1 1"/>
+          <box size="0.32 0.18 0.12"/>
         </geometry>
       </collision>
       <inertial>
@@ -55,6 +56,16 @@
       <origin xyz="-0.075 0.0 0.12" rpy="0 0 0"/>
     </joint>
 
+    <gazebo reference="imu">
+      <sensor name="imu_sensor" type="imu">
+        <always_on>true</always_on>
+        <update_rate>100</update_rate>
+        <visualize>false</visualize>
+        <topic>/imu/data</topic>
+        <gz_frame_id>imu</gz_frame_id>
+      </sensor>
+    </gazebo>
+
     <!-- Velodyne LiDAR Link -->
     <link name="velodyne">
       <inertial>
@@ -69,6 +80,36 @@
       <child link="velodyne"/>
       <origin xyz="0.08 0.0 0.21" rpy="0 0 0"/>
     </joint>
+
+    <gazebo reference="velodyne">
+      <sensor name="lidar_sensor" type="gpu_lidar">
+        <always_on>true</always_on>
+        <update_rate>10</update_rate>
+        <visualize>true</visualize>
+        <topic>/scan</topic>
+        <gz_frame_id>velodyne</gz_frame_id>
+        <lidar>
+          <scan>
+            <horizontal>
+              <samples>720</samples>
+              <resolution>1</resolution>
+              <min_angle>-3.14159</min_angle>
+              <max_angle>3.14159</max_angle>
+            </horizontal>
+          </scan>
+          <range>
+            <min>0.12</min>
+            <max>20.0</max>
+            <resolution>0.01</resolution>
+          </range>
+          <noise>
+            <type>gaussian</type>
+            <mean>0.0</mean>
+            <stddev>0.01</stddev>
+          </noise>
+        </lidar>
+      </sensor>
+    </gazebo>
 
 
     <!-- Intermediate link to represent the geometry between sensor_link and cameras -->
