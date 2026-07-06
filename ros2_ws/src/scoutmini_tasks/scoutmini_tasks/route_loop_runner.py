@@ -18,6 +18,7 @@ from geometry_msgs.msg import PoseStamped
 from map_interfaces.srv import GetWaypointsByName
 from nav2_msgs.action import NavigateThroughPoses
 from rclpy.action import ActionClient
+from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
 from rclpy.qos import QoSProfile
 from std_msgs.msg import String
@@ -46,6 +47,7 @@ class RouteLoopRunner(Node):
         super().__init__('route_loop_runner')
 
         self.declare_parameter('route_name', 'route')
+        self.declare_parameter('map_name', '')
         self.declare_parameter('action_name', '/navigate_through_poses')
         self.declare_parameter('auto_start', True)
         self.declare_parameter('loop', True)
@@ -60,6 +62,9 @@ class RouteLoopRunner(Node):
 
         self.route_name = (
             self.get_parameter('route_name').get_parameter_value().string_value.strip()
+        )
+        self.initial_map_name = (
+            self.get_parameter('map_name').get_parameter_value().string_value.strip()
         )
         self.action_name = self.get_parameter('action_name').get_parameter_value().string_value
         self.auto_start = self.get_parameter('auto_start').get_parameter_value().bool_value
@@ -81,6 +86,12 @@ class RouteLoopRunner(Node):
         self.stop_event = threading.Event()
         self._route_waypoint_names: List[str] = []
         self._route_poses: List[PoseStamped] = []
+        self._route_map_name = ''
+        self._resolving_waypoints = False
+        self._last_resolve_attempt_ns = 0
+        self._resolve_request_start_ns = 0
+        self._resolve_retry_period_sec = 1.0
+        self._resolve_timeout_sec = 3.0
 
         # Subscribe to /map_name to detect map changes
         self.map_name_sub = self.create_subscription(
@@ -101,6 +112,12 @@ class RouteLoopRunner(Node):
         self._restart_timer: Optional[object] = None
 
         self.get_logger().info(f'Route loop runner initialized for route: {self.route_name}')
+        if self.initial_map_name:
+            self.current_map_name = self.initial_map_name
+            self.get_logger().info(
+                f'Using initial map from parameter: {self.initial_map_name}; loading route'
+            )
+            self._load_route_for_map(self.initial_map_name)
 
     def _map_name_sub_cb(self, msg: String) -> None:
         """Handle incoming /map_name topic and reload route for the new map.
@@ -132,6 +149,7 @@ class RouteLoopRunner(Node):
         Args:
             map_name: Name of the map to load the route for.
         """
+        self._route_map_name = map_name
         route_path = self._get_route_file_path(map_name)
 
         if not route_path.exists():
@@ -179,20 +197,26 @@ class RouteLoopRunner(Node):
 
     def _resolve_route_poses(self) -> None:
         """Query the waypoint_server service to resolve waypoint names to poses."""
-        if not self._waypoint_client.wait_for_service(timeout_sec=5.0):
-            self.get_logger().error('Waypoint service not available')
-            self._route_poses = []
+        if self._resolving_waypoints:
+            return
+
+        if not self._waypoint_client.wait_for_service(timeout_sec=0.0):
+            self.get_logger().warn('Waypoint service not available; using waypoint file fallback')
+            self._resolve_route_poses_from_file()
             return
 
         try:
             request = GetWaypointsByName.Request()
             request.waypoint_names = self._route_waypoint_names
             self.get_logger().info(f'Querying waypoint service to resolve {len(request.waypoint_names)} waypoint(s)')
+            self._resolving_waypoints = True
+            self._resolve_request_start_ns = self.get_clock().now().nanoseconds
             future = self._waypoint_client.call_async(request)
             self.get_logger().info('Waypoint service call sent; waiting for response...')
             future.add_done_callback(self._waypoint_service_cb)
 
         except Exception as exc:
+            self._resolving_waypoints = False
             self.get_logger().error(f'Failed to call waypoint service: {exc}')
             self._route_poses = []
 
@@ -202,6 +226,7 @@ class RouteLoopRunner(Node):
         Args:
             future: Service call future with GetWaypointsByName.Response.
         """
+        self._resolving_waypoints = False
         self.get_logger().info('Waypoint service response received; processing results...')
         try:
             response = future.result()
@@ -214,6 +239,7 @@ class RouteLoopRunner(Node):
                     self.get_logger().warn(msg)
                 else:
                     self.get_logger().error(msg)
+                    self._route_poses = []
             self.get_logger().info(f'Waypoint service resolved {len(self._route_poses)}/{len(self._route_waypoint_names)} waypoint(s) to poses')
 
         except Exception as exc:
@@ -221,9 +247,92 @@ class RouteLoopRunner(Node):
             self._route_poses = []
         self.get_logger().info(f'Resolved {len(self._route_poses)}/{len(self._route_waypoint_names)} waypoints to poses')   
 
+    def _resolve_route_poses_from_file(self) -> None:
+        """Resolve route waypoint names directly from the installed map waypoint JSON."""
+        if not self._route_map_name:
+            self.get_logger().error('No map name available for waypoint file fallback')
+            self._route_poses = []
+            return
+
+        waypoint_path = (
+            Path(get_package_share_directory('map_tools'))
+            / 'maps'
+            / self._route_map_name
+            / f'{self._route_map_name}_waypoints.json'
+        )
+
+        try:
+            with waypoint_path.open('r', encoding='utf-8') as stream:
+                waypoints = yaml.safe_load(stream) or []
+
+            by_name: Dict[str, dict] = {
+                str(item.get('name', '')).strip(): item
+                for item in waypoints
+                if isinstance(item, dict) and str(item.get('name', '')).strip()
+            }
+
+            poses: List[PoseStamped] = []
+            missing: List[str] = []
+            for name in self._route_waypoint_names:
+                item = by_name.get(name)
+                if item is None:
+                    missing.append(name)
+                    continue
+
+                pose = PoseStamped()
+                pose.header.frame_id = str(item.get('frame_id', 'map'))
+                pose.pose.position.x = float(item.get('x', 0.0))
+                pose.pose.position.y = float(item.get('y', 0.0))
+                pose.pose.position.z = float(item.get('z', 0.0))
+
+                orientation = item.get('orientation', {})
+                pose.pose.orientation.x = float(orientation.get('x', 0.0))
+                pose.pose.orientation.y = float(orientation.get('y', 0.0))
+                pose.pose.orientation.z = float(orientation.get('z', 0.0))
+                pose.pose.orientation.w = float(orientation.get('w', 1.0))
+                poses.append(pose)
+
+            if missing and not self.skip_missing_waypoints:
+                self.get_logger().error(f'Could not resolve waypoint(s) from file: {missing}')
+                self._route_poses = []
+                return
+
+            if missing:
+                self.get_logger().warn(f'Skipping missing waypoint(s) from file: {missing}')
+
+            self._route_poses = poses
+            self.get_logger().info(
+                f'Waypoint file resolved {len(self._route_poses)}/{len(self._route_waypoint_names)} waypoint(s)'
+            )
+
+        except Exception as exc:
+            self.get_logger().error(f'Failed waypoint file fallback from {waypoint_path}: {exc}')
+            self._route_poses = []
+
     def _tick(self) -> None:
         """Main loop tick; checks conditions and sends route goal if ready."""
-        if not self.auto_start or not self._route_poses:
+        if not self.auto_start:
+            return
+
+        if self._route_waypoint_names and not self._route_poses:
+            now_ns = self.get_clock().now().nanoseconds
+            if self._resolving_waypoints:
+                timeout_ns = int(self._resolve_timeout_sec * 1e9)
+                if now_ns - self._resolve_request_start_ns >= timeout_ns:
+                    self.get_logger().warn(
+                        'Waypoint service response timed out; using waypoint file fallback'
+                    )
+                    self._resolving_waypoints = False
+                    self._resolve_route_poses_from_file()
+                return
+
+            retry_period_ns = int(self._resolve_retry_period_sec * 1e9)
+            if now_ns - self._last_resolve_attempt_ns >= retry_period_ns:
+                self._last_resolve_attempt_ns = now_ns
+                self._resolve_route_poses()
+            return
+
+        if not self._route_poses:
             return
 
         if self._goal_active:
@@ -335,12 +444,13 @@ def main(args=None) -> None:
 
     try:
         rclpy.spin(node)
-    except KeyboardInterrupt:
+    except (KeyboardInterrupt, ExternalShutdownException):
         pass
     finally:
         node.stop()
         node.destroy_node()
-        rclpy.shutdown()
+        if rclpy.ok():
+            rclpy.shutdown()
 
 
 if __name__ == '__main__':

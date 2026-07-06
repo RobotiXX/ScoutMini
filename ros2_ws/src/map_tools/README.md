@@ -120,14 +120,24 @@ waypoints:
    - 3304
 ```
 
-Then start Nav2 with the route loop enabled:
+Save the route as `map_tools/maps/<map_name>/routes/<route_name>.yaml`, then start Nav2 with the route loop enabled:
 
 ```bash
 ros2 launch scoutmini_nav2 navigation.launch.py \
-   map:=/absolute/path/to/fuse_3rd.yaml \
    map_name:=fuse_3rd \
    use_route_loop:=true \
-   route_file:=/home/nle/repos/ScoutMini/ros2_ws/src/map_tools/maps/fuse_3rd/routes/route.yaml
+   route_name:=route1 \
+   route_loop:=true
+```
+
+For Gazebo, launch the simulator and Nav2 together. This uses Gazebo odometry (`/odom`) and skips the hardware odometry stack:
+
+```bash
+ros2 launch scoutmini_nav2 simulation_2d.launch.py \
+   map_name:=fuse_3rd \
+   use_route_loop:=true \
+   route_name:=route1 \
+   route_loop:=true
 ```
 
 ## Launch File Parameters

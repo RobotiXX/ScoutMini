@@ -34,7 +34,11 @@ class InitialPosePublisher(Node):
 
         message = PoseWithCovarianceStamped()
         message.header.frame_id = frame_id
-        message.header.stamp = self.get_clock().now().to_msg()
+        # AMCL accepts a zero stamp as the latest available transform. In Gazebo
+        # this avoids publishing an initial pose with a future /clock sample before
+        # lidar/odom messages have caught up.
+        message.header.stamp.sec = 0
+        message.header.stamp.nanosec = 0
         message.pose.pose.position.x = float(x)
         message.pose.pose.position.y = float(y)
         message.pose.pose.position.z = float(z)

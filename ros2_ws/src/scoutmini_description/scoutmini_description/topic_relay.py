@@ -10,6 +10,7 @@ class ScoutMiniTopicRelay(Node):
         self.cmd_pub = self.create_publisher(TwistStamped, '/diff_drive_controller/cmd_vel', 10)
         self.odom_pub = self.create_publisher(Odometry, '/odom', 10)
         self.create_subscription(Twist, '/cmd_vel', self.cmd_callback, 10)
+        self.create_subscription(Twist, '/cmd_vel_smoothed', self.cmd_callback, 10)
         self.create_subscription(Odometry, '/diff_drive_controller/odom', self.odom_callback, 10)
 
     def cmd_callback(self, msg):

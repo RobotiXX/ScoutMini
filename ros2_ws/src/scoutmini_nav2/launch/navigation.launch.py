@@ -11,6 +11,7 @@ from nav2_common.launch import RewrittenYaml
 def generate_launch_description():
     use_sim_time = LaunchConfiguration('use_sim_time')
     port_name = LaunchConfiguration('port_name')
+    launch_sensors_odometry = LaunchConfiguration('launch_sensors_odometry')
     map_name = LaunchConfiguration('map_name')
     # Compose the map file path from the map name to avoid two sources of truth
     map_file = PathJoinSubstitution([
@@ -26,7 +27,13 @@ def generate_launch_description():
     initial_pose_yaw = LaunchConfiguration('initial_pose_yaw')
     rviz = LaunchConfiguration('rviz')
     rviz_config_file = LaunchConfiguration('rviz_config_file')
-    # route loop runner is launched separately in the `scoutmini_tasks` package
+    use_route_loop = LaunchConfiguration('use_route_loop')
+    route_name = LaunchConfiguration('route_name')
+    route_loop = LaunchConfiguration('route_loop')
+    route_repeat_delay_sec = LaunchConfiguration('route_repeat_delay_sec')
+    route_start_delay_sec = LaunchConfiguration('route_start_delay_sec')
+    route_skip_missing_waypoints = LaunchConfiguration('route_skip_missing_waypoints')
+    route_wait_for_server_sec = LaunchConfiguration('route_wait_for_server_sec')
     nav_to_pose_bt_xml = LaunchConfiguration('nav_to_pose_bt_xml')
     nav_through_poses_bt_xml = LaunchConfiguration('nav_through_poses_bt_xml')
 
@@ -48,6 +55,7 @@ def generate_launch_description():
                 'sensors_odometry.launch.py',
             ])
         ),
+        condition=IfCondition(launch_sensors_odometry),
         launch_arguments={
             'use_sim_time': use_sim_time,
             'port_name': port_name,
@@ -122,9 +130,33 @@ def generate_launch_description():
         }],
     )
 
+    route_loop_runner_node = Node(
+        condition=IfCondition(use_route_loop),
+        package='scoutmini_tasks',
+        executable='route_loop_runner',
+        name='route_loop_runner',
+        output='screen',
+        parameters=[{
+            'route_name': route_name,
+            'action_name': '/navigate_through_poses',
+            'auto_start': True,
+            'loop': route_loop,
+            'repeat_delay_sec': route_repeat_delay_sec,
+            'start_delay_sec': route_start_delay_sec,
+            'skip_missing_waypoints': route_skip_missing_waypoints,
+            'wait_for_server_sec': route_wait_for_server_sec,
+            'use_sim_time': use_sim_time,
+        }],
+    )
+
     return LaunchDescription([
         DeclareLaunchArgument('use_sim_time', default_value='false'),
         DeclareLaunchArgument('port_name', default_value='can2'),
+        DeclareLaunchArgument(
+            'launch_sensors_odometry',
+            default_value='true',
+            description='Launch hardware Scout Mini bringup and RKO LIO odometry',
+        ),
         # # Initial pose in 3401
         # DeclareLaunchArgument('initial_pose_x', default_value='0.15'),
         # DeclareLaunchArgument('initial_pose_y', default_value='0.5'),
@@ -155,6 +187,41 @@ def generate_launch_description():
         ),
         DeclareLaunchArgument('rviz', default_value='false'),
         DeclareLaunchArgument(
+            'use_route_loop',
+            default_value='false',
+            description='Start scoutmini_tasks route_loop_runner with Nav2',
+        ),
+        DeclareLaunchArgument(
+            'route_name',
+            default_value='route1',
+            description='Route YAML basename under map_tools/maps/<map_name>/routes',
+        ),
+        DeclareLaunchArgument(
+            'route_loop',
+            default_value='true',
+            description='Repeat the selected route after Nav2 completes it',
+        ),
+        DeclareLaunchArgument(
+            'route_repeat_delay_sec',
+            default_value='1.0',
+            description='Delay before repeating a completed route',
+        ),
+        DeclareLaunchArgument(
+            'route_start_delay_sec',
+            default_value='2.0',
+            description='Delay before sending the first route goal',
+        ),
+        DeclareLaunchArgument(
+            'route_skip_missing_waypoints',
+            default_value='false',
+            description='Allow route execution when waypoint_server cannot resolve every waypoint',
+        ),
+        DeclareLaunchArgument(
+            'route_wait_for_server_sec',
+            default_value='30.0',
+            description='Warn after this many seconds waiting for the Nav2 route action server',
+        ),
+        DeclareLaunchArgument(
             'rviz_config_file',
             default_value=PathJoinSubstitution([
                 FindPackageShare('nav2_bringup'),
@@ -178,12 +245,11 @@ def generate_launch_description():
                 'navigate_through_poses_w_replanning_and_recovery.xml',
             ])
         ),
-        # Route runner is not auto-launched here; run `route_loop_runner` from the
-        # `scoutmini_tasks` package separately when desired.
         sensors_odometry,
         initial_pose_publisher,
         nav2,
         map_name_publisher_node,
         waypoint_server_node,
+        route_loop_runner_node,
         # rviz_node,
     ])
