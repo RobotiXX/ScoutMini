@@ -41,7 +41,7 @@ class WaypointCollector(Node):
         self.declare_parameter('clicked_topic', '/clicked_point')
         self.declare_parameter('marker_topic', '/map_tools/waypoints')
         self.declare_parameter('map_name', '')
-        self.declare_parameter('map_name_topic', '/map_tools/map_name')
+        self.declare_parameter('map_name_topic', '/map_name')
         self.declare_parameter('map_name_wait_timeout_sec', 5.0)
         self.declare_parameter('output_file', '')
         self.declare_parameter('interactive_naming', True)
