@@ -1,8 +1,8 @@
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, OpaqueFunction
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, OpaqueFunction, SetEnvironmentVariable
 from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import Command, FindExecutable, LaunchConfiguration, PathJoinSubstitution
+from launch.substitutions import Command, EnvironmentVariable, FindExecutable, LaunchConfiguration, PathJoinSubstitution
 from launch_ros.actions import Node
 from launch_ros.parameter_descriptions import ParameterValue
 from launch_ros.substitutions import FindPackageShare
@@ -31,6 +31,11 @@ def launch_setup(context, *args, **kwargs):
                 'worlds',
                 'warehouse.sdf',
             ]),
+            'tb3_sandbox': PathJoinSubstitution([
+                FindPackageShare('scoutmini_description'),
+                'worlds',
+                'tb3_sandbox.sdf',
+            ]),
         }
         selected_world = worlds[world].perform(context)
 
@@ -49,6 +54,10 @@ def generate_launch_description():
     model = LaunchConfiguration('model')
     use_sim_time = LaunchConfiguration('use_sim_time')
     spawn_robot = LaunchConfiguration('spawn_robot')
+    spawn_x = LaunchConfiguration('spawn_x')
+    spawn_y = LaunchConfiguration('spawn_y')
+    spawn_z = LaunchConfiguration('spawn_z')
+    spawn_yaw = LaunchConfiguration('spawn_yaw')
     bridge_config = LaunchConfiguration('bridge_config')
 
     robot_description = ParameterValue(
@@ -76,8 +85,8 @@ def generate_launch_description():
         DeclareLaunchArgument(
             'world',
             default_value='warehouse',
-            choices=['warehouse', 'empty', 'default_warehouse'],
-            description='Gazebo world to launch: warehouse, empty, or default_warehouse',
+            choices=['warehouse', 'empty', 'default_warehouse', 'tb3_sandbox'],
+            description='Gazebo world to launch: warehouse, empty, default_warehouse, or tb3_sandbox',
         ),
         DeclareLaunchArgument(
             'world_file',
@@ -89,12 +98,24 @@ def generate_launch_description():
             default_value='true',
             description='Spawn the Scout Mini robot and supporting ROS nodes into the selected world.',
         ),
+        DeclareLaunchArgument('spawn_x', default_value='0.0'),
+        DeclareLaunchArgument('spawn_y', default_value='0.0'),
+        DeclareLaunchArgument('spawn_z', default_value='0.05'),
+        DeclareLaunchArgument('spawn_yaw', default_value='0.0'),
         DeclareLaunchArgument(
             'bridge_config',
             default_value=PathJoinSubstitution(
                 [package_share, 'config', 'ros_gz_bridge.yaml']
             ),
             description='ROS-Gazebo bridge configuration file',
+        ),
+        SetEnvironmentVariable(
+            name='GZ_SIM_RESOURCE_PATH',
+            value=[
+                '/opt/ros/jazzy/share/nav2_minimal_tb3_sim/models',
+                ':',
+                EnvironmentVariable('GZ_SIM_RESOURCE_PATH', default_value=''),
+            ],
         ),
         OpaqueFunction(function=launch_setup),
         Node(
@@ -115,9 +136,10 @@ def generate_launch_description():
             arguments=[
                 '-name', 'scout_mini',
                 '-topic', 'robot_description',
-                '-x', '0.0',
-                '-y', '0.0',
-                '-z', '0.05',
+                '-x', spawn_x,
+                '-y', spawn_y,
+                '-z', spawn_z,
+                '-Y', spawn_yaw,
             ],
             output='screen',
         ),

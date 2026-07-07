@@ -6,7 +6,7 @@
             <inertial>
                 <mass value="3" />
                 <origin xyz="0 0 0" />
-                <inertia ixx="0.7171" ixy="0" ixz="0" iyy="0.7171" iyz="0" izz="0.1361" />
+                <inertia ixx="0.00756" ixy="0" ixz="0" iyy="0.00756" iyz="0" izz="0.01148" />
             </inertial>
             <visual>
                 <origin xyz="0 0 0" rpy="0 0 0" />
@@ -19,8 +19,7 @@
                 xyz="0 0 0"
                 rpy="0 0 0" />
               <geometry>
-                <mesh
-                  filename="file://$(find scoutmini_description)/meshes/wheel.dae" />
+                <cylinder radius="${wheel_radius}" length="${wheel_length}"/>
               </geometry>
             </collision>
         </link>
@@ -33,10 +32,10 @@
         </joint>
 
         <gazebo reference="${wheel_prefix}_wheel_link">
-            <mu1 value="1.0"/>
-            <mu2 value="0.08"/>
+            <mu1 value="1.5"/>
+            <mu2 value="0.8"/>
             <slip1 value="0.0"/>
-            <slip2 value="0.4"/>
+            <slip2 value="0.0"/>
             <kp value="500000.0"/>
             <kd value="20.0"/>
             <minDepth value="0.001"/>

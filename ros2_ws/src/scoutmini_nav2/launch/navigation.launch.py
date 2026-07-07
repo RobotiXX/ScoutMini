@@ -41,6 +41,7 @@ def generate_launch_description():
         source_file=params_file,
         param_rewrites={
             'use_sim_time': use_sim_time,
+            'yaml_filename': map_file,
             'default_nav_to_pose_bt_xml': nav_to_pose_bt_xml,
             'default_nav_through_poses_bt_xml': nav_through_poses_bt_xml,
         },
