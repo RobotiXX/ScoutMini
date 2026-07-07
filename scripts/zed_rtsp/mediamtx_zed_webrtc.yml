@@ -1,0 +1,49 @@
+logLevel: info
+logDestinations: [stdout]
+
+api: false
+metrics: false
+pprof: false
+playback: false
+
+# image2rtsp owns port 8554. MediaMTX only proxies that stream to WebRTC here.
+rtsp: false
+rtmp: false
+hls: false
+srt: false
+moq: false
+
+webrtc: true
+webrtcAddress: :8889
+webrtcEncryption: false
+webrtcAllowOrigins: ["*"]
+webrtcLocalUDPAddress: :8189
+webrtcLocalTCPAddress: ""
+webrtcIPsFromInterfaces: true
+webrtcIPsFromInterfacesList: []
+webrtcAdditionalHosts: []
+webrtcICEServers2: []
+webrtcHandshakeTimeout: 10s
+webrtcTrackGatherTimeout: 2s
+
+authMethod: internal
+authInternalUsers:
+  - user: any
+    pass:
+    ips: []
+    permissions:
+      - action: read
+        path: zed
+
+pathDefaults:
+  source: publisher
+  sourceOnDemand: true
+  sourceOnDemandStartTimeout: 10s
+  sourceOnDemandCloseAfter: 10s
+  rtspTransport: tcp
+
+paths:
+  zed:
+    source: rtsp://127.0.0.1:8554/zed
+    sourceOnDemand: true
+    rtspTransport: tcp
