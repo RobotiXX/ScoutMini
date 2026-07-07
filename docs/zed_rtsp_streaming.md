@@ -41,6 +41,7 @@ SSH tunnel viewer:
 - ZED SDK version: `5.2.2`
 - ZED camera: ZED 2 on USB, with `/dev/video0` and `/dev/video1`
 - One-command robot start script: `./scripts/zed_rtsp/start_zed_rtsp_stack.sh`
+- Optional autostart installer: not present in this checkout.
 
 The `image2rtsp` configuration should contain:
 
@@ -53,9 +54,15 @@ port:             "8554"
 local_only:       False
 ```
 
+## Autostart Status
+
+This checkout does not currently include an autostart installer for the RTSP or
+WebRTC stack. Keep using the manual scripts until the lab explicitly approves a
+systemd user service or another startup mechanism.
+
 ## Start the Robot Stream Manually
 
-Run this on the robot:
+Use this for the current manual workflow:
 
 ```bash
 cd /home/nvidia/repos/ScoutMini
@@ -149,6 +156,98 @@ If local port `18554` is already in use, choose another local port:
 LOCAL_PORT=18555 ./scripts/zed_rtsp/view_zed_rtsp_ssh_tunnel.sh nvidia@192.168.0.159
 ```
 
+## WebRTC Browser Viewer
+
+Use this after the RTSP stream works. The WebRTC gateway keeps RTSP available
+for debugging, then proxies `rtsp://127.0.0.1:8554/zed` to MediaMTX WebRTC on
+port `8889`.
+
+Current repo files:
+
+- Local MediaMTX installer: `scripts/zed_rtsp/install_mediamtx_local.sh`
+- MediaMTX config: `scripts/zed_rtsp/mediamtx_zed_webrtc.yml`
+- WebRTC stack script: `scripts/zed_rtsp/start_zed_webrtc_stack.sh`
+- Bounded smoke test: `scripts/zed_rtsp/smoke_test_zed_webrtc_stack.sh`
+- Stop helper: `scripts/zed_rtsp/stop_zed_stream_stack.sh`
+- Diagnostics script: `scripts/zed_rtsp/check_zed_stream_stack.sh`
+- Diagnostics bundle: `scripts/zed_rtsp/collect_zed_stream_diagnostics.sh`
+- ZED bag helper: `scripts/zed_rtsp/record_zed_debug_bag.sh`
+- Tailscale setup note: `scripts/zed_rtsp/tailscale_robot_setup.md`
+- Optional local helper page: `scripts/zed_rtsp/viewer/zed_webrtc_viewer.html`
+
+Install MediaMTX only after robot-owner approval. The local installer keeps the
+downloaded archive and extracted binary under `scripts/zed_rtsp/tools/`, which
+is ignored by git:
+
+```bash
+cd /home/nvidia/repos/ScoutMini
+./scripts/zed_rtsp/install_mediamtx_local.sh
+```
+
+Once the local MediaMTX binary exists, start the ZED RTSP stream plus WebRTC
+gateway:
+
+```bash
+cd /home/nvidia/repos/ScoutMini
+./scripts/zed_rtsp/start_zed_webrtc_stack.sh
+```
+
+For a bounded local smoke test that starts the stack, checks the viewer
+endpoint, and exits:
+
+```bash
+./scripts/zed_rtsp/smoke_test_zed_webrtc_stack.sh
+```
+
+Then open this from a browser on a reachable machine:
+
+```text
+http://<robot-ip-or-tailscale-ip>:8889/zed/
+```
+
+If the RTSP stack is already running and you only want to start the WebRTC
+gateway:
+
+```bash
+START_RTSP=0 ./scripts/zed_rtsp/start_zed_webrtc_stack.sh
+```
+
+If WebRTC loads but video never connects across Tailscale or another private
+network, first confirm TCP reachability to `8889`. Then check whether UDP
+`8189` is blocked. MediaMTX advertises interface IPs by default; if ICE
+candidate selection is wrong, add the private robot IP to
+`webrtcAdditionalHosts` in `scripts/zed_rtsp/mediamtx_zed_webrtc.yml`.
+
+Do not expose ports `8554`, `8889`, or `8189` to the public internet in this
+setup. Use lab LAN, SSH tunneling, or Tailscale-approved private access.
+
+## Tailscale Private Access
+
+Tailscale is the next step after LAN WebRTC works. This robot currently needs
+an interactive `sudo` terminal for installation/authentication, so use the
+dedicated setup note:
+
+```bash
+less scripts/zed_rtsp/tailscale_robot_setup.md
+```
+
+After Tailscale is installed and authenticated, open the same WebRTC endpoint
+with the robot's Tailscale IP:
+
+```text
+http://<robot-tailscale-ip>:8889/zed/
+```
+
+Current verified robot endpoint:
+
+```text
+http://100.78.242.13:8889/zed/
+```
+
+This endpoint was verified from the laptop over Tailscale on July 1, 2026. A
+browser "Not secure" label is expected because this phase uses plain HTTP
+inside the private tailnet.
+
 ## Check the Stream
 
 Run on the robot:
@@ -178,6 +277,31 @@ echo "RTSP port:"
 ss -ltnp | grep ':8554' || true
 ```
 
+Or run the project helper:
+
+```bash
+./scripts/zed_rtsp/check_zed_stream_stack.sh
+```
+
+For a support bundle with Tailscale, SSH, stream ports, ROS topic visibility,
+and recent ROS log pointers:
+
+```bash
+./scripts/zed_rtsp/collect_zed_stream_diagnostics.sh
+```
+
+To stop the streaming stack:
+
+```bash
+./scripts/zed_rtsp/stop_zed_stream_stack.sh
+```
+
+To record a short bag for offline camera/perception debugging:
+
+```bash
+DURATION_SECONDS=60 ./scripts/zed_rtsp/record_zed_debug_bag.sh
+```
+
 From a viewer laptop, test connectivity:
 
 ```bash
@@ -187,6 +311,9 @@ nc -vz 192.168.0.159 8554
 ## Permissions
 
 - Runtime start/stop does not require `sudo`.
+- Any future autostart setup requires approval. A systemd user service would
+  likely also require `sudo loginctl enable-linger nvidia` if the stream should
+  start after boot before login.
 - The robot user must be able to access the ZED camera. The `nvidia` user is
   expected to be in `video`, `render`, and `zed`.
 - A fresh setup needs `sudo` for GStreamer and RTSP development packages.
