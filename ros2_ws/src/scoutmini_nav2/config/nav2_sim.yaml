@@ -140,11 +140,11 @@ controller_server:
       debug_trajectory_details: True
       min_vel_x: 0.0
       min_vel_y: 0.0
-      max_vel_x: 0.5
+      max_vel_x: 1.0
       max_vel_y: 0.0
       max_vel_theta: 1.0
       min_speed_xy: 0.0
-      max_speed_xy: 0.5
+      max_speed_xy: 1.0
       min_speed_theta: 0.0
       acc_lim_x: 2.5
       acc_lim_y: 0.0
@@ -223,7 +223,7 @@ local_costmap:
 
       inflation_layer:
         plugin: 'nav2_costmap_2d::InflationLayer'
-        inflation_radius: 0.5
+        inflation_radius: 0.7
         cost_scaling_factor: 3.0
 
 global_costmap:
@@ -258,7 +258,7 @@ global_costmap:
 
       inflation_layer:
         plugin: 'nav2_costmap_2d::InflationLayer'
-        inflation_radius: 0.5
+        inflation_radius: 0.7
         cost_scaling_factor: 3.0
 
 map_server:

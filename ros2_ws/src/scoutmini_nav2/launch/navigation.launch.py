@@ -252,5 +252,5 @@ def generate_launch_description():
         map_name_publisher_node,
         waypoint_server_node,
         route_loop_runner_node,
-        # rviz_node,
+        rviz_node,
     ])

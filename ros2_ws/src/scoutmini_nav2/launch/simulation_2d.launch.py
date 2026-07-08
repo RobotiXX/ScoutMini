@@ -104,7 +104,7 @@ def generate_launch_description():
         DeclareLaunchArgument('port_name', default_value='can2'),
         DeclareLaunchArgument(
             'world',
-            default_value='warehouse',
+            default_value='default_warehouse',
             choices=['warehouse', 'empty', 'default_warehouse', 'tb3_sandbox'],
             description='Gazebo world to launch',
         ),
@@ -122,11 +122,11 @@ def generate_launch_description():
         DeclareLaunchArgument('spawn_y', default_value='0.0'),
         DeclareLaunchArgument('spawn_z', default_value='0.05'),
         DeclareLaunchArgument('spawn_yaw', default_value='0.0'),
-        DeclareLaunchArgument('map_name', default_value='fuse_3rd'),
-        DeclareLaunchArgument('initial_pose_x', default_value='13.7'),
-        DeclareLaunchArgument('initial_pose_y', default_value='26.0'),
+        DeclareLaunchArgument('map_name', default_value='warehouse'),
+        DeclareLaunchArgument('initial_pose_x', default_value='0.0'),
+        DeclareLaunchArgument('initial_pose_y', default_value='0.0'),
         DeclareLaunchArgument('initial_pose_z', default_value='0.0'),
-        DeclareLaunchArgument('initial_pose_yaw', default_value='-2.02'),
+        DeclareLaunchArgument('initial_pose_yaw', default_value='0.0'),
         DeclareLaunchArgument(
             'params_file',
             default_value=PathJoinSubstitution([
