@@ -32,10 +32,14 @@
         </joint>
 
         <gazebo reference="${wheel_prefix}_wheel_link">
-            <mu1 value="1.5"/>
-            <mu2 value="0.8"/>
+            <!-- Align ODE's primary friction direction with the wheel rolling axis.
+                 This keeps the friction pyramid from locking to world cardinal axes
+                 during skid-steer turns. -->
+            <fdir1 value="1 0 0"/>
+            <mu1 value="0.8"/>
+            <mu2 value="0.2"/>
             <slip1 value="0.0"/>
-            <slip2 value="0.0"/>
+            <slip2 value="0.1"/>
             <kp value="500000.0"/>
             <kd value="20.0"/>
             <minDepth value="0.001"/>

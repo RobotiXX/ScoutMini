@@ -27,9 +27,9 @@ def launch_setup(context, *args, **kwargs):
                 'empty_with_sensors.sdf',
             ]),
             'default_warehouse': PathJoinSubstitution([
-                FindPackageShare('nav2_minimal_tb4_sim'),
+                FindPackageShare('scoutmini_description'),
                 'worlds',
-                'warehouse.sdf',
+                'turtlebot4_warehouse.sdf',
             ]),
             'tb3_sandbox': PathJoinSubstitution([
                 FindPackageShare('scoutmini_description'),
@@ -112,7 +112,9 @@ def generate_launch_description():
         SetEnvironmentVariable(
             name='GZ_SIM_RESOURCE_PATH',
             value=[
-                '/opt/ros/jazzy/share/nav2_minimal_tb3_sim/models',
+                PathJoinSubstitution([package_share, 'worlds']),
+                ':',
+                PathJoinSubstitution([package_share, 'meshes']),
                 ':',
                 EnvironmentVariable('GZ_SIM_RESOURCE_PATH', default_value=''),
             ],

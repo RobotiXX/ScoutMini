@@ -63,7 +63,7 @@
     <model name="turtlebot3_world">
       <static>true</static>
       <include>
-        <uri>file:///opt/ros/jazzy/share/nav2_minimal_tb3_sim/models/turtlebot3_world</uri>
+        <uri>model://turtlebot3_world</uri>
       </include>
     </model>
   </world>

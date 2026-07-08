@@ -15,9 +15,10 @@ class ScoutMiniTopicRelay(Node):
 
     def cmd_callback(self, msg):
         stamped = TwistStamped()
-        # Jazzy's diff_drive_controller treats a zero stamp as current controller time.
-        # This avoids command timeout loops from relay/controller clock skew in simulation.
+        # Stamp commands with the current ROS time so Humble's diff_drive_controller
+        # does not treat relayed commands as stale.
         stamped.header.frame_id = 'base_footprint'
+        stamped.header.stamp = self.get_clock().now().to_msg()
         stamped.twist = msg
         self.cmd_pub.publish(stamped)
 
