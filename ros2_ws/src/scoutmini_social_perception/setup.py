@@ -34,6 +34,7 @@ setup(
             'adascore_people_adapter = scoutmini_social_perception.adascore_people_adapter_node:main',
             'perception_benchmark = scoutmini_social_perception.perception_benchmark_node:main',
             'adascore_readiness_check = scoutmini_social_perception.adascore_readiness_check:main',
+            'adascore_preflight_check = scoutmini_social_perception.adascore_preflight_check:main',
         ],
     },
 )

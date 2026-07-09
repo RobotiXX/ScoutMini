@@ -58,6 +58,15 @@ ros2 run scoutmini_social_perception adascore_readiness_check \
   --yolo-engine-path /home/nvidia/models/yolo/yolo11n.engine
 ```
 
+For a read-only live ROS graph preflight before AdaSCoRe/Nav2 dry integration:
+
+```bash
+ros2 run scoutmini_social_perception adascore_preflight_check
+```
+
+This reports required topic availability and flags visible motion-command
+topics. It does not publish, launch Nav2, or mark motion safe.
+
 ## AdaSCoRe Boundary
 
 The AdaSCoRe adapter is disabled by default. The inspected AdaSCoRe `humble`

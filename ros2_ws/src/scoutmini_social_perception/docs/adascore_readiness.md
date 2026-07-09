@@ -187,6 +187,16 @@ Required live topics:
 /map
 ```
 
+Read-only preflight:
+
+```bash
+ros2 run scoutmini_social_perception adascore_preflight_check
+```
+
+The preflight reports missing required topics and flags motion-command topics
+such as `/cmd_vel` if they are visible. It never reports that robot motion is
+safe; controlled motion remains a separate Phase 7 decision.
+
 ## Phase 7: Controlled Motion Gate
 
 Only run after all prior gates pass.

@@ -252,3 +252,19 @@ Result:
 - Added separate `.repos` manifests for `people_msgs`-only import and full upstream AdaSCoRe import.
 - Added manifest parsing coverage to confirm the expected People `ros2` branch and AdaSCoRe `humble` branch are pinned.
 - Dependency install instructions remain separate-workspace only; no AdaSCoRe source was vendored into ScoutMini.
+
+AdaSCoRe/Nav2 graph preflight gate:
+
+```bash
+ros2 run scoutmini_social_perception adascore_preflight_check --settle-sec 1.0
+```
+
+Result on the current robot graph:
+
+- Test suite passed with 14 tests.
+- Build passed.
+- Preflight observed 124 topics.
+- Required topics present: `/tf`, `/rko_lio/odometry`, `/scan`, `/map`.
+- Required topic missing: `/people`.
+- Motion topic present: `/cmd_vel`.
+- `summary.safe_to_start_motion` is always false by design; this command is read-only and cannot authorize motion.

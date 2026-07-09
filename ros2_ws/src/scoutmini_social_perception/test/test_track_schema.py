@@ -9,6 +9,7 @@ from scoutmini_social_perception.adascore_people_adapter_node import (
     _person_yaw,
     should_publish_people_msg,
 )
+from scoutmini_social_perception.adascore_preflight_check import evaluate_topics
 from scoutmini_social_perception.adascore_readiness_check import build_report
 from scoutmini_social_perception.people_projection_node import estimate_person_range
 from scoutmini_social_perception.track_schema import (
@@ -184,3 +185,27 @@ def test_dependency_manifests_are_parseable_and_pin_expected_branches():
     assert repos['adascore']['version'] == 'humble'
     assert repos['hunav/people']['version'] == 'ros2'
     assert repos['hunav/hunav_sim']['version'] == 'humble'
+
+
+def test_adascore_preflight_reports_missing_required_topics():
+    report = evaluate_topics(['/people', '/tf'], required_topics=['/people', '/tf', '/map'])
+
+    assert report['required_topics']['/people']
+    assert report['required_topics']['/tf']
+    assert not report['required_topics']['/map']
+    assert report['missing_required_topics'] == ['/map']
+    assert not report['summary']['required_topics_available']
+    assert not report['summary']['safe_to_start_motion']
+
+
+def test_adascore_preflight_flags_motion_topics_and_normalizes_names():
+    report = evaluate_topics(
+        ['people', '/tf', '/map', '/cmd_vel'],
+        required_topics=['/people', 'tf', 'map'],
+        motion_topics=['cmd_vel'],
+    )
+
+    assert report['summary']['required_topics_available']
+    assert report['summary']['motion_topics_detected']
+    assert report['motion_topics_present'] == ['/cmd_vel']
+    assert not report['summary']['safe_to_start_motion']
