@@ -128,6 +128,16 @@ ros2 run scoutmini_social_perception adascore_readiness_check
 
 Goal: publish valid AdaSCoRe people messages while keeping robot motion disabled.
 
+Dry run without AdaSCoRe dependencies:
+
+```bash
+ros2 launch scoutmini_social_perception adascore_dry_run.launch.py
+ros2 topic echo /adascore/dry_run/people
+ros2 topic echo /adascore/people_debug
+```
+
+The dry run uses fake projected people, isolated dry-run frames, an identity static transform, and JSON output. It should pass before `people_msgs` output is attempted. Use `target_frame:=map source_frame:=base_link` only when intentionally testing the live robot TF path.
+
 Launch:
 
 ```bash

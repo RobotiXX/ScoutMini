@@ -47,6 +47,24 @@ Do not publish base-link-relative projected coordinates to `/people` for AdaSCoR
 
 The package includes `people_frame_transform`, which converts `/people/projected` into `/people/projected_map` with TF. The AdaSCoRe adapter launch includes that node and feeds the transformed topic into the adapter.
 
+## Dry run
+
+Use the dry-run launch to verify the ScoutMini-side data path without camera input, YOLO, `people_msgs`, AdaSCoRe, or robot motion:
+
+```bash
+ros2 launch scoutmini_social_perception adascore_dry_run.launch.py
+```
+
+The launch publishes fake projected people in `adascore_dry_base_link`, starts an identity static transform to `adascore_dry_map`, transforms the people onto `/people/projected_map`, and mirrors the adapter output as JSON on `/adascore/dry_run/people`. The isolated dry-run frames avoid collisions with a live robot TF tree.
+
+To test the exact AdaSCoRe topic after confirming no real AdaSCoRe controller is consuming it:
+
+```bash
+ros2 launch scoutmini_social_perception adascore_dry_run.launch.py adascore_people_topic:=/people
+```
+
+To intentionally test the live robot TF path, add `target_frame:=map source_frame:=base_link`.
+
 ## Remaining integration work
 
 - Install or vendor AdaSCoRe dependencies in a deliberate integration phase, not inside this package.

@@ -191,3 +191,18 @@ Result:
 - `/home/nvidia/models/yolo/yolo11n.engine` does not exist.
 - TensorRT is installed, but `yolo_gpu_execution_ready` is false because CUDA PyTorch is unavailable and no default TensorRT engine artifact exists.
 - AdaSCoRe dependencies remain unavailable according to the checker.
+
+AdaSCoRe dry-run launch:
+
+```bash
+ros2 launch scoutmini_social_perception adascore_dry_run.launch.py
+ros2 topic echo --once --full-length /adascore/dry_run/people
+ros2 topic echo --once --full-length /adascore/people_debug
+```
+
+Result:
+
+- Dry run launched fake projected people, a static identity TF between isolated dry-run frames, `people_frame_transform`, and the adapter in `json_debug` mode.
+- `/adascore/dry_run/people` published JSON with `frame_id: "adascore_dry_map"` and two fake people.
+- `/adascore/people_debug` reported `enabled: true`, `output_message_type: "json_debug"`, `frame_id: "adascore_dry_map"`, `adascore_frame_id: "adascore_dry_map"`, `people_count: 2`, and `people_msgs_available: false`.
+- The dry run intentionally avoids the live `map`/`base_link` TF tree by default; use `target_frame:=map source_frame:=base_link` only for an intentional live-TF check.

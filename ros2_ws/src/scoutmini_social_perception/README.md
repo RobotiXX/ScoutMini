@@ -61,3 +61,28 @@ launch includes a TF-backed `people_frame_transform` node so AdaSCoRe receives
 people in `map`, not base-link-relative projection coordinates.
 
 See `docs/adascore_interface_notes.md` before enabling `people_msgs` output.
+
+## AdaSCoRe Dry Run
+
+To test the ScoutMini side of the AdaSCoRe people path without camera input,
+YOLO, AdaSCoRe, `people_msgs`, or robot motion:
+
+```bash
+ros2 launch scoutmini_social_perception adascore_dry_run.launch.py
+```
+
+Expected topics:
+
+- `/people/projected`
+- `/people/projected_map`
+- `/adascore/dry_run/people`
+- `/adascore/people_debug`
+
+The dry run publishes JSON to `/adascore/dry_run/people` by default. Override
+`adascore_people_topic:=/people` only when intentionally testing the real
+AdaSCoRe topic.
+
+The default dry-run frames are `adascore_dry_map` and
+`adascore_dry_base_link` so the launch does not collide with a live robot TF
+tree. Override `target_frame:=map source_frame:=base_link` only when
+intentionally testing against the robot's current TF.

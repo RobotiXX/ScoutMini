@@ -15,6 +15,7 @@ def generate_launch_description():
     output_message_type = LaunchConfiguration('output_message_type')
     adascore_people_topic = LaunchConfiguration('adascore_people_topic')
     adascore_frame_id = LaunchConfiguration('adascore_frame_id')
+    require_frame_match = LaunchConfiguration('require_frame_match')
     input_topic = LaunchConfiguration('input_topic')
     projected_map_topic = LaunchConfiguration('projected_map_topic')
 
@@ -38,6 +39,11 @@ def generate_launch_description():
             'adascore_frame_id',
             default_value='map',
             description='Required frame for AdaSCoRe people output',
+        ),
+        DeclareLaunchArgument(
+            'require_frame_match',
+            default_value='true',
+            description='Drop people_msgs output unless incoming people are in adascore_frame_id',
         ),
         DeclareLaunchArgument(
             'input_topic',
@@ -76,6 +82,7 @@ def generate_launch_description():
                     'output_message_type': output_message_type,
                     'adascore_people_topic': adascore_people_topic,
                     'adascore_frame_id': adascore_frame_id,
+                    'require_frame_match': ParameterValue(require_frame_match, value_type=bool),
                 },
             ],
         ),
