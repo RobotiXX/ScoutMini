@@ -137,6 +137,9 @@ Dry run without AdaSCoRe dependencies:
 
 ```bash
 ros2 launch scoutmini_social_perception adascore_dry_run.launch.py
+ros2 launch scoutmini_social_perception adascore_dry_run.launch.py \
+  output_message_type:=people_msgs \
+  adascore_people_topic:=/adascore/dry_run/people_msg
 ros2 topic echo /adascore/dry_run/people
 ros2 topic echo /adascore/people_debug
 ```

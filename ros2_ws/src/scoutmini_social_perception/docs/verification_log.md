@@ -301,3 +301,23 @@ Result on the current robot graph:
 - The preflight reported the expected `/people` type as `people_msgs/msg/People`.
 - `/cmd_vel` was visible, so `summary.motion_topics_detected` was true.
 - `summary.safe_to_start_motion` remained false.
+
+Real `people_msgs` adapter dry run:
+
+```bash
+source /opt/ros/humble/setup.bash
+source /home/nvidia/adascore_ws/install/setup.bash
+source /home/nvidia/repos/ScoutMini-rohan-work/ros2_ws/install/setup.bash
+ros2 launch scoutmini_social_perception adascore_dry_run.launch.py \
+  output_message_type:=people_msgs \
+  adascore_people_topic:=/adascore/dry_run/people_msg
+```
+
+Result:
+
+- `people_msgs` built successfully in `/home/nvidia/adascore_ws`.
+- `ros2 interface show people_msgs/msg/People` and `people_msgs/msg/Person` matched the adapter contract.
+- `/adascore/dry_run/people_msg` published type `people_msgs/msg/People`.
+- The message contained two fake people in `frame_id: adascore_dry_map` with x/y/yaw, velocity, reliability, and adapter tags.
+- `/adascore/people_debug` reported `output_message_type: "people_msgs"` and `people_msgs_available: true`.
+- This remained a no-motion dry run on `/adascore/dry_run/people_msg`, not `/people`.

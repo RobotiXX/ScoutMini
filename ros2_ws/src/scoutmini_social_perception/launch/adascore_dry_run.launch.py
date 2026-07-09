@@ -17,6 +17,7 @@ def generate_launch_description():
     projected_topic = LaunchConfiguration('projected_topic')
     projected_map_topic = LaunchConfiguration('projected_map_topic')
     adascore_people_topic = LaunchConfiguration('adascore_people_topic')
+    output_message_type = LaunchConfiguration('output_message_type')
     publish_rate_hz = LaunchConfiguration('publish_rate_hz')
 
     return LaunchDescription([
@@ -47,6 +48,11 @@ def generate_launch_description():
                 'Dry-run AdaSCoRe-facing JSON topic; use /people only when intentionally '
                 'testing that topic'
             ),
+        ),
+        DeclareLaunchArgument(
+            'output_message_type',
+            default_value='json_debug',
+            description='Adapter output type: json_debug or people_msgs',
         ),
         DeclareLaunchArgument(
             'publish_rate_hz',
@@ -108,7 +114,7 @@ def generate_launch_description():
                 {
                     'enabled': True,
                     'projected_topic': projected_map_topic,
-                    'output_message_type': 'json_debug',
+                    'output_message_type': output_message_type,
                     'adascore_people_topic': adascore_people_topic,
                     'adascore_frame_id': target_frame,
                     'require_frame_match': True,
