@@ -23,6 +23,8 @@ setup(
         'console_scripts': [
             'route_loop_runner = scoutmini_tasks.route_loop_runner:main',
             'slack_gateway = scoutmini_tasks.slack_gateway:main',
+            'slack_status_poster = scoutmini_tasks.slack_status_poster:main',
+            'slack_command_bot = scoutmini_tasks.slack_command_bot:main',
         ],
     },
 )
