@@ -1,6 +1,7 @@
 route_loop_runner:
   ros__parameters:
     route_name: "route1"
-    loop: false
+    auto_start: true
+    start_delay_sec: 0.0
     skip_missing_waypoints: false
     wait_for_server_sec: 10.0
