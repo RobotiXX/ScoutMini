@@ -1,0 +1,76 @@
+fake_people_detector:
+  ros__parameters:
+    publish_rate_hz: 10.0
+    output_topic: /people/tracks
+    marker_topic: /people/markers
+    frame_id: base_link
+
+yolo_people_detector:
+  ros__parameters:
+    image_topic: /equirectangular/image
+    detections_topic: /people/detections_2d
+    debug_image_topic: /people/debug_image
+    marker_topic: /people/detections_2d/markers
+    metrics_topic: /people/detector_metrics
+    model_path: ''
+    device: cpu
+    confidence_threshold: 0.35
+    iou_threshold: 0.45
+    target_fps: 8.0
+    imgsz: 640
+    enable_tracking: false
+    tracker_config: bytetrack.yaml
+    publish_debug_image: true
+    frame_id: camera_360
+    person_class_id: 0
+
+people_tracker:
+  ros__parameters:
+    detections_topic: /people/detections_2d
+    tracks_topic: /people/tracks_2d
+    marker_topic: /people/tracks_2d/markers
+    max_match_pixel_distance: 120.0
+    track_timeout_sec: 0.75
+    frame_id: camera_360
+
+people_projection:
+  ros__parameters:
+    tracks_topic: /people/tracks_2d
+    projected_topic: /people/projected
+    marker_topic: /people/projected/markers
+    source_frame: camera_360
+    output_frame: base_link
+    equirectangular_center_x_norm: 0.5
+    bearing_offset_rad: 0.0
+    fixed_range_m: 3.0
+    range_mode: fixed_distance_debug
+    assumed_person_height_m: 1.7
+    stale_timeout_sec: 0.75
+
+people_frame_transform:
+  ros__parameters:
+    input_topic: /people/projected
+    output_topic: /people/projected_map
+    marker_topic: /people/projected_map/markers
+    target_frame: map
+    tf_timeout_sec: 0.05
+    use_latest_tf: true
+
+adascore_people_adapter:
+  ros__parameters:
+    projected_topic: /people/projected_map
+    adascore_people_topic: /people
+    debug_topic: /adascore/people_debug
+    enabled: false
+    output_message_type: json_debug
+    adascore_frame_id: map
+    require_frame_match: true
+
+perception_benchmark:
+  ros__parameters:
+    topics:
+      - /people/detector_metrics
+      - /people/detections_2d
+      - /people/tracks_2d
+      - /people/projected
+    report_rate_hz: 1.0
