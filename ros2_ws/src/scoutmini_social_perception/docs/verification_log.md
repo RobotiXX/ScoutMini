@@ -131,3 +131,34 @@ Result:
 - `/people/detector_metrics` published with `device: "cpu"`, `target_fps: 2.0`, `imgsz: 512`, `confidence_threshold: 0.35`, `iou_threshold: 0.45`, and `publish_debug_image: false`.
 - The benchmark node observed `/people/detector_metrics`, `/people/detections_2d`, `/people/tracks_2d`, and `/people/projected` publishing during bag playback.
 - ROS 2 bag and topic commands must run outside Codex's network sandbox; sandboxed runs can report DDS socket errors or hang waiting for topic traffic.
+
+AdaSCoRe dependency gate:
+
+```bash
+ros2 interface show people_msgs/msg/People
+ros2 pkg list | rg 'adascore|people_msgs|hunav|social_force|nav2_controller|tf2_ros'
+python3 -c "import torch; print(torch.__version__); print(torch.cuda.is_available()); print(torch.version.cuda)"
+python3 -c "import tensorrt; print(tensorrt.__version__)"
+```
+
+Result:
+
+- `people_msgs` is not installed.
+- AdaSCoRe, HuNavSim, and social-force planner packages are not installed.
+- `nav2_controller`, `tf2_ros`, and `tf2_ros_py` are installed.
+- PyTorch is still CPU-only: `2.6.0+cpu`, CUDA unavailable.
+- TensorRT Python import works: `10.3.0`.
+
+Adapter missing-dependency smoke:
+
+```bash
+timeout 8s ros2 launch scoutmini_social_perception adascore_adapter_pipeline.launch.py \
+  enabled:=true \
+  output_message_type:=people_msgs \
+  adascore_frame_id:=map
+```
+
+Result:
+
+- The adapter logged the expected error that `people_msgs` is missing.
+- This is the correct fail-closed behavior before Phase 5 can publish real AdaSCoRe people messages.
