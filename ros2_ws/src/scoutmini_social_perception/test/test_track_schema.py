@@ -16,6 +16,7 @@ from scoutmini_social_perception.adascore_preflight_check import (
 )
 from scoutmini_social_perception.adascore_readiness_check import build_report
 from scoutmini_social_perception.people_projection_node import estimate_person_range
+from scoutmini_social_perception.perception_bag_validate import evaluate_report
 from scoutmini_social_perception.track_schema import (
     bearing_from_equirectangular,
     make_image_markers,
@@ -223,6 +224,55 @@ def test_adascore_preflight_flags_motion_topics_and_normalizes_names():
     assert preflight_exit_code(report, fail_on_missing=True) == 0
 
 
+def test_perception_bag_validation_gates_counts_and_frames():
+    report = {
+        'topics': {
+            '/people/projected': {
+                'messages': 4,
+                'nonempty_messages': 2,
+                'frame_ids': ['adascore_bag_map'],
+            },
+            '/adascore/shadow/people': {
+                'messages': 3,
+                'nonempty_messages': 1,
+                'frame_ids': ['adascore_bag_map'],
+            },
+        }
+    }
+
+    passed, failures = evaluate_report(
+        report,
+        min_messages={'/people/projected': 1, '/adascore/shadow/people': 1},
+        min_nonempty={'/adascore/shadow/people': 1},
+        required_frames={'/adascore/shadow/people': 'adascore_bag_map'},
+    )
+
+    assert passed
+    assert failures == []
+
+
+def test_perception_bag_validation_reports_failures():
+    report = {
+        'topics': {
+            '/adascore/shadow/people': {
+                'messages': 0,
+                'nonempty_messages': 0,
+                'frame_ids': [],
+            },
+        }
+    }
+
+    passed, failures = evaluate_report(
+        report,
+        min_messages={'/adascore/shadow/people': 1},
+        min_nonempty={'/adascore/shadow/people': 1},
+        required_frames={'/adascore/shadow/people': 'adascore_bag_map'},
+    )
+
+    assert not passed
+    assert len(failures) == 3
+
+
 def test_adascore_preflight_fails_wrong_people_topic_type():
     report = evaluate_topics(
         ['/people', '/tf', '/map'],
@@ -241,3 +291,29 @@ def test_parse_expected_type_accepts_topic_equals_type_list():
 
     assert topic == '/people'
     assert types == ['people_msgs/msg/People', 'std_msgs/msg/String']
+
+
+def test_shadow_controller_config_uses_social_force_and_shadow_people():
+    config = yaml.safe_load((PACKAGE_ROOT / 'config' / 'adascore_shadow_controller.yaml').read_text())
+    params = config['controller_server']['ros__parameters']
+    follow_path = params['FollowPath']
+    sensor_interface = follow_path['sensor_interface']
+
+    assert params['controller_plugins'] == ['FollowPath']
+    assert follow_path['plugin'] == 'social_force_window_planner::SFWPlannerNode'
+    assert follow_path['controller_frame'] == 'odom'
+    assert follow_path['robot_base_frame'] == 'base_link'
+    assert sensor_interface['people_topic'] == '/adascore/shadow/people'
+    assert sensor_interface['laser_topic'] == '/scan'
+    assert sensor_interface['odom_topic'] == '/rko_lio/odometry'
+    assert params['odom_topic'] == '/rko_lio/odometry'
+    assert params['enable_stamped_cmd_vel'] is False
+
+
+def test_shadow_controller_launch_remaps_cmd_vel_off_live_topic():
+    launch_text = (PACKAGE_ROOT / 'launch' / 'adascore_shadow_controller.launch.py').read_text()
+
+    assert "package='nav2_controller'" in launch_text
+    assert "executable='controller_server'" in launch_text
+    assert "'/adascore/shadow/cmd_vel'" in launch_text
+    assert "('/cmd_vel', '/adascore/shadow/cmd_vel')" in launch_text

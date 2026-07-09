@@ -390,3 +390,112 @@ Result:
 - `summary.yolo_gpu_execution_ready` was `false` because the TensorRT engine is
   not generated yet and torch is CPU-only.
 - No movement command or Nav2 controller launch was run.
+
+AdaSCoRe shadow bag validation:
+
+```bash
+ros2 launch scoutmini_social_perception bag_adascore_shadow_pipeline.launch.py \
+  target_fps:=1.0 \
+  imgsz:=416 \
+  publish_debug_image:=false
+```
+
+Then, while the launch was running:
+
+```bash
+ros2 run scoutmini_social_perception perception_bag_validate \
+  --duration-sec 28 \
+  --people-topic /adascore/shadow/people \
+  --min-messages /people/detector_metrics=1 \
+  --min-messages /people/detections_2d=1 \
+  --min-messages /people/tracks_2d=1 \
+  --min-messages /people/projected=1 \
+  --min-messages /adascore/shadow/people=1 \
+  --require-frame /people/projected=adascore_bag_map \
+  --require-frame /adascore/shadow/people=adascore_bag_map \
+  --fail-on-missing
+```
+
+and:
+
+```bash
+ros2 bag play /home/nvidia/ssd/bags_for_yolo/rosbag2_2026_03_29-16_37_05 \
+  --clock \
+  --rate 1.0
+```
+
+Result:
+
+- Validation passed with no failures.
+- `/people/detector_metrics`, `/people/detections_2d`, `/people/tracks_2d`,
+  `/people/projected`, and `/adascore/shadow/people` each received 9 messages.
+- `/adascore/shadow/people` published `people_msgs/msg/People` with
+  `frame_id: adascore_bag_map`, `max_people: 2`, and 7 nonempty messages.
+- Detector timing for this CPU run was approximately 116-136 ms per processed
+  frame at `imgsz:=416` and `target_fps:=1.0`.
+- No live `/people` publish, Nav2 controller launch, or motion command was run.
+
+AdaSCoRe SFM shadow consumption from bag-derived people:
+
+```bash
+ros2 run scoutmini_social_perception adascore_sfm_shadow_probe \
+  --people-topic /adascore/shadow/people \
+  --agents-config social_nav.yaml \
+  --duration-sec 30 \
+  --min-people 1 \
+  --fail-on-missing
+```
+
+Then replayed the same short `/equirectangular/image` bag.
+
+Result:
+
+- AdaSCoRe `SocialForceModel` imported and subscribed through the remap from
+  `/people` to `/adascore/shadow/people`.
+- The stricter probe passed with `messages_received: 1`, `max_people: 1`,
+  `last_people_count: 1`, `sfm_last_people_count: 1`, `sfm_max_people: 1`, and
+  no error. Passing now requires both the direct shadow topic subscriber and the
+  AdaSCoRe `SocialForceModel` state to observe a nonempty people message.
+- No live `/people` publish, Nav2 controller launch, or motion command was run.
+
+Longer bag playback check:
+
+```bash
+ros2 bag play /home/nvidia/ssd/valicor_bags/rosbag2_2026_06_23-16_18_31 \
+  --clock \
+  --rate 4.0
+```
+
+Result:
+
+- The bag metadata lists `/equirectangular/image`, but direct
+  `ros2 topic echo --once /equirectangular/image --field header` subscribers did
+  not receive messages during playback with default or `sensor_data` QoS.
+- The shadow perception validator also saw no messages from this bag.
+- This bag remains a candidate for future playback investigation and is not a
+  passing AdaSCoRe shadow-validation gate.
+
+AdaSCoRe social-force controller shadow configure:
+
+```bash
+ros2 launch scoutmini_social_perception adascore_shadow_controller.launch.py
+```
+
+Then, while the launch was running:
+
+```bash
+ros2 lifecycle set /controller_server configure
+```
+
+Result:
+
+- `controller_server` launched without lifecycle activation and published no
+  live robot command topic because the launch remaps `cmd_vel` to
+  `/adascore/shadow/cmd_vel`.
+- The lifecycle configure transition succeeded.
+- Nav2 created `FollowPath` with type
+  `social_force_window_planner::SFWPlannerNode`.
+- The social-force sensor interface reported `/scan`,
+  `/adascore/shadow/people`, and `/rko_lio/odometry`.
+- The launch shut down cleanly after `SIGINT`.
+- No activation, Nav2 goal, live `/cmd_vel`, or robot movement was used.
