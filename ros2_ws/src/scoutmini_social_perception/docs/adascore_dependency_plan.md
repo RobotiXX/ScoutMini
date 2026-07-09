@@ -58,14 +58,32 @@ reviewed.
 Observed on this robot:
 
 - `people_msgs`, `hunav_msgs`, `hunav_evaluator`, `hunav_rviz2_panel`,
-  `hunav_sim`, `pic4rl`, and `adascore` built in `/home/nvidia/adascore_ws`.
-- `hunav_agent_manager` did not build because its CMake expects
-  `behaviortree_cpp`, while this ROS Humble install currently provides
-  `behaviortree_cpp_v3`.
+  `hunav_sim`, `pic4rl`, `hunav_agent_manager`,
+  `social_force_window_planner`, and `adascore` built in
+  `/home/nvidia/adascore_ws`.
+- AdaSCoRe's upstream `.repos` file did not include
+  `social_force_window_planner`, but the Nav2 social-window configs reference
+  `social_force_window_planner::SFWPlannerNode`. The ScoutMini manifest adds
+  `https://github.com/robotics-upo/social_force_window_planner.git` on the
+  `ros2` branch.
+- Two external dependency checkouts needed local build-compatibility patches on
+  this robot:
+  `hunav/hunav_sim/hunav_agent_manager` was adjusted from
+  `behaviortree_cpp` to `behaviortree_cpp_v3`, from
+  `BT::Tree::tickExactlyOnce()` to `BT::Tree::tickRoot()`, and to include
+  lightsfm headers from the workspace source tree.
+  `social_force_window_planner` was adjusted to include the workspace lightsfm
+  headers directly instead of assuming `/usr/local/include/lightsfm`.
 - `rosdep` attempted to install additional apt packages and needed sudo, so
   system dependency installation was not completed from Codex.
 - AdaSCoRe's Python `SocialForceModel` import and `/people` subscription path
   were validated with `/people` remapped to a dry-run topic.
+- `adascore_readiness_check` reports `adascore_dependencies_available: true`
+  after sourcing `/home/nvidia/adascore_ws/install/setup.bash` and the
+  ScoutMini overlay.
+- GPU inference is not complete yet: TensorRT is installed, but the default
+  `/home/nvidia/models/yolo/yolo11n.engine` engine does not exist and the
+  installed PyTorch build is CPU-only.
 
 ## Source Notes
 

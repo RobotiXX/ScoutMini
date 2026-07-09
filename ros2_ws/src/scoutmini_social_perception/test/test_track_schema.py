@@ -190,6 +190,7 @@ def test_dependency_manifests_are_parseable_and_pin_expected_branches():
     assert repos['hunav/people']['version'] == 'ros2'
     assert repos['hunav/hunav_sim']['version'] == 'v1.0-humble'
     assert repos['hunav/hunav_gazebo_wrapper']['version'] == 'v1.0-humble'
+    assert repos['social_force_window_planner']['version'] == 'ros2'
 
 
 def test_adascore_preflight_reports_missing_required_topics():

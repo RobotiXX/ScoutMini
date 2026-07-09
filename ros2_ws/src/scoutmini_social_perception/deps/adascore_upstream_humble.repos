@@ -37,3 +37,7 @@ repositories:
   pic4rl_gym:
     type: git
     url: https://github.com/PIC4SeR/PIC4rl_gym.git
+  social_force_window_planner:
+    type: git
+    url: https://github.com/robotics-upo/social_force_window_planner.git
+    version: ros2

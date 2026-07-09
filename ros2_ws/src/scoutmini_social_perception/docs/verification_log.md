@@ -336,10 +336,21 @@ colcon build --symlink-install --packages-select \
 Result:
 
 - `people_msgs` built and exposed `people_msgs/msg/People` and `people_msgs/msg/Person`.
-- `adascore`, `hunav_msgs`, `hunav_evaluator`, `hunav_rviz2_panel`, `hunav_sim`, and `pic4rl` built in `/home/nvidia/adascore_ws`.
-- `hunav_agent_manager` did not build because it requires `behaviortree_cpp`, while this ROS Humble install provides `behaviortree_cpp_v3`.
+- `adascore`, `hunav_msgs`, `hunav_evaluator`, `hunav_rviz2_panel`,
+  `hunav_sim`, `pic4rl`, `hunav_agent_manager`, and
+  `social_force_window_planner` built in `/home/nvidia/adascore_ws`.
+- `hunav_agent_manager` required a local external-workspace compatibility patch
+  for `behaviortree_cpp_v3`, `BT::Tree::tickRoot()`, and workspace-local
+  lightsfm headers.
+- `social_force_window_planner` required a local external-workspace
+  compatibility patch for workspace-local lightsfm headers.
 - `rosdep` also attempted to install apt package `ros-humble-controller-manager` and required sudo credentials, so system dependency installation was not completed.
-- `adascore_readiness_check` now finds `adascore`, `people_msgs`, and `hunav_msgs`, but still reports `adascore_dependencies_available: false` because `hunav_agent_manager` and `social_force_window_planner` are not available.
+- `adascore_readiness_check` now finds `adascore`, `people_msgs`,
+  `hunav_msgs`, `hunav_agent_manager`, and `social_force_window_planner`, and
+  reports `adascore_dependencies_available: true`.
+- GPU model readiness is still incomplete: TensorRT is available, but
+  `/home/nvidia/models/yolo/yolo11n.engine` is missing and the installed torch
+  build reports `cuda_available: false`.
 
 AdaSCoRe SFM read-only consumption smoke:
 
@@ -358,4 +369,24 @@ Result:
 - The probe logged AdaSCoRe's People-topic subscription path.
 - The probe received two fake people from the dry-run `people_msgs/msg/People` topic.
 - No live `/people` publish was used for this smoke.
+- No movement command or Nav2 controller launch was run.
+
+AdaSCoRe dependency readiness after external planner import:
+
+```bash
+source /opt/ros/humble/setup.bash
+source /home/nvidia/adascore_ws/install/setup.bash
+source /home/nvidia/repos/ScoutMini-rohan-work/ros2_ws/install/setup.bash
+ros2 run scoutmini_social_perception adascore_readiness_check
+```
+
+Result:
+
+- ROS packages available: `adascore`, `people_msgs`, `hunav_msgs`,
+  `hunav_agent_manager`, `social_force_window_planner`, `nav2_controller`, and
+  `tf2_ros`.
+- `summary.adascore_dependencies_available` was `true`.
+- `summary.gpu_runtime_detected` and `summary.tensorrt_available` were `true`.
+- `summary.yolo_gpu_execution_ready` was `false` because the TensorRT engine is
+  not generated yet and torch is CPU-only.
 - No movement command or Nav2 controller launch was run.
