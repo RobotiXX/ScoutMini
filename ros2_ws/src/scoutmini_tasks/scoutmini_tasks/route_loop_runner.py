@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Follow a named waypoint route in a loop using Nav2.
+"""Follow a named waypoint route once using Nav2.
 
 The route is defined in YAML as a list of waypoint names. The runner subscribes
 to /map_name topic to determine the current map and constructs the route YAML
@@ -8,9 +8,8 @@ resolve waypoint names to coordinates. This eliminates the need for direct file
 I/O of waypoint JSON in this node.
 """
 
-import threading
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import List
 
 import rclpy
 from ament_index_python.packages import get_package_share_directory
@@ -26,13 +25,13 @@ import yaml
 
 
 class RouteLoopRunner(Node):
-    """Load a named route and navigate it in a loop using Nav2.
+    """Load a named route and navigate it once using Nav2.
 
     This node:
     1. Subscribes to /map_name to determine the current map
     2. Loads the YAML route file from map_tools/maps/<map_name>/routes/<route_name>.yaml
     3. Queries the waypoint_server service to resolve waypoint names to PoseStamped objects
-    4. Sends a NavigateThroughPoses action to Nav2 and optionally loops the route
+    4. Sends a single NavigateThroughPoses action to Nav2 and monitors feedback
 
     Attributes:
         route_name (str): Name of the route YAML file (without .yaml extension).
@@ -48,8 +47,6 @@ class RouteLoopRunner(Node):
         self.declare_parameter('route_name', 'route')
         self.declare_parameter('action_name', '/navigate_through_poses')
         self.declare_parameter('auto_start', True)
-        self.declare_parameter('loop', True)
-        self.declare_parameter('repeat_delay_sec', 1.0)
         self.declare_parameter('start_delay_sec', 0.0)
 
         # timeout for action server
@@ -63,10 +60,6 @@ class RouteLoopRunner(Node):
         )
         self.action_name = self.get_parameter('action_name').get_parameter_value().string_value
         self.auto_start = self.get_parameter('auto_start').get_parameter_value().bool_value
-        self.loop = self.get_parameter('loop').get_parameter_value().bool_value
-        self.repeat_delay_sec = (
-            self.get_parameter('repeat_delay_sec').get_parameter_value().double_value
-        )
         self.start_delay_sec = (
             self.get_parameter('start_delay_sec').get_parameter_value().double_value
         )
@@ -78,7 +71,6 @@ class RouteLoopRunner(Node):
         )
 
         self.current_map_name = ''
-        self.stop_event = threading.Event()
         self._route_waypoint_names: List[str] = []
         self._route_poses: List[PoseStamped] = []
 
@@ -96,11 +88,11 @@ class RouteLoopRunner(Node):
         # Internal state for goal tracking
         self._goal_active = False
         self._goal_sent_once = False
+        self._goal_finished = False
         self._start_time = self.get_clock().now()
         self._start_timer = self.create_timer(0.5, self._tick)
-        self._restart_timer: Optional[object] = None
 
-        self.get_logger().info(f'Route loop runner initialized for route: {self.route_name}')
+        self.get_logger().info(f'Route runner initialized for route: {self.route_name}')
 
     def _map_name_sub_cb(self, msg: String) -> None:
         """Handle incoming /map_name topic and reload route for the new map.
@@ -110,6 +102,11 @@ class RouteLoopRunner(Node):
         """
         new_map_name = msg.data.strip()
         if new_map_name != self.current_map_name:
+            if self._goal_sent_once:
+                self.get_logger().warn(
+                    f'Map changed to: {new_map_name}, but goal was already sent; ignoring map change'
+                )
+                return
             self.current_map_name = new_map_name
             self.get_logger().info(f'Map changed to: {new_map_name}; reloading route')
             self._load_route_for_map(new_map_name)
@@ -222,11 +219,11 @@ class RouteLoopRunner(Node):
         self.get_logger().info(f'Resolved {len(self._route_poses)}/{len(self._route_waypoint_names)} waypoints to poses')   
 
     def _tick(self) -> None:
-        """Main loop tick; checks conditions and sends route goal if ready."""
-        if not self.auto_start or not self._route_poses:
+        """Main tick; sends one route goal when route and action server are ready."""
+        if not self.auto_start or not self._route_poses or self._goal_finished:
             return
 
-        if self._goal_active:
+        if self._goal_active or self._goal_sent_once:
             return
 
         if not self._action_client.wait_for_server(timeout_sec=0.0):
@@ -237,11 +234,9 @@ class RouteLoopRunner(Node):
                 )
             return
 
-        if not self._goal_sent_once:
-            elapsed_sec = (self.get_clock().now() - self._start_time).nanoseconds / 1e9
-            if elapsed_sec < self.start_delay_sec:
-                return
-            self._goal_sent_once = True
+        elapsed_sec = (self.get_clock().now() - self._start_time).nanoseconds / 1e9
+        if elapsed_sec < self.start_delay_sec:
+            return
 
         self._send_route_goal()
 
@@ -255,11 +250,29 @@ class RouteLoopRunner(Node):
         goal.poses = list(self._route_poses)
 
         self.get_logger().info(
-            f'Sending route with {len(goal.poses)} pose(s) to {self.action_name}; loop={self.loop}'
+            f'Sending route with {len(goal.poses)} pose(s) to {self.action_name}'
         )
         self._goal_active = True
-        send_future = self._action_client.send_goal_async(goal)
+        self._goal_sent_once = True
+        send_future = self._action_client.send_goal_async(goal, feedback_callback=self._feedback_cb)
         send_future.add_done_callback(self._goal_response_cb)
+
+    def _feedback_cb(self, feedback_msg) -> None:
+        """Log NavigateThroughPoses feedback as progress updates."""
+        feedback = feedback_msg.feedback
+        distance_remaining = getattr(feedback, 'distance_remaining', None)
+        poses_remaining = getattr(feedback, 'number_of_poses_remaining', None)
+        recoveries = getattr(feedback, 'number_of_recoveries', None)
+
+        parts = ['Route progress']
+        if distance_remaining is not None:
+            parts.append(f'distance_remaining={distance_remaining:.2f}m')
+        if poses_remaining is not None:
+            parts.append(f'poses_remaining={poses_remaining}')
+        if recoveries is not None:
+            parts.append(f'recoveries={recoveries}')
+
+        self.get_logger().info(', '.join(parts))
 
     def _goal_response_cb(self, future) -> None:
         """Handle response from goal submission.
@@ -270,9 +283,11 @@ class RouteLoopRunner(Node):
         goal_handle = future.result()
         if not goal_handle.accepted:
             self._goal_active = False
+            self._goal_finished = True
             self.get_logger().error('Route goal was rejected by Nav2')
-            self._schedule_restart()
             return
+
+        self.get_logger().info('Route goal accepted; monitoring progress...')
 
         result_future = goal_handle.get_result_async()
         result_future.add_done_callback(self._result_cb)
@@ -284,46 +299,18 @@ class RouteLoopRunner(Node):
             future: Action result future.
         """
         self._goal_active = False
+        self._goal_finished = True
         try:
             result = future.result()
         except Exception as exc:
             self.get_logger().error(f'Failed to retrieve route result: {exc}')
-            self._schedule_restart()
             return
 
         status = result.status
         self.get_logger().info(f'Route finished with Nav2 status code {status}')
 
-        if self.loop and not self.stop_event.is_set():
-            self._schedule_restart()
-
-    def _schedule_restart(self) -> None:
-        """Schedule a timer to restart the route loop."""
-        if not self.loop or self.stop_event.is_set():
-            return
-
-        if self._restart_timer is not None:
-            self._restart_timer.cancel()
-
-        self._restart_timer = self.create_timer(self.repeat_delay_sec, self._restart_cb)
-
-    def _restart_cb(self) -> None:
-        """Callback for restart timer; sends the route goal again."""
-        if self._restart_timer is not None:
-            self._restart_timer.cancel()
-            self._restart_timer = None
-
-        if self.stop_event.is_set() or self._goal_active:
-            return
-
-        self._send_route_goal()
-
     def stop(self) -> None:
-        """Stop the route loop runner."""
-        self.stop_event.set()
-        if self._restart_timer is not None:
-            self._restart_timer.cancel()
-            self._restart_timer = None
+        """Stop the route runner."""
         if self._start_timer is not None:
             self._start_timer.cancel()
 

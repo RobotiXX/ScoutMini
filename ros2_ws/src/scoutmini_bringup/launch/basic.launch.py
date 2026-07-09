@@ -11,6 +11,7 @@ def generate_launch_description():
     witmotion_pkg = get_package_share_directory('witmotion_ros')
     velodyne_pkg = get_package_share_directory('velodyne')
     ds4_pkg = get_package_share_directory('ds4_driver')
+    insta360_pkg = get_package_share_directory('insta360_ros_driver')
     scout_pkg = get_package_share_directory('scout_base')
     scout_description_pkg = get_package_share_directory('scoutmini_description')
 
@@ -34,10 +35,16 @@ def generate_launch_description():
             }.items(),
         ),
 
-        # ZED camera
+        # ZED 2 camera
         IncludeLaunchDescription(
            PythonLaunchDescriptionSource(os.path.join(zed_pkg, 'launch', 'zed_camera.launch.py')),
            launch_arguments={'camera_model': 'zed2', 'camera_name': 'zed2'}.items(),
+        ),
+
+        # Insta360 X4 camera
+        IncludeLaunchDescription(
+            AnyLaunchDescriptionSource(os.path.join(insta360_pkg, 'launch', 'x4_equirectangular_crop_h264.launch.xml')),
+            launch_arguments={'equirectangular_config': os.path.join(insta360_pkg, 'config', 'x4_calibration.yaml')}.items(),
         ),
 
         # IMU (Witmotion)
