@@ -91,17 +91,23 @@ def test_person_yaw_prefers_explicit_yaw_then_velocity_then_bearing():
     assert abs(_person_yaw({'bearing_rad': -0.4}) + 0.4) < 1e-9
 
 
-def test_adascore_readiness_report_has_expected_gates():
-    report = build_report()
+def test_adascore_readiness_report_has_expected_gates(tmp_path):
+    engine_path = tmp_path / 'custom.engine'
+    engine_path.write_text('fake engine placeholder')
+    report = build_report(yolo_engine_path=str(engine_path))
 
     assert 'people_msgs' in report['ros_packages']
     assert 'adascore' in report['ros_packages']
     assert 'torch' in report['python_modules']
     assert 'tensorrt' in report['python_modules']
     assert 'yolo_tensorrt_engine' in report['model_artifacts']
+    assert report['model_artifacts']['yolo_pt']['format'] == 'pytorch'
+    assert report['model_artifacts']['yolo_tensorrt_engine']['format'] == 'tensorrt'
+    assert report['model_artifacts']['yolo_tensorrt_engine']['available']
     assert 'adascore_dependencies_available' in report['summary']
     assert 'cuda_pytorch_available' in report['summary']
     assert 'yolo_gpu_execution_ready' in report['summary']
+    assert report['summary']['yolo_gpu_execution_ready']
 
 
 class _FakePeople:

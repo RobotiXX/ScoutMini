@@ -221,3 +221,18 @@ Result:
 - Build passed.
 - Added unit coverage for projected-person conversion into the expected `people_msgs/People` contract: header stamp/frame, person name, x/y/yaw, velocity x/y/angular z, reliability, and adapter tags.
 - Added unit coverage for the `require_frame_match` gate.
+
+TensorRT model-artifact readiness gate:
+
+```bash
+ros2 run scoutmini_social_perception adascore_readiness_check \
+  --yolo-engine-path /home/nvidia/models/yolo/yolo11n.engine
+```
+
+Result:
+
+- Test suite passed with 11 tests.
+- Build passed.
+- Readiness checker reports `/home/nvidia/models/yolo/yolo11n.pt` as available with `format: "pytorch"`.
+- Readiness checker reports `/home/nvidia/models/yolo/yolo11n.engine` as missing with `format: "tensorrt"`.
+- `summary.yolo_gpu_execution_ready` remains false until CUDA PyTorch works or the TensorRT engine artifact exists.

@@ -89,6 +89,8 @@ Checks:
 python3 -c "import torch; print(torch.__version__); print(torch.cuda.is_available()); print(torch.version.cuda)"
 python3 -c "import tensorrt; print(tensorrt.__version__)"
 ros2 run scoutmini_social_perception adascore_readiness_check
+ros2 run scoutmini_social_perception adascore_readiness_check \
+  --yolo-engine-path /home/nvidia/models/yolo/yolo11n.engine
 ```
 
 Targets:
@@ -103,6 +105,7 @@ GPU implementation gate:
 2. Export YOLO to TensorRT using a model artifact path under `/home/nvidia/models/yolo`.
 3. Add a separate launch/config setting for the engine path, keeping CPU `.pt` launch behavior intact.
 4. Re-run the Phase 1 matrix against the engine and compare `/people/detector_metrics`.
+5. Record the readiness checker output showing `summary.yolo_gpu_execution_ready: true`.
 
 ## Phase 4: AdaSCoRe Dependencies
 

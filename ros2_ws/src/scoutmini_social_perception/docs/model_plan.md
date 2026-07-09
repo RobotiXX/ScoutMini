@@ -15,7 +15,7 @@ Weights should be stored outside source control, for example:
 
 TensorRT engines should also stay outside source control:
 
-`/home/nvidia/models/yolo/yolo11n_fp16.engine`
+`/home/nvidia/models/yolo/yolo11n.engine`
 
 ## Selection Process
 
@@ -38,3 +38,34 @@ Before live robot navigation:
 - stale people disappear within `track_timeout_sec`
 - no perception-only launch commands robot motion
 - CPU/GPU load leaves room for Nav2 and camera processing
+
+## TensorRT Artifact Gate
+
+After exporting a TensorRT engine outside the repo, verify that the expected
+artifact exists and is recognized:
+
+```bash
+ros2 run scoutmini_social_perception adascore_readiness_check \
+  --yolo-pt-path /home/nvidia/models/yolo/yolo11n.pt \
+  --yolo-engine-path /home/nvidia/models/yolo/yolo11n.engine
+```
+
+Pass criteria:
+
+- `model_artifacts.yolo_tensorrt_engine.available` is `true`.
+- `model_artifacts.yolo_tensorrt_engine.format` is `tensorrt`.
+- `summary.yolo_gpu_execution_ready` is `true`.
+
+Then run the same perception launch against the engine:
+
+```bash
+ros2 launch scoutmini_social_perception yolo_people_pipeline.launch.py \
+  model_path:=/home/nvidia/models/yolo/yolo11n.engine \
+  device:=0 \
+  target_fps:=8.0 \
+  imgsz:=640 \
+  publish_debug_image:=false
+```
+
+Use `/people/detector_metrics` to compare `elapsed_ms`, observed topic rate,
+and dropped-frame behavior against the CPU `.pt` run.

@@ -51,6 +51,13 @@ This prints a JSON report for the local ROS package dependencies, Python ML
 modules, model artifacts, CUDA PyTorch availability, TensorRT availability,
 YOLO GPU execution readiness, and AdaSCoRe dependency gate.
 
+To check a specific exported TensorRT engine:
+
+```bash
+ros2 run scoutmini_social_perception adascore_readiness_check \
+  --yolo-engine-path /home/nvidia/models/yolo/yolo11n.engine
+```
+
 ## AdaSCoRe Boundary
 
 The AdaSCoRe adapter is disabled by default. The inspected AdaSCoRe `humble`

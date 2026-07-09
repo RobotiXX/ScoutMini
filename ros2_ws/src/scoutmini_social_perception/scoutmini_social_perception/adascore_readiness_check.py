@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import argparse
 import importlib
 import json
 from pathlib import Path
@@ -35,6 +36,23 @@ DEFAULT_MODEL_ARTIFACTS = {
     'yolo_tensorrt_engine': '/home/nvidia/models/yolo/yolo11n.engine',
 }
 
+MODEL_FORMATS = {
+    '.pt': 'pytorch',
+    '.engine': 'tensorrt',
+    '.onnx': 'onnx',
+}
+
+
+def _artifact_status(path: str) -> dict[str, Any]:
+    artifact = Path(path).expanduser()
+    suffix = artifact.suffix.lower()
+    return {
+        'path': str(artifact),
+        'available': artifact.exists(),
+        'format': MODEL_FORMATS.get(suffix, 'unknown'),
+        'suffix': suffix,
+    }
+
 
 def _module_status(module_name: str) -> dict[str, Any]:
     try:
@@ -62,12 +80,15 @@ def _ros_package_status(package_name: str) -> dict[str, Any]:
     return {'available': True, 'prefix': prefix}
 
 
-def build_report() -> dict[str, Any]:
+def build_report(
+    yolo_pt_path: str = DEFAULT_MODEL_ARTIFACTS['yolo_pt'],
+    yolo_engine_path: str = DEFAULT_MODEL_ARTIFACTS['yolo_tensorrt_engine'],
+) -> dict[str, Any]:
     python_modules = {name: _module_status(name) for name in PYTHON_MODULES}
     ros_packages = {name: _ros_package_status(name) for name in ROS_PACKAGES}
     model_artifacts = {
-        name: {'path': path, 'available': Path(path).exists()}
-        for name, path in DEFAULT_MODEL_ARTIFACTS.items()
+        'yolo_pt': _artifact_status(yolo_pt_path),
+        'yolo_tensorrt_engine': _artifact_status(yolo_engine_path),
     }
     torch_status = python_modules['torch']
     cuda_pytorch_available = bool(torch_status.get('cuda_available'))
@@ -98,7 +119,20 @@ def build_report() -> dict[str, Any]:
 
 
 def main() -> None:
-    print(json.dumps(build_report(), indent=2, sort_keys=True))
+    parser = argparse.ArgumentParser(description='Report ScoutMini AdaSCoRe readiness gates.')
+    parser.add_argument(
+        '--yolo-pt-path',
+        default=DEFAULT_MODEL_ARTIFACTS['yolo_pt'],
+        help='Expected PyTorch YOLO model artifact path.',
+    )
+    parser.add_argument(
+        '--yolo-engine-path',
+        default=DEFAULT_MODEL_ARTIFACTS['yolo_tensorrt_engine'],
+        help='Expected TensorRT YOLO engine artifact path.',
+    )
+    args = parser.parse_args()
+    report = build_report(args.yolo_pt_path, args.yolo_engine_path)
+    print(json.dumps(report, indent=2, sort_keys=True))
 
 
 if __name__ == '__main__':
