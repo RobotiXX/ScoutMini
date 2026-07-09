@@ -88,6 +88,7 @@ Checks:
 ```bash
 python3 -c "import torch; print(torch.__version__); print(torch.cuda.is_available()); print(torch.version.cuda)"
 python3 -c "import tensorrt; print(tensorrt.__version__)"
+ros2 run scoutmini_social_perception adascore_readiness_check
 ```
 
 Targets:
@@ -120,6 +121,7 @@ Checks:
 ros2 interface show people_msgs/msg/People
 ros2 interface show people_msgs/msg/Person
 ros2 pkg list | grep -E 'adascore|people_msgs|hunav|social_force'
+ros2 run scoutmini_social_perception adascore_readiness_check
 ```
 
 ## Phase 5: Adapter Without Motion

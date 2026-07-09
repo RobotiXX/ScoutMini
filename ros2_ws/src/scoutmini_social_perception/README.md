@@ -39,6 +39,18 @@ dependencies.
 
 See `docs/model_plan.md` before choosing or exporting a model.
 
+## Readiness Check
+
+After building and sourcing the workspace, run:
+
+```bash
+ros2 run scoutmini_social_perception adascore_readiness_check
+```
+
+This prints a JSON report for the local ROS package dependencies, Python ML
+modules, model artifacts, CUDA PyTorch availability, TensorRT availability,
+YOLO GPU execution readiness, and AdaSCoRe dependency gate.
+
 ## AdaSCoRe Boundary
 
 The AdaSCoRe adapter is disabled by default. The inspected AdaSCoRe `humble`

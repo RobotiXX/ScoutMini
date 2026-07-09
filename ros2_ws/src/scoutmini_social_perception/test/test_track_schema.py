@@ -3,6 +3,7 @@ import math
 from builtin_interfaces.msg import Time
 
 from scoutmini_social_perception.adascore_people_adapter_node import _person_yaw
+from scoutmini_social_perception.adascore_readiness_check import build_report
 from scoutmini_social_perception.people_projection_node import estimate_person_range
 from scoutmini_social_perception.track_schema import (
     bearing_from_equirectangular,
@@ -84,3 +85,16 @@ def test_person_yaw_prefers_explicit_yaw_then_velocity_then_bearing():
     assert abs(_person_yaw(explicit) - 1.25) < 1e-9
     assert abs(_person_yaw(velocity) - (math.pi / 2.0)) < 1e-9
     assert abs(_person_yaw({'bearing_rad': -0.4}) + 0.4) < 1e-9
+
+
+def test_adascore_readiness_report_has_expected_gates():
+    report = build_report()
+
+    assert 'people_msgs' in report['ros_packages']
+    assert 'adascore' in report['ros_packages']
+    assert 'torch' in report['python_modules']
+    assert 'tensorrt' in report['python_modules']
+    assert 'yolo_tensorrt_engine' in report['model_artifacts']
+    assert 'adascore_dependencies_available' in report['summary']
+    assert 'cuda_pytorch_available' in report['summary']
+    assert 'yolo_gpu_execution_ready' in report['summary']

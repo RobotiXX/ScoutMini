@@ -176,3 +176,18 @@ Result:
 - Test suite passed with 8 tests.
 - Build passed.
 - Added coverage for fixed-range clamping, person-height range estimation, and AdaSCoRe yaw selection from explicit yaw, velocity, or bearing.
+
+Readiness checker:
+
+```bash
+ros2 run scoutmini_social_perception adascore_readiness_check
+```
+
+Result:
+
+- Test suite passed with 9 tests after adding the checker shape test.
+- Build passed.
+- `/home/nvidia/models/yolo/yolo11n.pt` exists.
+- `/home/nvidia/models/yolo/yolo11n.engine` does not exist.
+- TensorRT is installed, but `yolo_gpu_execution_ready` is false because CUDA PyTorch is unavailable and no default TensorRT engine artifact exists.
+- AdaSCoRe dependencies remain unavailable according to the checker.
