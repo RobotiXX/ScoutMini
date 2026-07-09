@@ -22,6 +22,7 @@ setup(
     entry_points={
         'console_scripts': [
             'route_loop_runner = scoutmini_tasks.route_loop_runner:main',
+            'slack_gateway = scoutmini_tasks.slack_gateway:main',
         ],
     },
 )
