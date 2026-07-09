@@ -111,6 +111,8 @@ GPU implementation gate:
 
 Goal: install the message and controller stack deliberately outside this package.
 
+Use `adascore_dependency_plan.md` for the external workspace/import commands.
+
 Required packages:
 
 - `people_msgs` from `wg-perception/people` ROS 2 branch.

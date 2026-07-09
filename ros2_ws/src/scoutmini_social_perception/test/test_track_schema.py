@@ -1,6 +1,8 @@
 import math
+from pathlib import Path
 
 from builtin_interfaces.msg import Time
+import yaml
 
 from scoutmini_social_perception.adascore_people_adapter_node import (
     AdaScorePeopleAdapter,
@@ -15,6 +17,9 @@ from scoutmini_social_perception.track_schema import (
     normalize_angle,
 )
 from scoutmini_social_perception.people_frame_transform_node import transform_person
+
+
+PACKAGE_ROOT = Path(__file__).resolve().parents[1]
 
 
 def test_bearing_from_equirectangular_center_is_zero():
@@ -164,3 +169,18 @@ def test_people_msg_frame_gate_requires_matching_frame_when_enabled():
     assert should_publish_people_msg('map', 'map', True)
     assert not should_publish_people_msg('base_link', 'map', True)
     assert should_publish_people_msg('base_link', 'map', False)
+
+
+def test_dependency_manifests_are_parseable_and_pin_expected_branches():
+    people_manifest = yaml.safe_load((PACKAGE_ROOT / 'deps' / 'people_msgs_ros2.repos').read_text())
+    full_manifest = yaml.safe_load((PACKAGE_ROOT / 'deps' / 'adascore_upstream_humble.repos').read_text())
+
+    people_repo = people_manifest['repositories']['hunav/people']
+    assert people_repo['url'] == 'https://github.com/wg-perception/people.git'
+    assert people_repo['version'] == 'ros2'
+
+    repos = full_manifest['repositories']
+    assert repos['adascore']['url'] == 'https://github.com/maurom3197/adascore.git'
+    assert repos['adascore']['version'] == 'humble'
+    assert repos['hunav/people']['version'] == 'ros2'
+    assert repos['hunav/hunav_sim']['version'] == 'humble'

@@ -1,0 +1,5 @@
+repositories:
+  hunav/people:
+    type: git
+    url: https://github.com/wg-perception/people.git
+    version: ros2

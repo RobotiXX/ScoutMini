@@ -1,0 +1,39 @@
+repositories:
+  adascore:
+    type: git
+    url: https://github.com/maurom3197/adascore.git
+    version: humble
+  hunav/lightsfm:
+    type: git
+    url: https://github.com/robotics-upo/lightsfm.git
+    version: master
+  hunav/hunav_gazebo_wrapper:
+    type: git
+    url: https://github.com/robotics-upo/hunav_gazebo_wrapper.git
+    version: humble
+  hunav/hunav_sim:
+    type: git
+    url: https://github.com/robotics-upo/hunav_sim.git
+    version: humble
+  hunav/people:
+    type: git
+    url: https://github.com/wg-perception/people.git
+    version: ros2
+  jackal/jackal:
+    type: git
+    url: https://github.com/andreaostuni/jackal.git
+    version: humble
+  jackal/jackal_desktop:
+    type: git
+    url: https://github.com/andreaostuni/jackal_desktop.git
+    version: humble
+  jackal/jackal_simulator:
+    type: git
+    url: https://github.com/andreaostuni/jackal_simulator.git
+    version: humble
+  gazebo_ros_additional_pkgs:
+    type: git
+    url: https://github.com/andreaostuni/gazebo_ros_additional_pkgs.git
+  pic4rl_gym:
+    type: git
+    url: https://github.com/PIC4SeR/PIC4rl_gym.git

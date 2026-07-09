@@ -68,6 +68,8 @@ launch includes a TF-backed `people_frame_transform` node so AdaSCoRe receives
 people in `map`, not base-link-relative projection coordinates.
 
 See `docs/adascore_interface_notes.md` before enabling `people_msgs` output.
+Use `docs/adascore_dependency_plan.md` for the separate-workspace dependency
+import plan.
 
 ## AdaSCoRe Dry Run
 

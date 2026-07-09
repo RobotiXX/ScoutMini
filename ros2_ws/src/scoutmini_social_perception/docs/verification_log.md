@@ -236,3 +236,19 @@ Result:
 - Readiness checker reports `/home/nvidia/models/yolo/yolo11n.pt` as available with `format: "pytorch"`.
 - Readiness checker reports `/home/nvidia/models/yolo/yolo11n.engine` as missing with `format: "tensorrt"`.
 - `summary.yolo_gpu_execution_ready` remains false until CUDA PyTorch works or the TensorRT engine artifact exists.
+
+AdaSCoRe dependency manifest gate:
+
+```bash
+python3 -m compileall -q src/scoutmini_social_perception/scoutmini_social_perception
+colcon test --packages-select scoutmini_social_perception --event-handlers console_direct+
+colcon build --symlink-install --packages-select scoutmini_social_perception
+```
+
+Result:
+
+- Test suite passed with 12 tests.
+- Build passed.
+- Added separate `.repos` manifests for `people_msgs`-only import and full upstream AdaSCoRe import.
+- Added manifest parsing coverage to confirm the expected People `ros2` branch and AdaSCoRe `humble` branch are pinned.
+- Dependency install instructions remain separate-workspace only; no AdaSCoRe source was vendored into ScoutMini.
