@@ -1,5 +1,9 @@
+import math
+
 from builtin_interfaces.msg import Time
 
+from scoutmini_social_perception.adascore_people_adapter_node import _person_yaw
+from scoutmini_social_perception.people_projection_node import estimate_person_range
 from scoutmini_social_perception.track_schema import (
     bearing_from_equirectangular,
     make_image_markers,
@@ -52,3 +56,31 @@ def test_transform_person_rotates_and_translates_position():
     assert abs(out['y'] - 21.0) < 1e-6
     assert abs(out['vx']) < 1e-6
     assert abs(out['vy'] - 1.0) < 1e-6
+
+
+def test_estimate_person_range_fixed_mode_is_clamped():
+    range_m, source = estimate_person_range({}, 'fixed_distance_debug', 0.01, 1.7)
+
+    assert abs(range_m - 0.1) < 1e-9
+    assert source == 'fixed_distance_debug'
+
+
+def test_estimate_person_range_from_person_height():
+    range_m, source = estimate_person_range(
+        {'bbox_xyxy': [100.0, 100.0, 200.0, 260.0], 'image_height': 640},
+        'person_height_ground_plane',
+        3.0,
+        1.7,
+    )
+
+    assert abs(range_m - (1.7 / ((160.0 / 640.0) * math.pi))) < 1e-6
+    assert source == 'person_height_ground_plane'
+
+
+def test_person_yaw_prefers_explicit_yaw_then_velocity_then_bearing():
+    explicit = {'yaw_rad': 1.25, 'vx': 1.0, 'vy': 0.0, 'bearing_rad': 0.0}
+    velocity = {'vx': 0.0, 'vy': 2.0, 'bearing_rad': 0.0}
+
+    assert abs(_person_yaw(explicit) - 1.25) < 1e-9
+    assert abs(_person_yaw(velocity) - (math.pi / 2.0)) < 1e-9
+    assert abs(_person_yaw({'bearing_rad': -0.4}) + 0.4) < 1e-9

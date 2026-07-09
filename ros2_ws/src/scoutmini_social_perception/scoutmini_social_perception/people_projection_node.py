@@ -13,6 +13,24 @@ from visualization_msgs.msg import MarkerArray
 from .track_schema import ProjectedPerson, make_people_frame, make_projected_markers, parse_people_frame
 
 
+def estimate_person_range(
+    track: Dict[str, object],
+    mode: str,
+    fixed_range_m: float,
+    assumed_person_height_m: float,
+) -> tuple[float, str]:
+    fixed_range = max(0.1, float(fixed_range_m))
+    if mode == 'person_height_ground_plane':
+        bbox = [float(v) for v in track.get('bbox_xyxy', [0.0, 0.0, 0.0, 0.0])]
+        image_height = max(1, int(track.get('image_height', 1)))
+        bbox_height = max(1.0, bbox[3] - bbox[1])
+        angular_height = (bbox_height / float(image_height)) * math.pi
+        assumed_height = max(0.5, float(assumed_person_height_m))
+        estimated_range = assumed_height / max(0.05, angular_height)
+        return min(max(estimated_range, 0.2), 12.0), 'person_height_ground_plane'
+    return fixed_range, 'fixed_distance_debug'
+
+
 class PeopleProjection(Node):
     def __init__(self) -> None:
         super().__init__('people_projection')
@@ -79,17 +97,12 @@ class PeopleProjection(Node):
         self.marker_pub.publish(make_projected_markers(now_msg, output_frame, out_frame.people))
 
     def _estimate_range(self, track: Dict[str, object]) -> tuple[float, str]:
-        mode = str(self.get_parameter('range_mode').value)
-        fixed_range = max(0.1, float(self.get_parameter('fixed_range_m').value))
-        if mode == 'person_height_ground_plane':
-            bbox = [float(v) for v in track.get('bbox_xyxy', [0.0, 0.0, 0.0, 0.0])]
-            image_height = max(1, int(track.get('image_height', 1)))
-            bbox_height = max(1.0, bbox[3] - bbox[1])
-            angular_height = (bbox_height / float(image_height)) * math.pi
-            assumed_height = max(0.5, float(self.get_parameter('assumed_person_height_m').value))
-            estimated_range = assumed_height / max(0.05, angular_height)
-            return min(max(estimated_range, 0.2), 12.0), 'person_height_ground_plane'
-        return fixed_range, 'fixed_distance_debug'
+        return estimate_person_range(
+            track,
+            str(self.get_parameter('range_mode').value),
+            float(self.get_parameter('fixed_range_m').value),
+            float(self.get_parameter('assumed_person_height_m').value),
+        )
 
     def _estimate_velocity(self, track_id: int, x: float, y: float, now_sec: float) -> tuple[float, float]:
         previous = self.previous_positions.get(track_id)

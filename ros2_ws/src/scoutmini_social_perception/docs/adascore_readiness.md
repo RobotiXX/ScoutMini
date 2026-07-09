@@ -50,6 +50,13 @@ Pass criteria:
 
 Goal: prove person positions are in the right direction and frame.
 
+Implementation status:
+
+- Bearing wrap behavior is unit-tested at the equirectangular image center and edges.
+- Frame transform math is unit-tested for position and velocity rotation/translation.
+- Range-estimation math is unit-tested for fixed debug range and person-height range mode.
+- AdaSCoRe yaw selection is unit-tested for explicit yaw, velocity-derived yaw, and bearing fallback.
+
 Checks:
 
 ```bash
@@ -63,6 +70,7 @@ Pass criteria:
 - `bearing_rad` is plausible for front, left, right, and back positions.
 - `/people/projected_map` publishes with `frame_id: "map"`.
 - Range source is understood. `fixed_distance_debug` is not acceptable for final motion.
+- Live walk-around results are recorded in `verification_log.md`.
 
 ## Phase 3: GPU and TensorRT Readiness
 

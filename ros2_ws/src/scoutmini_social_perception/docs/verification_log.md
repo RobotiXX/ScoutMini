@@ -162,3 +162,17 @@ Result:
 
 - The adapter logged the expected error that `people_msgs` is missing.
 - This is the correct fail-closed behavior before Phase 5 can publish real AdaSCoRe people messages.
+
+Phase 2 and adapter math unit gate:
+
+```bash
+python3 -m compileall -q src/scoutmini_social_perception/scoutmini_social_perception
+colcon test --packages-select scoutmini_social_perception --event-handlers console_direct+
+colcon build --symlink-install --packages-select scoutmini_social_perception
+```
+
+Result:
+
+- Test suite passed with 8 tests.
+- Build passed.
+- Added coverage for fixed-range clamping, person-height range estimation, and AdaSCoRe yaw selection from explicit yaw, velocity, or bearing.
