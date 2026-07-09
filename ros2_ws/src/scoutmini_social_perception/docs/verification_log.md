@@ -206,3 +206,18 @@ Result:
 - `/adascore/dry_run/people` published JSON with `frame_id: "adascore_dry_map"` and two fake people.
 - `/adascore/people_debug` reported `enabled: true`, `output_message_type: "json_debug"`, `frame_id: "adascore_dry_map"`, `adascore_frame_id: "adascore_dry_map"`, `people_count: 2`, and `people_msgs_available: false`.
 - The dry run intentionally avoids the live `map`/`base_link` TF tree by default; use `target_frame:=map source_frame:=base_link` only for an intentional live-TF check.
+
+AdaSCoRe message-contract unit gate:
+
+```bash
+python3 -m compileall -q src/scoutmini_social_perception/scoutmini_social_perception
+colcon test --packages-select scoutmini_social_perception --event-handlers console_direct+
+colcon build --symlink-install --packages-select scoutmini_social_perception
+```
+
+Result:
+
+- Test suite passed with 11 tests.
+- Build passed.
+- Added unit coverage for projected-person conversion into the expected `people_msgs/People` contract: header stamp/frame, person name, x/y/yaw, velocity x/y/angular z, reliability, and adapter tags.
+- Added unit coverage for the `require_frame_match` gate.

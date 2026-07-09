@@ -2,7 +2,11 @@ import math
 
 from builtin_interfaces.msg import Time
 
-from scoutmini_social_perception.adascore_people_adapter_node import _person_yaw
+from scoutmini_social_perception.adascore_people_adapter_node import (
+    AdaScorePeopleAdapter,
+    _person_yaw,
+    should_publish_people_msg,
+)
 from scoutmini_social_perception.adascore_readiness_check import build_report
 from scoutmini_social_perception.people_projection_node import estimate_person_range
 from scoutmini_social_perception.track_schema import (
@@ -98,3 +102,59 @@ def test_adascore_readiness_report_has_expected_gates():
     assert 'adascore_dependencies_available' in report['summary']
     assert 'cuda_pytorch_available' in report['summary']
     assert 'yolo_gpu_execution_ready' in report['summary']
+
+
+class _FakePeople:
+    pass
+
+
+class _FakePerson:
+    pass
+
+
+def test_adascore_people_msg_conversion_matches_expected_contract():
+    adapter = AdaScorePeopleAdapter.__new__(AdaScorePeopleAdapter)
+    adapter.PeopleMsg = _FakePeople
+    adapter.PersonMsg = _FakePerson
+
+    msg = adapter._to_people_msg(
+        12.25,
+        'map',
+        [
+            {
+                'track_id': 7,
+                'x': 1.2,
+                'y': -0.4,
+                'yaw_rad': 0.75,
+                'vx': 0.3,
+                'vy': -0.1,
+                'wz': 0.05,
+                'confidence': 0.88,
+                'source': 'people_frame_transform',
+                'range_source': 'person_height_ground_plane',
+            }
+        ],
+    )
+
+    assert msg.header.stamp.sec == 12
+    assert msg.header.stamp.nanosec == 250000000
+    assert msg.header.frame_id == 'map'
+    assert len(msg.people) == 1
+
+    person = msg.people[0]
+    assert person.name == 'person_7'
+    assert abs(person.position.x - 1.2) < 1e-9
+    assert abs(person.position.y + 0.4) < 1e-9
+    assert abs(person.position.z - 0.75) < 1e-9
+    assert abs(person.velocity.x - 0.3) < 1e-9
+    assert abs(person.velocity.y + 0.1) < 1e-9
+    assert abs(person.velocity.z - 0.05) < 1e-9
+    assert abs(person.reliability - 0.88) < 1e-9
+    assert person.tagnames == ['track_id', 'source', 'range_source']
+    assert person.tags == ['7', 'people_frame_transform', 'person_height_ground_plane']
+
+
+def test_people_msg_frame_gate_requires_matching_frame_when_enabled():
+    assert should_publish_people_msg('map', 'map', True)
+    assert not should_publish_people_msg('base_link', 'map', True)
+    assert should_publish_people_msg('base_link', 'map', False)

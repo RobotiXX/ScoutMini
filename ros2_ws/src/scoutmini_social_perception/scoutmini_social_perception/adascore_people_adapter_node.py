@@ -43,6 +43,10 @@ def _person_yaw(person: Dict[str, Any]) -> float:
     return float(person.get('bearing_rad', 0.0))
 
 
+def should_publish_people_msg(frame_id: str, required_frame_id: str, require_frame_match: bool) -> bool:
+    return not require_frame_match or frame_id == required_frame_id
+
+
 class AdaScorePeopleAdapter(Node):
     """Republish projected people behind an explicit disabled-by-default gate."""
 
@@ -127,7 +131,7 @@ class AdaScorePeopleAdapter(Node):
         if self.output_message_type != 'people_msgs' or self.people_pub is None:
             return
 
-        if self.require_frame_match and frame.frame_id != self.adascore_frame_id:
+        if not should_publish_people_msg(frame.frame_id, self.adascore_frame_id, self.require_frame_match):
             self.get_logger().warn(
                 f'Dropping AdaSCoRe people output because frame_id={frame.frame_id!r} '
                 f'does not match required {self.adascore_frame_id!r}. '

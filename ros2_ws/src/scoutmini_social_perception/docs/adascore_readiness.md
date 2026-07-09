@@ -138,6 +138,12 @@ ros2 topic echo /adascore/people_debug
 
 The dry run uses fake projected people, isolated dry-run frames, an identity static transform, and JSON output. It should pass before `people_msgs` output is attempted. Use `target_frame:=map source_frame:=base_link` only when intentionally testing the live robot TF path.
 
+Implementation status:
+
+- The adapter's conversion from projected JSON people into the expected `people_msgs/People` shape is unit-tested with local fake message classes.
+- The frame-match gate is unit-tested so non-controller-frame people are rejected when `require_frame_match` is enabled.
+- Live `people_msgs` publishing still requires installing the real dependency stack.
+
 Launch:
 
 ```bash
