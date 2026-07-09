@@ -1,28 +1,20 @@
-"""PyQt multi-page demo without ROS.
-
-Use this file to learn basic Qt layout/page patterns before adding ROS topics.
-"""
-
 import sys
-from functools import partial
 
-from PyQt5.QtCore import QRegularExpression, Qt, QTimer, pyqtSlot as Slot
-from PyQt5.QtGui import QRegularExpressionValidator
+from PyQt5.QtCore import Qt, QTimer, pyqtSlot as Slot
 from PyQt5.QtWidgets import (
     QApplication,
-    QGridLayout,
     QHBoxLayout,
-    QLabel,
-    QLineEdit,
     QPushButton,
     QStackedWidget,
     QVBoxLayout,
     QWidget,
 )
 
+from scoutmini_display.pages import CounterPage, KeypadPage, WifiPage
+
 
 class SecondsCounter(QWidget):
-    """Example touchscreen-style UI with page switching and a keypad."""
+    """Main controller for the demo pages, interactions, and timer loop."""
 
     def __init__(self):
         super().__init__()
@@ -34,32 +26,31 @@ class SecondsCounter(QWidget):
 
         # QStackedWidget keeps multiple "pages" and shows one at a time.
         self.pages = QStackedWidget()
-        self.counter_page = self.create_counter_page()
-        self.keypad_page = self.create_keypad_page()
+        self.counter_page = CounterPage()
+        self.keypad_page = KeypadPage(self.last_room_number)
+        self.wifi_page = WifiPage()
         self.pages.addWidget(self.counter_page)
         self.pages.addWidget(self.keypad_page)
+        self.pages.addWidget(self.wifi_page)
 
-        self.time_button = QPushButton("Time")
-        self.keypad_button = QPushButton("Keypad")
-        self.time_button.setMinimumSize(180, 80)
-        self.keypad_button.setMinimumSize(180, 80)
-        self.time_button.setCheckable(True)
-        self.keypad_button.setCheckable(True)
-        self.time_button.setStyleSheet(
-            "QPushButton { font-size: 36px; }"
-            "QPushButton:checked { background-color: #2d6cdf; color: white; font-weight: bold; }"
-        )
-        self.keypad_button.setStyleSheet(
-            "QPushButton { font-size: 36px; }"
-            "QPushButton:checked { background-color: #2d6cdf; color: white; font-weight: bold; }"
-        )
-        self.time_button.clicked.connect(self.show_time_page)
-        self.keypad_button.clicked.connect(self.show_keypad_page)
+        # Wire page-local widgets to the controller methods.
+        self.counter_page.minus_button.clicked.connect(self.decrease_by_ten)
+        self.counter_page.plus_button.clicked.connect(self.increase_by_ten)
+        self.keypad_page.enter_button.clicked.connect(self.store_room_number)
+        self.keypad_page.digit_pressed.connect(self.append_digit)
+
+        self.page_buttons = [
+            self._create_nav_button("Time", self.show_time_page),
+            self._create_nav_button("Keypad", self.show_keypad_page),
+            self._create_nav_button("WiFi", self.show_wifi_page),
+        ]
 
         self.footer = QHBoxLayout()
-        self.footer.addWidget(self.time_button, alignment=Qt.AlignLeft)
+        self.footer.addWidget(self.page_buttons[0], alignment=Qt.AlignLeft)
         self.footer.addStretch()
-        self.footer.addWidget(self.keypad_button, alignment=Qt.AlignRight)
+        self.footer.addWidget(self.page_buttons[1], alignment=Qt.AlignCenter)
+        self.footer.addStretch()
+        self.footer.addWidget(self.page_buttons[2], alignment=Qt.AlignRight)
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(24, 24, 24, 24)
@@ -67,100 +58,12 @@ class SecondsCounter(QWidget):
         layout.addLayout(self.footer)
 
         self.show_page(0)
+        self.wifi_page.refresh_networks()
 
         # Regular UI timer updates the counter every second.
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.update_counter)
         self.timer.start(1000)  # loop period in milliseconds
-
-    def create_counter_page(self):
-        """Build the page that shows and edits elapsed seconds."""
-        page = QWidget()
-        layout = QVBoxLayout(page)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.addStretch()
-
-        # The counter stays visually centered while the +/- buttons sit on the same horizontal line.
-        self.label = QLabel("Seconds since start: 0")
-        self.label.setAlignment(Qt.AlignCenter)
-        self.label.setStyleSheet("font-size: 64px;")
-
-        self.minus_button = QPushButton("-10")
-        self.plus_button = QPushButton("+10")
-        self.minus_button.setStyleSheet("font-size: 32px;")
-        self.plus_button.setStyleSheet("font-size: 32px;")
-        self.minus_button.setMinimumSize(240, 120)
-        self.plus_button.setMinimumSize(240, 120)
-        self.minus_button.clicked.connect(self.decrease_by_ten)
-        self.plus_button.clicked.connect(self.increase_by_ten)
-
-        counter_row = QHBoxLayout()
-        counter_row.addWidget(self.minus_button, alignment=Qt.AlignVCenter)
-        counter_row.addStretch()
-        counter_row.addWidget(self.label, alignment=Qt.AlignCenter)
-        counter_row.addStretch()
-        counter_row.addWidget(self.plus_button, alignment=Qt.AlignVCenter)
-
-        layout.addLayout(counter_row)
-
-        layout.addStretch()
-        return page
-
-    def create_keypad_page(self):
-        """Build a numeric keypad page for entering a 4-digit value."""
-        page = QWidget()
-        layout = QVBoxLayout(page)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(18)
-        layout.addStretch()
-
-        # This page collects a 4-digit room number, then stores the last submitted value below the keypad.
-        title = QLabel("Enter 4-digit room number")
-        title.setAlignment(Qt.AlignCenter)
-        title.setStyleSheet("font-size: 28px;")
-        layout.addWidget(title)
-
-        self.room_input = QLineEdit()
-        self.room_input.setMaxLength(4)
-        self.room_input.setAlignment(Qt.AlignCenter)
-        self.room_input.setPlaceholderText("____")
-        self.room_input.setStyleSheet("font-size: 30px; padding: 10px;")
-        self.room_input.setValidator(QRegularExpressionValidator(QRegularExpression(r"\d{0,4}"), self))
-        layout.addWidget(self.room_input)
-
-        keypad = QGridLayout()
-        keypad.setHorizontalSpacing(16)
-        keypad.setVerticalSpacing(16)
-
-        digits = [
-            ("1", 0, 0), ("2", 0, 1), ("3", 0, 2),
-            ("4", 1, 0), ("5", 1, 1), ("6", 1, 2),
-            ("7", 2, 0), ("8", 2, 1), ("9", 2, 2),
-            ("0", 3, 1),
-        ]
-
-        for digit, row, column in digits:
-            button = QPushButton(digit)
-            button.setFixedSize(90, 70)
-            button.setStyleSheet("font-size: 26px;")
-            button.clicked.connect(partial(self.append_digit, digit))
-            keypad.addWidget(button, row, column)
-
-        layout.addLayout(keypad)
-
-        self.enter_button = QPushButton("Enter")
-        self.enter_button.setFixedHeight(64)
-        self.enter_button.setStyleSheet("font-size: 24px;")
-        self.enter_button.clicked.connect(self.store_room_number)
-        layout.addWidget(self.enter_button)
-
-        self.last_room_label = QLabel(f"Last room number entered: {self.last_room_number}")
-        self.last_room_label.setAlignment(Qt.AlignCenter)
-        self.last_room_label.setStyleSheet("font-size: 24px;")
-        layout.addWidget(self.last_room_label)
-
-        layout.addStretch()
-        return page
 
     @Slot(bool)
     def show_time_page(self, checked=False):
@@ -170,31 +73,47 @@ class SecondsCounter(QWidget):
     def show_keypad_page(self, checked=False):
         self.show_page(1)
 
+    @Slot(bool)
+    def show_wifi_page(self, checked=False):
+        self.show_page(2)
+        self.wifi_page.refresh_networks()
+
+    def _create_nav_button(self, label, slot):
+        button = QPushButton(label)
+        button.setMinimumSize(180, 80)
+        button.setCheckable(True)
+        button.setStyleSheet(
+            "QPushButton { font-size: 36px; }"
+            "QPushButton:checked { background-color: #2d6cdf; color: white; font-weight: bold; }"
+        )
+        button.clicked.connect(slot)
+        return button
+
     def show_page(self, index):
         """Switch visible page and keep footer buttons in sync."""
         self.pages.setCurrentIndex(index)
-        self.time_button.setChecked(index == 0)
-        self.keypad_button.setChecked(index == 1)
+        for page_index, button in enumerate(self.page_buttons):
+            button.setChecked(index == page_index)
 
-    @Slot(str, bool)
-    def append_digit(self, digit, checked=False):
-        if len(self.room_input.text()) < 4:
-            self.room_input.setText(self.room_input.text() + digit)
+    @Slot(str)
+    def append_digit(self, digit):
+        if len(self.keypad_page.room_input.text()) < 4:
+            self.keypad_page.room_input.setText(self.keypad_page.room_input.text() + digit)
 
     @Slot()
     def store_room_number(self):
         # Require exactly 4 digits before accepting input.
-        room_number = self.room_input.text()
+        room_number = self.keypad_page.room_input.text()
         if len(room_number) != 4:
             return
 
         self.last_room_number = room_number
-        self.last_room_label.setText(f"Last room number entered: {self.last_room_number}")
-        self.room_input.clear()
+        self.keypad_page.set_last_room_number(self.last_room_number)
+        self.keypad_page.room_input.clear()
 
     @Slot()
     def refresh_label(self):
-        self.label.setText(f"Seconds since start: {self.seconds}")
+        self.counter_page.set_seconds(self.seconds)
 
     @Slot()
     def increase_by_ten(self):
@@ -216,5 +135,7 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
     window = SecondsCounter()
     # Use full-screen because this package targets touchscreen robot displays.
-    window.showFullScreen()
+    window.resize(1024, 600)
+    window.show()
+    # window.showFullScreen()
     sys.exit(app.exec())
