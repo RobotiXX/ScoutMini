@@ -192,12 +192,16 @@ Read-only preflight:
 ```bash
 ros2 run scoutmini_social_perception adascore_preflight_check
 ros2 run scoutmini_social_perception adascore_preflight_check --fail-on-missing
+ros2 run scoutmini_social_perception adascore_preflight_check \
+  --expected-type /people=people_msgs/msg/People \
+  --fail-on-missing
 ```
 
 The preflight reports missing required topics and flags motion-command topics
 such as `/cmd_vel` if they are visible. It never reports that robot motion is
 safe; controlled motion remains a separate Phase 7 decision. Use
-`--fail-on-missing` in scripts to exit nonzero when required topics are absent.
+`--fail-on-missing` in scripts to exit nonzero when required topics are absent
+or present with the wrong expected type.
 
 ## Phase 7: Controlled Motion Gate
 

@@ -68,7 +68,13 @@ This reports required topic availability and flags visible motion-command
 topics. It does not publish, launch Nav2, or mark motion safe.
 
 For scripts, add `--fail-on-missing` to return exit code 2 when any required
-topic is absent.
+topic is absent or has the wrong expected type. By default, `/people` is
+expected to be `people_msgs/msg/People`; override or add checks with:
+
+```bash
+ros2 run scoutmini_social_perception adascore_preflight_check \
+  --expected-type /people=people_msgs/msg/People
+```
 
 ## AdaSCoRe Boundary
 

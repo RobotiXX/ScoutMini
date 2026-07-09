@@ -284,3 +284,20 @@ Result on the current robot graph:
 - Command exited with code 2 because `/people` is missing.
 - Required topics present: `/tf`, `/rko_lio/odometry`, `/scan`, `/map`.
 - `summary.safe_to_start_motion` remained false.
+
+Preflight topic-type gate:
+
+```bash
+ros2 run scoutmini_social_perception adascore_preflight_check \
+  --settle-sec 1.0 \
+  --fail-on-missing
+```
+
+Result on the current robot graph:
+
+- Test suite passed with 16 tests.
+- Build passed.
+- Command exited with code 2 because `/people` is missing.
+- The preflight reported the expected `/people` type as `people_msgs/msg/People`.
+- `/cmd_vel` was visible, so `summary.motion_topics_detected` was true.
+- `summary.safe_to_start_motion` remained false.

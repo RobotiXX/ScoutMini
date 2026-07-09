@@ -9,7 +9,11 @@ from scoutmini_social_perception.adascore_people_adapter_node import (
     _person_yaw,
     should_publish_people_msg,
 )
-from scoutmini_social_perception.adascore_preflight_check import evaluate_topics, preflight_exit_code
+from scoutmini_social_perception.adascore_preflight_check import (
+    evaluate_topics,
+    parse_expected_type,
+    preflight_exit_code,
+)
 from scoutmini_social_perception.adascore_readiness_check import build_report
 from scoutmini_social_perception.people_projection_node import estimate_person_range
 from scoutmini_social_perception.track_schema import (
@@ -195,6 +199,7 @@ def test_adascore_preflight_reports_missing_required_topics():
     assert not report['required_topics']['/map']
     assert report['missing_required_topics'] == ['/map']
     assert not report['summary']['required_topics_available']
+    assert not report['summary']['expected_topic_types_match']
     assert not report['summary']['safe_to_start_motion']
     assert preflight_exit_code(report, fail_on_missing=False) == 0
     assert preflight_exit_code(report, fail_on_missing=True) == 2
@@ -205,10 +210,32 @@ def test_adascore_preflight_flags_motion_topics_and_normalizes_names():
         ['people', '/tf', '/map', '/cmd_vel'],
         required_topics=['/people', 'tf', 'map'],
         motion_topics=['cmd_vel'],
+        topic_types={'people': ['people_msgs/msg/People']},
     )
 
     assert report['summary']['required_topics_available']
+    assert report['summary']['expected_topic_types_match']
     assert report['summary']['motion_topics_detected']
     assert report['motion_topics_present'] == ['/cmd_vel']
     assert not report['summary']['safe_to_start_motion']
     assert preflight_exit_code(report, fail_on_missing=True) == 0
+
+
+def test_adascore_preflight_fails_wrong_people_topic_type():
+    report = evaluate_topics(
+        ['/people', '/tf', '/map'],
+        required_topics=['/people', '/tf', '/map'],
+        topic_types={'/people': ['std_msgs/msg/String']},
+    )
+
+    assert report['summary']['required_topics_available']
+    assert not report['summary']['expected_topic_types_match']
+    assert report['wrong_type_topics'] == ['/people']
+    assert preflight_exit_code(report, fail_on_missing=True) == 2
+
+
+def test_parse_expected_type_accepts_topic_equals_type_list():
+    topic, types = parse_expected_type('people=people_msgs/msg/People,std_msgs/msg/String')
+
+    assert topic == '/people'
+    assert types == ['people_msgs/msg/People', 'std_msgs/msg/String']
