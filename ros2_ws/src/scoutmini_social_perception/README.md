@@ -67,6 +67,9 @@ ros2 run scoutmini_social_perception adascore_preflight_check
 This reports required topic availability and flags visible motion-command
 topics. It does not publish, launch Nav2, or mark motion safe.
 
+For scripts, add `--fail-on-missing` to return exit code 2 when any required
+topic is absent.
+
 ## AdaSCoRe Boundary
 
 The AdaSCoRe adapter is disabled by default. The inspected AdaSCoRe `humble`

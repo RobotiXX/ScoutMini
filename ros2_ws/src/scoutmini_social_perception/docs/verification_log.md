@@ -268,3 +268,19 @@ Result on the current robot graph:
 - Required topic missing: `/people`.
 - Motion topic present: `/cmd_vel`.
 - `summary.safe_to_start_motion` is always false by design; this command is read-only and cannot authorize motion.
+
+Preflight fail-on-missing gate:
+
+```bash
+ros2 run scoutmini_social_perception adascore_preflight_check \
+  --settle-sec 1.0 \
+  --fail-on-missing
+```
+
+Result on the current robot graph:
+
+- Test suite passed with 14 tests.
+- Build passed.
+- Command exited with code 2 because `/people` is missing.
+- Required topics present: `/tf`, `/rko_lio/odometry`, `/scan`, `/map`.
+- `summary.safe_to_start_motion` remained false.

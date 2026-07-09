@@ -9,7 +9,7 @@ from scoutmini_social_perception.adascore_people_adapter_node import (
     _person_yaw,
     should_publish_people_msg,
 )
-from scoutmini_social_perception.adascore_preflight_check import evaluate_topics
+from scoutmini_social_perception.adascore_preflight_check import evaluate_topics, preflight_exit_code
 from scoutmini_social_perception.adascore_readiness_check import build_report
 from scoutmini_social_perception.people_projection_node import estimate_person_range
 from scoutmini_social_perception.track_schema import (
@@ -196,6 +196,8 @@ def test_adascore_preflight_reports_missing_required_topics():
     assert report['missing_required_topics'] == ['/map']
     assert not report['summary']['required_topics_available']
     assert not report['summary']['safe_to_start_motion']
+    assert preflight_exit_code(report, fail_on_missing=False) == 0
+    assert preflight_exit_code(report, fail_on_missing=True) == 2
 
 
 def test_adascore_preflight_flags_motion_topics_and_normalizes_names():
@@ -209,3 +211,4 @@ def test_adascore_preflight_flags_motion_topics_and_normalizes_names():
     assert report['summary']['motion_topics_detected']
     assert report['motion_topics_present'] == ['/cmd_vel']
     assert not report['summary']['safe_to_start_motion']
+    assert preflight_exit_code(report, fail_on_missing=True) == 0

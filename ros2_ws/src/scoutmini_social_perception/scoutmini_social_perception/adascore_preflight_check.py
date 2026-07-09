@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 import time
 from typing import Iterable
 
@@ -53,6 +54,15 @@ def evaluate_topics(
     }
 
 
+def preflight_exit_code(report: dict[str, object], fail_on_missing: bool) -> int:
+    if not fail_on_missing:
+        return 0
+    summary = report.get('summary', {})
+    if isinstance(summary, dict) and summary.get('required_topics_available') is True:
+        return 0
+    return 2
+
+
 class _GraphProbe(Node):
     def __init__(self) -> None:
         super().__init__('adascore_preflight_check')
@@ -85,6 +95,11 @@ def main() -> None:
         default=1.0,
         help='Seconds to wait for ROS graph discovery.',
     )
+    parser.add_argument(
+        '--fail-on-missing',
+        action='store_true',
+        help='Exit with code 2 when any required topic is missing.',
+    )
     args = parser.parse_args()
 
     required_topics = _parse_csv(args.required_topic) or DEFAULT_REQUIRED_TOPICS
@@ -100,6 +115,7 @@ def main() -> None:
         report = evaluate_topics(topics, required_topics, motion_topics)
         report['observed_topic_count'] = len(topics)
         print(json.dumps(report, indent=2, sort_keys=True))
+        sys.exit(preflight_exit_code(report, args.fail_on_missing))
     finally:
         node.destroy_node()
         rclpy.shutdown()
