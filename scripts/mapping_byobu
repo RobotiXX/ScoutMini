@@ -1,0 +1,105 @@
+#!/bin/bash
+# Byobu command layout for Scout Mini ROS 2 mapping.
+#
+# This creates a byobu session and starts each mapping command automatically.
+set -euo pipefail
+
+SESSION_NAME="${SCOUT_MAPPING_BYOBU_SESSION:-scout_mapping}"
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+ROS_WS="${REPO_ROOT}/ros2_ws"
+
+USE_SIM_TIME="${USE_SIM_TIME:-false}"
+PORT_NAME="${PORT_NAME:-can2}"
+BASE_FRAME="${BASE_FRAME:-base_link}"
+
+SLAM_PARAMS_FILE="${SLAM_PARAMS_FILE:-${ROS_WS}/src/scoutmini_nav2/config/mapper_params_online_async.yaml}"
+RKO_LIO_CONFIG_FILE="${RKO_LIO_CONFIG_FILE:-${ROS_WS}/src/scoutmini_nav2/config/rko_lio_vlp16_indoor.yaml}"
+
+if byobu has-session -t "${SESSION_NAME}" 2>/dev/null; then
+  echo "Byobu session '${SESSION_NAME}' already exists."
+  byobu attach -t "${SESSION_NAME}"
+  exit 0
+fi
+
+byobu new-session -d -s "${SESSION_NAME}"
+
+NEXT_WINDOW=0
+
+target_window() {
+  echo "${SESSION_NAME}:$((NEXT_WINDOW - 1))"
+}
+
+new_window() {
+  local title="$1"
+  echo "Creating window: ${title}"
+  if [[ "${NEXT_WINDOW}" -eq 0 ]]; then
+    byobu rename-window -t "${SESSION_NAME}:0" "${title}"
+  else
+    byobu new-window -t "${SESSION_NAME}:${NEXT_WINDOW}" -n "${title}"
+  fi
+  NEXT_WINDOW=$((NEXT_WINDOW + 1))
+}
+
+split_pane() {
+  byobu split-window -t "$(target_window)" "$@"
+}
+
+send_command() {
+  local pane="$1"
+  local command="$2"
+  local target
+  target="$(target_window).${pane}"
+
+  byobu send-keys -R -t "${target}" C-u C-l
+  byobu send-keys -t "${target}" -l "${command}"
+  byobu send-keys -t "${target}" C-m
+}
+
+layout_tiled() {
+  byobu select-layout -t "$(target_window)" tiled >/dev/null
+}
+
+# Scout base and description share a window. Pass all node parameters through
+# launch arguments because ROS 2 parameters are node-scoped, not global.
+new_window "base_description"
+send_command 0 \
+  "ros2 launch scout_base scout_mini_base.launch.py use_sim_time:=${USE_SIM_TIME} port_name:=${PORT_NAME} base_frame:=${BASE_FRAME} odom_topic_name:=wheel_odom publish_odom_topic:=false publish_odom_tf:=false"
+split_pane -v
+send_command 1 \
+  "ros2 launch scoutmini_description scout_mini_base_description.launch.py use_sim_time:=${USE_SIM_TIME}"
+layout_tiled
+
+# Cameras together.
+new_window "cameras"
+send_command 0 \
+  "ros2 launch zed_wrapper zed_camera.launch.py camera_model:=zed2 camera_name:=zed2 use_sim_time:=${USE_SIM_TIME}"
+split_pane -h
+send_command 1 \
+  "ros2 launch insta360_ros_driver x4_equirectangular_crop_h264.launch.xml"
+layout_tiled
+
+# IMU and Velodyne together, two panes in one window.
+new_window "imu_lidar"
+send_command 0 "ros2 launch witmotion_ros wt901.launch.py"
+split_pane -h
+send_command 1 "ros2 launch velodyne velodyne-all-nodes-VLP16-launch.py"
+layout_tiled
+
+# RKO LIO gets its own window and must receive its config file explicitly.
+new_window "rko_lio"
+send_command 0 \
+  "ros2 launch rko_lio odometry.launch.py config_file:=${RKO_LIO_CONFIG_FILE} output:=both"
+
+# SLAM toolbox mapping, using the mapping_2d.launch.py default YAML explicitly.
+new_window "slam"
+send_command 0 \
+  "ros2 launch slam_toolbox online_async_launch.py use_sim_time:=${USE_SIM_TIME} slam_params_file:=${SLAM_PARAMS_FILE} output:=both"
+
+# Dashboard display gets its own window.
+new_window "dashboard"
+send_command 0 "ros2 run scoutmini_display robot_dashboard"
+
+byobu select-window -t "${SESSION_NAME}:0"
+
+echo "Created byobu session '${SESSION_NAME}' and started ROS 2 mapping commands."
+byobu attach -t "${SESSION_NAME}"
