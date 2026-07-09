@@ -129,9 +129,12 @@ class YoloPeopleDetector(Node):
             'elapsed_ms': round(float(elapsed_ms), 3),
             'model_path': str(self.get_parameter('model_path').value),
             'device': str(self.get_parameter('device').value),
+            'confidence_threshold': float(self.get_parameter('confidence_threshold').value),
+            'iou_threshold': float(self.get_parameter('iou_threshold').value),
             'target_fps': float(self.get_parameter('target_fps').value),
             'imgsz': int(self.get_parameter('imgsz').value),
             'enable_tracking': bool(self.get_parameter('enable_tracking').value),
+            'publish_debug_image': bool(self.get_parameter('publish_debug_image').value),
         }
         out = String()
         out.data = json.dumps(metrics, separators=(',', ':'), sort_keys=True)

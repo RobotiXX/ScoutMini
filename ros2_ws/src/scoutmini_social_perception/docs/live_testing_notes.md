@@ -43,7 +43,9 @@ ros2 run rqt_image_view rqt_image_view /people/debug_image
 
 ## Next Tuning Steps
 
-- Add an `imgsz` launch argument so CPU tests can compare 640, 512, and 416.
+- Use the `imgsz` launch argument so CPU tests can compare 640, 512, and 416.
 - Keep seam shifting low priority unless later tests show the front direction is split.
 - Confirm `bearing_rad` by standing front, left, right, and back relative to the robot.
 - Plan for CUDA PyTorch or TensorRT before expecting real-time social navigation performance.
+
+See `adascore_readiness.md` for the gated path from perception tuning to AdaSCoRe integration.

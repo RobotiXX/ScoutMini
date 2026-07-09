@@ -93,3 +93,41 @@ Result:
 
 - `/people/projected_map` published with `frame_id: "map"`.
 - The smoke wrapper timed out during process cleanup, but the expected transformed topic output was captured.
+
+## 2026-07-09
+
+Commands:
+
+```bash
+cd /home/nvidia/repos/ScoutMini-rohan-work/ros2_ws
+source /opt/ros/humble/setup.bash
+source install/setup.bash
+python3 -m compileall -q src/scoutmini_social_perception/scoutmini_social_perception
+colcon build --symlink-install --packages-select scoutmini_social_perception
+colcon test --packages-select scoutmini_social_perception --event-handlers console_direct+
+```
+
+Result:
+
+- Build passed.
+- Test suite passed with 5 tests.
+
+YOLO bag smoke:
+
+```bash
+ros2 launch scoutmini_social_perception yolo_people_pipeline.launch.py \
+  model_path:=/home/nvidia/models/yolo/yolo11n.pt \
+  target_fps:=2.0 \
+  imgsz:=512 \
+  publish_debug_image:=false
+
+ros2 bag play /home/nvidia/ssd/bags_for_yolo/rosbag2_2026_03_29-16_37_05 \
+  --rate 0.25 \
+  --topics /equirectangular/image
+```
+
+Result:
+
+- `/people/detector_metrics` published with `device: "cpu"`, `target_fps: 2.0`, `imgsz: 512`, `confidence_threshold: 0.35`, `iou_threshold: 0.45`, and `publish_debug_image: false`.
+- The benchmark node observed `/people/detector_metrics`, `/people/detections_2d`, `/people/tracks_2d`, and `/people/projected` publishing during bag playback.
+- ROS 2 bag and topic commands must run outside Codex's network sandbox; sandboxed runs can report DDS socket errors or hang waiting for topic traffic.

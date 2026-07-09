@@ -16,6 +16,10 @@ def generate_launch_description():
     image_topic = LaunchConfiguration('image_topic')
     device = LaunchConfiguration('device')
     target_fps = LaunchConfiguration('target_fps')
+    imgsz = LaunchConfiguration('imgsz')
+    confidence_threshold = LaunchConfiguration('confidence_threshold')
+    iou_threshold = LaunchConfiguration('iou_threshold')
+    publish_debug_image = LaunchConfiguration('publish_debug_image')
     range_mode = LaunchConfiguration('range_mode')
     fixed_range_m = LaunchConfiguration('fixed_range_m')
 
@@ -24,6 +28,10 @@ def generate_launch_description():
         DeclareLaunchArgument('image_topic', default_value='/equirectangular/image'),
         DeclareLaunchArgument('device', default_value='cpu'),
         DeclareLaunchArgument('target_fps', default_value='8.0'),
+        DeclareLaunchArgument('imgsz', default_value='640'),
+        DeclareLaunchArgument('confidence_threshold', default_value='0.35'),
+        DeclareLaunchArgument('iou_threshold', default_value='0.45'),
+        DeclareLaunchArgument('publish_debug_image', default_value='true'),
         DeclareLaunchArgument('range_mode', default_value='fixed_distance_debug'),
         DeclareLaunchArgument('fixed_range_m', default_value='3.0'),
         Node(
@@ -38,6 +46,10 @@ def generate_launch_description():
                     'image_topic': image_topic,
                     'device': device,
                     'target_fps': ParameterValue(target_fps, value_type=float),
+                    'imgsz': ParameterValue(imgsz, value_type=int),
+                    'confidence_threshold': ParameterValue(confidence_threshold, value_type=float),
+                    'iou_threshold': ParameterValue(iou_threshold, value_type=float),
+                    'publish_debug_image': ParameterValue(publish_debug_image, value_type=bool),
                 },
             ],
         ),
