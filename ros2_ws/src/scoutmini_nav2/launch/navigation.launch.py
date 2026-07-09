@@ -25,6 +25,7 @@ def generate_launch_description():
     initial_pose_y = LaunchConfiguration('initial_pose_y')
     initial_pose_z = LaunchConfiguration('initial_pose_z')
     initial_pose_yaw = LaunchConfiguration('initial_pose_yaw')
+    amcl_tf_broadcast = LaunchConfiguration('amcl_tf_broadcast')
     rviz = LaunchConfiguration('rviz')
     rviz_config_file = LaunchConfiguration('rviz_config_file')
     use_route_loop = LaunchConfiguration('use_route_loop')
@@ -44,6 +45,7 @@ def generate_launch_description():
             'yaml_filename': map_file,
             'default_nav_to_pose_bt_xml': nav_to_pose_bt_xml,
             'default_nav_through_poses_bt_xml': nav_through_poses_bt_xml,
+            'tf_broadcast': amcl_tf_broadcast,
         },
         convert_types=True,
     )
@@ -173,6 +175,11 @@ def generate_launch_description():
         DeclareLaunchArgument('initial_pose_y', default_value='26.0'),
         DeclareLaunchArgument('initial_pose_z', default_value='0.0'),
         DeclareLaunchArgument('initial_pose_yaw', default_value='-2.02'),
+        DeclareLaunchArgument(
+            'amcl_tf_broadcast',
+            default_value='true',
+            description='Allow AMCL to publish map->odom. Disable for ground-truth simulation localization.',
+        ),
         DeclareLaunchArgument(
             'map_name',
             default_value='fuse_3rd',

@@ -36,6 +36,12 @@ def launch_setup(context, *args, **kwargs):
                 'worlds',
                 'tb3_sandbox.sdf',
             ]),
+            'fuse_3rd': PathJoinSubstitution([
+                FindPackageShare('map_tools'),
+                'maps',
+                'fuse_3rd',
+                'fuse_3rd.sdf',
+            ]),
         }
         selected_world = worlds[world].perform(context)
 
@@ -85,8 +91,8 @@ def generate_launch_description():
         DeclareLaunchArgument(
             'world',
             default_value='warehouse',
-            choices=['warehouse', 'empty', 'default_warehouse', 'tb3_sandbox'],
-            description='Gazebo world to launch: warehouse, empty, default_warehouse, or tb3_sandbox',
+            choices=['warehouse', 'empty', 'default_warehouse', 'tb3_sandbox', 'fuse_3rd'],
+            description='Gazebo world to launch: warehouse, empty, default_warehouse, tb3_sandbox, or fuse_3rd',
         ),
         DeclareLaunchArgument(
             'world_file',
@@ -115,6 +121,8 @@ def generate_launch_description():
                 PathJoinSubstitution([package_share, 'worlds']),
                 ':',
                 PathJoinSubstitution([package_share, 'meshes']),
+                ':',
+                PathJoinSubstitution([FindPackageShare('map_tools'), 'maps', 'fuse_3rd']),
                 ':',
                 EnvironmentVariable('GZ_SIM_RESOURCE_PATH', default_value=''),
             ],

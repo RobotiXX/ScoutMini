@@ -1,6 +1,6 @@
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
-from launch.conditions import IfCondition
+from launch.conditions import IfCondition, UnlessCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch_ros.actions import Node
@@ -48,6 +48,7 @@ def generate_launch_description():
             'initial_pose_y': LaunchConfiguration('initial_pose_y'),
             'initial_pose_z': LaunchConfiguration('initial_pose_z'),
             'initial_pose_yaw': LaunchConfiguration('initial_pose_yaw'),
+            'amcl_tf_broadcast': LaunchConfiguration('amcl_tf_broadcast'),
             'use_route_loop': 'false',
             'route_name': LaunchConfiguration('route_name'),
             'route_loop': LaunchConfiguration('route_loop'),
@@ -80,6 +81,15 @@ def generate_launch_description():
         }],
     )
 
+    static_map_to_odom = Node(
+        condition=UnlessCondition(LaunchConfiguration('amcl_tf_broadcast')),
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        name='ground_truth_map_to_odom',
+        arguments=['0', '0', '0', '0', '0', '0', 'map', 'odom'],
+        output='screen',
+    )
+
     nav_to_pose_runner = Node(
         condition=IfCondition(LaunchConfiguration('use_goal')),
         package='scoutmini_tasks',
@@ -105,7 +115,7 @@ def generate_launch_description():
         DeclareLaunchArgument(
             'world',
             default_value='default_warehouse',
-            choices=['warehouse', 'empty', 'default_warehouse', 'tb3_sandbox'],
+            choices=['warehouse', 'empty', 'default_warehouse', 'tb3_sandbox', 'fuse_3rd'],
             description='Gazebo world to launch',
         ),
         DeclareLaunchArgument(
@@ -127,6 +137,11 @@ def generate_launch_description():
         DeclareLaunchArgument('initial_pose_y', default_value='0.0'),
         DeclareLaunchArgument('initial_pose_z', default_value='0.0'),
         DeclareLaunchArgument('initial_pose_yaw', default_value='0.0'),
+        DeclareLaunchArgument(
+            'amcl_tf_broadcast',
+            default_value='false',
+            description='Allow AMCL to publish map->odom. Defaults false so sim uses ground-truth map->odom.',
+        ),
         DeclareLaunchArgument(
             'params_file',
             default_value=PathJoinSubstitution([
@@ -175,6 +190,7 @@ def generate_launch_description():
             ]),
         ),
         gazebo,
+        static_map_to_odom,
         route_loop_runner,
         nav_to_pose_runner,
         navigation,

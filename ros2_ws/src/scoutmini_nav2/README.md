@@ -42,6 +42,29 @@ ros2 launch scoutmini_nav2 simulation_2d.launch.py \
   goal_yaw:=0.0
 ```
 
+
+Launch the Fuse 3rd floor world with its matching map:
+
+```bash
+ros2 launch scoutmini_nav2 simulation_2d.launch.py \
+  world:=fuse_3rd \
+  map_name:=fuse_3rd \
+  spawn_x:=13.7 \
+  spawn_y:=26.0 \
+  spawn_yaw:=-2.02 \
+  initial_pose_x:=13.7 \
+  initial_pose_y:=26.0 \
+  initial_pose_yaw:=-2.02
+```
+
+
+For simulated maps generated in metric map coordinates, keep the Gazebo spawn
+pose and Nav2 initial pose matched. `/ground_truth/odom` reports the robot pose
+relative to the Gazebo world; AMCL publishes `map -> odom`. If the robot is
+spawned at `(0, 0, 0)` but initialized in Nav2 at `(13.7, 26.0, -2.02)`, RViz
+will draw scans at a different map pose than the physical pose Gazebo is
+raycasting from.
+
 Useful overrides:
 
 ```bash
@@ -61,6 +84,36 @@ Available `world` values:
 - `warehouse`: Scout Mini local warehouse world
 - `empty`: empty world with sensors
 - `tb3_sandbox`: TurtleBot3 sandbox-style world
+- `fuse_3rd`: STL-based world from `map_tools/maps/fuse_3rd`
+
+
+## Ground-Truth Localization In Simulation
+
+The simulation launch defaults to ground-truth localization:
+
+```bash
+amcl_tf_broadcast:=false
+```
+
+With this setting, AMCL still starts as part of Nav2 bringup, but it does not
+publish `map -> odom`. The launch publishes a static identity `map -> odom`
+instead, so `/ground_truth/odom` remains the source of robot motion in RViz and
+Nav2.
+
+This avoids apparent drift when the simulated 3D world and the 2D occupancy map
+are not a perfect match. Gazebo raycasts `/scan` against the STL/world geometry,
+while AMCL localizes against the PGM occupancy map. If AMCL is allowed to publish
+`map -> odom`, it can slowly move the robot pose in RViz even though
+`/ground_truth/odom` is still correct relative to Gazebo.
+
+To test AMCL scan matching instead of ground-truth localization, launch with:
+
+```bash
+ros2 launch scoutmini_nav2 simulation_2d.launch.py amcl_tf_broadcast:=true
+```
+
+When `amcl_tf_broadcast:=true`, do not also publish a static `map -> odom` from
+another terminal, or TF will have two publishers for the same transform.
 
 ## RViz
 
