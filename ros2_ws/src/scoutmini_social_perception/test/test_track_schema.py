@@ -188,7 +188,8 @@ def test_dependency_manifests_are_parseable_and_pin_expected_branches():
     assert repos['adascore']['url'] == 'https://github.com/maurom3197/adascore.git'
     assert repos['adascore']['version'] == 'humble'
     assert repos['hunav/people']['version'] == 'ros2'
-    assert repos['hunav/hunav_sim']['version'] == 'humble'
+    assert repos['hunav/hunav_sim']['version'] == 'v1.0-humble'
+    assert repos['hunav/hunav_gazebo_wrapper']['version'] == 'v1.0-humble'
 
 
 def test_adascore_preflight_reports_missing_required_topics():

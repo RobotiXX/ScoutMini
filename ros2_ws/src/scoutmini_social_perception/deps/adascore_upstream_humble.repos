@@ -10,11 +10,11 @@ repositories:
   hunav/hunav_gazebo_wrapper:
     type: git
     url: https://github.com/robotics-upo/hunav_gazebo_wrapper.git
-    version: humble
+    version: v1.0-humble
   hunav/hunav_sim:
     type: git
     url: https://github.com/robotics-upo/hunav_sim.git
-    version: humble
+    version: v1.0-humble
   hunav/people:
     type: git
     url: https://github.com/wg-perception/people.git

@@ -321,3 +321,41 @@ Result:
 - The message contained two fake people in `frame_id: adascore_dry_map` with x/y/yaw, velocity, reliability, and adapter tags.
 - `/adascore/people_debug` reported `output_message_type: "people_msgs"` and `people_msgs_available: true`.
 - This remained a no-motion dry run on `/adascore/dry_run/people_msg`, not `/people`.
+
+AdaSCoRe external workspace bring-up:
+
+```bash
+mkdir -p /home/nvidia/adascore_ws/src
+vcs import /home/nvidia/adascore_ws/src < deps/people_msgs_ros2.repos
+colcon build --symlink-install --packages-select people_msgs
+vcs import /home/nvidia/adascore_ws/src < deps/adascore_upstream_humble.repos
+colcon build --symlink-install --packages-select \
+  people_msgs hunav_msgs hunav_evaluator hunav_rviz2_panel hunav_sim pic4rl adascore
+```
+
+Result:
+
+- `people_msgs` built and exposed `people_msgs/msg/People` and `people_msgs/msg/Person`.
+- `adascore`, `hunav_msgs`, `hunav_evaluator`, `hunav_rviz2_panel`, `hunav_sim`, and `pic4rl` built in `/home/nvidia/adascore_ws`.
+- `hunav_agent_manager` did not build because it requires `behaviortree_cpp`, while this ROS Humble install provides `behaviortree_cpp_v3`.
+- `rosdep` also attempted to install apt package `ros-humble-controller-manager` and required sudo credentials, so system dependency installation was not completed.
+- `adascore_readiness_check` now finds `adascore`, `people_msgs`, and `hunav_msgs`, but still reports `adascore_dependencies_available: false` because `hunav_agent_manager` and `social_force_window_planner` are not available.
+
+AdaSCoRe SFM read-only consumption smoke:
+
+```bash
+ros2 launch scoutmini_social_perception adascore_dry_run.launch.py \
+  output_message_type:=people_msgs \
+  adascore_people_topic:=/adascore/dry_run/people_msg
+```
+
+Then a read-only Python probe instantiated `adascore.utils.sfm.SocialForceModel`
+with `/people` remapped to `/adascore/dry_run/people_msg`.
+
+Result:
+
+- `SocialForceModel` imported successfully after building `pic4rl`.
+- The probe logged AdaSCoRe's People-topic subscription path.
+- The probe received two fake people from the dry-run `people_msgs/msg/People` topic.
+- No live `/people` publish was used for this smoke.
+- No movement command or Nav2 controller launch was run.

@@ -55,9 +55,23 @@ Do not merge those packages into the ScoutMini repository. Keep any build fixes
 or local patches in `/home/nvidia/adascore_ws` until they are understood and
 reviewed.
 
+Observed on this robot:
+
+- `people_msgs`, `hunav_msgs`, `hunav_evaluator`, `hunav_rviz2_panel`,
+  `hunav_sim`, `pic4rl`, and `adascore` built in `/home/nvidia/adascore_ws`.
+- `hunav_agent_manager` did not build because its CMake expects
+  `behaviortree_cpp`, while this ROS Humble install currently provides
+  `behaviortree_cpp_v3`.
+- `rosdep` attempted to install additional apt packages and needed sudo, so
+  system dependency installation was not completed from Codex.
+- AdaSCoRe's Python `SocialForceModel` import and `/people` subscription path
+  were validated with `/people` remapped to a dry-run topic.
+
 ## Source Notes
 
 - AdaSCoRe upstream: `https://github.com/maurom3197/adascore`, `humble` branch.
 - AdaSCoRe publishes an upstream `adascore.repos` for companion dependencies.
 - `wg-perception/people` documents `ros2` as its ROS 2 branch and contains
   `people_msgs`.
+- HuNav repositories used `v1.0-humble` branches on this robot, not a plain
+  `humble` branch.
