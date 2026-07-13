@@ -4,6 +4,7 @@ from launch.actions import IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
 from launch.substitutions import PathJoinSubstitution
+from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
 
 
@@ -32,13 +33,16 @@ def generate_launch_description():
                 'camera_name': LaunchConfiguration('camera_name'),
             }.items(),
         ),
-        IncludeLaunchDescription(
-            PythonLaunchDescriptionSource(
+        Node(
+            package='image2rtsp',
+            executable='image2rtsp',
+            name='image2rtsp',
+            parameters=[
                 PathJoinSubstitution([
-                    FindPackageShare('image2rtsp'),
-                    'launch',
-                    'image2rtsp.launch.py',
+                    FindPackageShare('scoutmini_streaming'),
+                    'config',
+                    'image2rtsp_zed.yaml',
                 ])
-            ),
+            ],
         ),
     ])
