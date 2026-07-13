@@ -6,6 +6,8 @@ PACKAGE_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 REPO_ROOT="${REPO_ROOT:-$(cd "$PACKAGE_ROOT/../../.." && pwd)}"
 SCOUT_WS="${SCOUT_WS:-$REPO_ROOT/ros2_ws}"
 ZED_RTSP_TOPIC="${ZED_RTSP_TOPIC:-/zed/zed_node/rgb/color/rect/image/compressed}"
+LOCAL_MEDIAMTX_BIN="$PACKAGE_ROOT/test/tools/mediamtx-1.19.2-linux-arm64/mediamtx"
+LEGACY_LOCAL_MEDIAMTX_BIN="$PACKAGE_ROOT/test/tools/mediamtx-v1.19.2-linux-arm64/mediamtx"
 
 echo "== Host =="
 hostname || true
@@ -24,11 +26,16 @@ fi
 
 echo
 echo "== MediaMTX =="
-LOCAL_MEDIAMTX="$PACKAGE_ROOT/test/tools/mediamtx-v1.19.2-linux-arm64/mediamtx"
-if [[ -x "$LOCAL_MEDIAMTX" ]]; then
-  "$LOCAL_MEDIAMTX" --version || true
+if [[ -x "$LOCAL_MEDIAMTX_BIN" ]]; then
+  "$LOCAL_MEDIAMTX_BIN" --version || true
+elif [[ -x "$LEGACY_LOCAL_MEDIAMTX_BIN" ]]; then
+  "$LEGACY_LOCAL_MEDIAMTX_BIN" --version || true
+elif command -v mediamtx >/dev/null 2>&1; then
+  mediamtx --version || true
 else
-  echo "local mediamtx: missing at $LOCAL_MEDIAMTX"
+  echo "mediamtx: missing"
+  echo "checked: $LOCAL_MEDIAMTX_BIN"
+  echo "checked: $LEGACY_LOCAL_MEDIAMTX_BIN"
 fi
 
 echo
