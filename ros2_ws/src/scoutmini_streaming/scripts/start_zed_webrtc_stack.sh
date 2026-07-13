@@ -6,7 +6,8 @@ PACKAGE_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 REPO_ROOT="${REPO_ROOT:-$(cd "$PACKAGE_ROOT/../../.." && pwd)}"
 RTSP_SCRIPT="${RTSP_SCRIPT:-$PACKAGE_ROOT/scripts/start_zed_rtsp_stack.sh}"
 MEDIAMTX_CONFIG="${MEDIAMTX_CONFIG:-$PACKAGE_ROOT/config/mediamtx_zed_webrtc.yml}"
-LOCAL_MEDIAMTX_BIN="$PACKAGE_ROOT/test/tools/mediamtx-v1.19.2-linux-arm64/mediamtx"
+LOCAL_MEDIAMTX_BIN="$PACKAGE_ROOT/test/tools/mediamtx-1.19.2-linux-arm64/mediamtx"
+LEGACY_LOCAL_MEDIAMTX_BIN="$PACKAGE_ROOT/test/tools/mediamtx-v1.19.2-linux-arm64/mediamtx"
 MEDIAMTX_BIN="${MEDIAMTX_BIN:-$LOCAL_MEDIAMTX_BIN}"
 WEBRTC_URL_PATH="${WEBRTC_URL_PATH:-zed/}"
 START_RTSP="${START_RTSP:-1}"
@@ -15,10 +16,13 @@ RTSP_PORT="${RTSP_PORT:-8554}"
 WEBRTC_PORT="${WEBRTC_PORT:-8889}"
 
 if [[ ! -x "$MEDIAMTX_BIN" ]]; then
-  if command -v mediamtx >/dev/null 2>&1; then
+  if [[ -x "$LEGACY_LOCAL_MEDIAMTX_BIN" ]]; then
+    MEDIAMTX_BIN="$LEGACY_LOCAL_MEDIAMTX_BIN"
+  elif command -v mediamtx >/dev/null 2>&1; then
     MEDIAMTX_BIN="$(command -v mediamtx)"
   else
     echo "Missing mediamtx. Expected local binary at: $LOCAL_MEDIAMTX_BIN" >&2
+    echo "Also checked legacy local binary at: $LEGACY_LOCAL_MEDIAMTX_BIN" >&2
     echo "Or set MEDIAMTX_BIN=/path/to/mediamtx." >&2
     exit 1
   fi
