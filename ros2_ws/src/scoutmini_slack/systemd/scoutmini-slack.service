@@ -1,0 +1,15 @@
+[Unit]
+Description=ScoutMini Slack gateway
+After=network-online.target
+StartLimitIntervalSec=60
+StartLimitBurst=3
+
+[Service]
+Type=simple
+Environment=REPO_ROOT=%h/repos/ScoutMini
+ExecStart=%h/repos/ScoutMini/ros2_ws/install/scoutmini_slack/share/scoutmini_slack/scripts/start_slack_gateway.sh
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target

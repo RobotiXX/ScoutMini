@@ -1,0 +1,7 @@
+string channel
+string text
+string thread_ts
+---
+bool success
+string error
+string ts

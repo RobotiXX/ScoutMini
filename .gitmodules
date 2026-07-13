@@ -34,3 +34,6 @@
 	path = ros2_ws/src/apriltag
 	url = git@github.com:RobotiXX/apriltag.git
 	branch = v3.4.5
+[submodule "ros2_ws/src/image2rtsp"]
+	path = ros2_ws/src/image2rtsp
+	url = git@github.com:RobotiXX/image2rtsp.git

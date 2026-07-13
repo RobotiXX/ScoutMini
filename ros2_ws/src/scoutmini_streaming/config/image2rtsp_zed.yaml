@@ -1,0 +1,8 @@
+/image2rtsp:
+  ros__parameters:
+    compressed: true
+    topic: "/zed2/zed_node/rgb/color/rect/image/compressed"
+    camera: false
+    mountpoint: "/zed"
+    port: "8554"
+    local_only: false

@@ -1,0 +1,1 @@
+"""ScoutMini Slack integration package."""

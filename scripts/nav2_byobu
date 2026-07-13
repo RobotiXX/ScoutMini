@@ -83,6 +83,9 @@ send_command 0 \
 split_pane -h
 send_command 1 \
   "ros2 launch insta360_ros_driver x4_equirectangular_crop_h264.launch.xml"
+split_pane -v
+send_command 2 \
+  "ros2 launch scoutmini_streaming image2rtsp.launch.py"
 layout_tiled
 
 # IMU and Velodyne together, two panes in one window.
