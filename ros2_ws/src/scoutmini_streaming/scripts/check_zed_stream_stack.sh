@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-REPO_ROOT="${REPO_ROOT:-/home/nvidia/repos/ScoutMini}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PACKAGE_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+REPO_ROOT="${REPO_ROOT:-$(cd "$PACKAGE_ROOT/../../.." && pwd)}"
 SCOUT_WS="${SCOUT_WS:-$REPO_ROOT/ros2_ws}"
-RTSP_WS="${RTSP_WS:-/home/nvidia/image2rtsp_ws}"
 ZED_RTSP_TOPIC="${ZED_RTSP_TOPIC:-/zed/zed_node/rgb/color/rect/image/compressed}"
 
 echo "== Host =="
@@ -23,7 +24,7 @@ fi
 
 echo
 echo "== MediaMTX =="
-LOCAL_MEDIAMTX="$REPO_ROOT/scripts/zed_rtsp/tools/mediamtx-v1.19.2-linux-arm64/mediamtx"
+LOCAL_MEDIAMTX="$PACKAGE_ROOT/test/tools/mediamtx-v1.19.2-linux-arm64/mediamtx"
 if [[ -x "$LOCAL_MEDIAMTX" ]]; then
   "$LOCAL_MEDIAMTX" --version || true
 else
@@ -33,11 +34,10 @@ fi
 echo
 echo "== Files =="
 for file in \
-  "$REPO_ROOT/scripts/zed_rtsp/start_zed_rtsp_stack.sh" \
-  "$REPO_ROOT/scripts/zed_rtsp/start_zed_webrtc_stack.sh" \
-  "$REPO_ROOT/scripts/zed_rtsp/mediamtx_zed_webrtc.yml" \
-  "$SCOUT_WS/install/setup.bash" \
-  "$RTSP_WS/install/setup.bash"; do
+  "$PACKAGE_ROOT/scripts/start_zed_rtsp_stack.sh" \
+  "$PACKAGE_ROOT/scripts/start_zed_webrtc_stack.sh" \
+  "$PACKAGE_ROOT/config/mediamtx_zed_webrtc.yml" \
+  "$SCOUT_WS/install/setup.bash"; do
   if [[ -e "$file" ]]; then
     echo "ok: $file"
   else

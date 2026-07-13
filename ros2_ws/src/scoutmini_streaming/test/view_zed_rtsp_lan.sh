@@ -1,7 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-ROBOT_IP="${1:-192.168.0.159}"
+if [[ $# -lt 1 ]]; then
+  echo "Usage: $0 <robot_ip>" >&2
+  exit 2
+fi
+
+ROBOT_IP="$1"
 MOUNTPOINT="${MOUNTPOINT:-zed}"
 URL="rtsp://${ROBOT_IP}:8554/${MOUNTPOINT}"
 

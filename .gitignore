@@ -2,5 +2,12 @@
 ros2_ws/build
 ros2_ws/install
 ros2_ws/log
+log/
 .codex
 **/__pycache__/**
+ros2_ws/src/scoutmini_streaming/test/diagnostics/**
+ros2_ws/src/scoutmini_streaming/test/rosbags/**
+ros2_ws/src/scoutmini_streaming/test/tools/**
+!ros2_ws/src/scoutmini_streaming/test/diagnostics/
+!ros2_ws/src/scoutmini_streaming/test/rosbags/
+!ros2_ws/src/scoutmini_streaming/test/tools/

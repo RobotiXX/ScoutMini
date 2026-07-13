@@ -1,14 +1,17 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-REPO_ROOT="${REPO_ROOT:-/home/nvidia/repos/ScoutMini}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PACKAGE_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+REPO_ROOT="${REPO_ROOT:-$(cd "$PACKAGE_ROOT/../../.." && pwd)}"
 SIGNAL_TIMEOUT="${SIGNAL_TIMEOUT:-8}"
 
 patterns=(
-  "$REPO_ROOT/scripts/zed_rtsp/start_zed_webrtc_stack.sh"
-  "$REPO_ROOT/scripts/zed_rtsp/start_zed_rtsp_stack.sh"
+  "$PACKAGE_ROOT/scripts/start_zed_webrtc_stack.sh"
+  "$PACKAGE_ROOT/scripts/start_zed_rtsp_stack.sh"
   "mediamtx.*mediamtx_zed_webrtc.yml"
   "ros2 launch image2rtsp image2rtsp.launch.py"
+  "ros2 launch scoutmini_streaming zed_rtsp.launch.py"
   "image2rtsp"
   "component_container_isolated.*__node:=zed_container"
 )

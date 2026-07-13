@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-REPO_ROOT="${REPO_ROOT:-/home/nvidia/repos/ScoutMini}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PACKAGE_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 VERSION="${VERSION:-v1.19.2}"
 ASSET="mediamtx_${VERSION}_linux_arm64.tar.gz"
 EXPECTED_SHA256="${EXPECTED_SHA256:-562f419912a8668c18216a9e8c95359ec82fbb754e4a44e2953ef62b98eec688}"
-TOOLS_DIR="$REPO_ROOT/scripts/zed_rtsp/tools"
+TOOLS_DIR="$PACKAGE_ROOT/test/tools"
 DOWNLOAD_DIR="$TOOLS_DIR/downloads"
 INSTALL_DIR="$TOOLS_DIR/mediamtx-${VERSION#v}-linux-arm64"
 BASE_URL="https://github.com/bluenviron/mediamtx/releases/download/${VERSION}"

@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-REPO_ROOT="${REPO_ROOT:-/home/nvidia/repos/ScoutMini}"
-STACK_SCRIPT="${STACK_SCRIPT:-$REPO_ROOT/scripts/zed_rtsp/start_zed_webrtc_stack.sh}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PACKAGE_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+STACK_SCRIPT="${STACK_SCRIPT:-$PACKAGE_ROOT/scripts/start_zed_webrtc_stack.sh}"
 TEST_SECONDS="${TEST_SECONDS:-60}"
 WEBRTC_HOST="${WEBRTC_HOST:-127.0.0.1}"
 WEBRTC_PORT="${WEBRTC_PORT:-8889}"
@@ -53,7 +54,7 @@ ss -ltnup | grep -E ":${RTSP_PORT}|:${WEBRTC_PORT}|:${ICE_PORT}" || true
 
 echo
 echo "Open from a laptop on LAN or Tailscale:"
-echo "  http://<robot-ip-or-tailscale-ip>:${WEBRTC_PORT}${VIEWER_PATH}"
+echo "  http://<robot_ip_or_tailscale_ip>:${WEBRTC_PORT}${VIEWER_PATH}"
 echo
 echo "Waiting for bounded test to finish..."
 

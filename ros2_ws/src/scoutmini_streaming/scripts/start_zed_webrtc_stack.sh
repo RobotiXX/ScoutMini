@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-REPO_ROOT="${REPO_ROOT:-/home/nvidia/repos/ScoutMini}"
-RTSP_SCRIPT="${RTSP_SCRIPT:-$REPO_ROOT/scripts/zed_rtsp/start_zed_rtsp_stack.sh}"
-MEDIAMTX_CONFIG="${MEDIAMTX_CONFIG:-$REPO_ROOT/scripts/zed_rtsp/mediamtx_zed_webrtc.yml}"
-LOCAL_MEDIAMTX_BIN="$REPO_ROOT/scripts/zed_rtsp/tools/mediamtx-v1.19.2-linux-arm64/mediamtx"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PACKAGE_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+REPO_ROOT="${REPO_ROOT:-$(cd "$PACKAGE_ROOT/../../.." && pwd)}"
+RTSP_SCRIPT="${RTSP_SCRIPT:-$PACKAGE_ROOT/scripts/start_zed_rtsp_stack.sh}"
+MEDIAMTX_CONFIG="${MEDIAMTX_CONFIG:-$PACKAGE_ROOT/config/mediamtx_zed_webrtc.yml}"
+LOCAL_MEDIAMTX_BIN="$PACKAGE_ROOT/test/tools/mediamtx-v1.19.2-linux-arm64/mediamtx"
 MEDIAMTX_BIN="${MEDIAMTX_BIN:-$LOCAL_MEDIAMTX_BIN}"
 WEBRTC_URL_PATH="${WEBRTC_URL_PATH:-zed/}"
 START_RTSP="${START_RTSP:-1}"
@@ -81,8 +83,8 @@ echo "Starting MediaMTX WebRTC gateway..."
 MEDIAMTX_PID="$!"
 
 echo "ZED WebRTC stack started."
-echo "Open: http://<robot-ip-or-tailscale-ip>:${WEBRTC_PORT}/${WEBRTC_URL_PATH}"
-echo "RTSP fallback: rtsp://<robot-ip>:${RTSP_PORT}/zed"
+echo "Open: http://<robot_ip_or_tailscale_ip>:${WEBRTC_PORT}/${WEBRTC_URL_PATH}"
+echo "RTSP fallback: rtsp://<robot_ip>:${RTSP_PORT}/zed"
 
 PIDS=("$MEDIAMTX_PID")
 if [[ -n "${RTSP_PID:-}" ]]; then

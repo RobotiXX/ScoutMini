@@ -26,10 +26,10 @@ The official installer for Ubuntu 22.04 Jammy adds:
 Current robot state after setup:
 
 - Tailscale hostname: `scoutmini-zed`
-- Tailscale IPv4: `100.78.242.13`
+- Tailscale IPv4: `<robot_tailscale_ip>`
 - Known laptop peer during setup: `rohan-xps-15-9530` at `100.86.214.46`
 - Browser playback over Tailscale: verified on July 1, 2026 with
-  `http://100.78.242.13:8889/zed/`
+  `http://<robot_tailscale_ip>:8889/zed/`
 
 ## Authenticate
 
@@ -53,13 +53,13 @@ Start the stream on the robot:
 
 ```bash
 cd /home/nvidia/repos/ScoutMini
-./scripts/zed_rtsp/start_zed_webrtc_stack.sh
+ros2_ws/src/scoutmini_streaming/scripts/start_zed_webrtc_stack.sh
 ```
 
 From a laptop that is also on the same tailnet, open:
 
 ```text
-http://100.78.242.13:8889/zed/
+http://<robot_tailscale_ip>:8889/zed/
 ```
 
 If the page loads but video does not start, check whether UDP `8189` is
@@ -70,14 +70,14 @@ WebRTC media negotiation uses ICE on UDP `8189`.
 
 ```bash
 cd /home/nvidia/repos/ScoutMini
-./scripts/zed_rtsp/check_zed_stream_stack.sh
+ros2_ws/src/scoutmini_streaming/scripts/check_zed_stream_stack.sh
 ```
 
 For a bounded robot-side startup test:
 
 ```bash
 cd /home/nvidia/repos/ScoutMini
-./scripts/zed_rtsp/smoke_test_zed_webrtc_stack.sh
+ros2_ws/src/scoutmini_streaming/test/smoke_test_zed_webrtc_stack.sh
 ```
 
 If `tailscale status` shows an iptables `--restore-mark` health warning, keep

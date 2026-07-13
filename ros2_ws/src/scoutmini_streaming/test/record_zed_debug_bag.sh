@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-REPO_ROOT="${REPO_ROOT:-/home/nvidia/repos/ScoutMini}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PACKAGE_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+REPO_ROOT="${REPO_ROOT:-$(cd "$PACKAGE_ROOT/../../.." && pwd)}"
 SCOUT_WS="${SCOUT_WS:-$REPO_ROOT/ros2_ws}"
-BAG_ROOT="${BAG_ROOT:-$REPO_ROOT/scripts/zed_rtsp/rosbags}"
+BAG_ROOT="${BAG_ROOT:-$PACKAGE_ROOT/test/rosbags}"
 DURATION_SECONDS="${DURATION_SECONDS:-60}"
 STAMP="$(date +%Y%m%d_%H%M%S)"
 OUT_DIR="${OUT_DIR:-$BAG_ROOT/zed_debug_$STAMP}"

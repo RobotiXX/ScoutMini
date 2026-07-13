@@ -8,49 +8,49 @@ separate from navigation, robot motion, mapping, and task code.
 Start the original RTSP stream:
 
 ```bash
-./scripts/zed_rtsp/start_zed_rtsp_stack.sh
+ros2_ws/src/scoutmini_streaming/scripts/start_zed_rtsp_stack.sh
 ```
 
 Start RTSP plus the WebRTC browser gateway:
 
 ```bash
-./scripts/zed_rtsp/start_zed_webrtc_stack.sh
+ros2_ws/src/scoutmini_streaming/scripts/start_zed_webrtc_stack.sh
 ```
 
 Run a bounded WebRTC smoke test:
 
 ```bash
-./scripts/zed_rtsp/smoke_test_zed_webrtc_stack.sh
+ros2_ws/src/scoutmini_streaming/test/smoke_test_zed_webrtc_stack.sh
 ```
 
 Stop the streaming stack:
 
 ```bash
-./scripts/zed_rtsp/stop_zed_stream_stack.sh
+ros2_ws/src/scoutmini_streaming/scripts/stop_zed_stream_stack.sh
 ```
 
 Check local stream dependencies and network state:
 
 ```bash
-./scripts/zed_rtsp/check_zed_stream_stack.sh
+ros2_ws/src/scoutmini_streaming/scripts/check_zed_stream_stack.sh
 ```
 
 Collect a diagnostics bundle:
 
 ```bash
-./scripts/zed_rtsp/collect_zed_stream_diagnostics.sh
+ros2_ws/src/scoutmini_streaming/scripts/collect_zed_stream_diagnostics.sh
 ```
 
 Record a short ZED debug bag:
 
 ```bash
-DURATION_SECONDS=60 ./scripts/zed_rtsp/record_zed_debug_bag.sh
+DURATION_SECONDS=60 ros2_ws/src/scoutmini_streaming/test/record_zed_debug_bag.sh
 ```
 
-Install the local MediaMTX binary under `scripts/zed_rtsp/tools/`:
+Install the local MediaMTX binary under `test/tools/`:
 
 ```bash
-./scripts/zed_rtsp/install_mediamtx_local.sh
+ros2_ws/src/scoutmini_streaming/test/install_mediamtx_local.sh
 ```
 
 ## Viewer URLs
@@ -58,13 +58,13 @@ Install the local MediaMTX binary under `scripts/zed_rtsp/tools/`:
 RTSP:
 
 ```text
-rtsp://<robot-ip>:8554/zed
+rtsp://<robot_ip>:8554/zed
 ```
 
 WebRTC browser viewer:
 
 ```text
-http://<robot-ip-or-tailscale-ip>:8889/zed/
+http://<robot_ip_or_tailscale_ip>:8889/zed/
 ```
 
 ## Files

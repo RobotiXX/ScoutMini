@@ -1,7 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-ROBOT_SSH="${1:-nvidia@192.168.0.159}"
+if [[ $# -lt 1 ]]; then
+  echo "Usage: $0 nvidia@<robot_ip>" >&2
+  exit 2
+fi
+
+ROBOT_SSH="$1"
 LOCAL_PORT="${LOCAL_PORT:-18554}"
 REMOTE_PORT="${REMOTE_PORT:-8554}"
 MOUNTPOINT="${MOUNTPOINT:-zed}"

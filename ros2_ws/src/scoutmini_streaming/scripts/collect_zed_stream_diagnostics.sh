@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-REPO_ROOT="${REPO_ROOT:-/home/nvidia/repos/ScoutMini}"
-OUT_DIR="${OUT_DIR:-$REPO_ROOT/scripts/zed_rtsp/diagnostics}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PACKAGE_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+REPO_ROOT="${REPO_ROOT:-$(cd "$PACKAGE_ROOT/../../.." && pwd)}"
+OUT_DIR="${OUT_DIR:-$PACKAGE_ROOT/test/diagnostics}"
 STAMP="$(date +%Y%m%d_%H%M%S)"
 BUNDLE_DIR="$OUT_DIR/zed_stream_diag_$STAMP"
 SCOUT_WS="${SCOUT_WS:-$REPO_ROOT/ros2_ws}"
@@ -39,7 +41,7 @@ run_capture tailscaled_status systemctl status tailscaled --no-pager
 run_capture active_networks nmcli -t -f NAME,TYPE,DEVICE,STATE connection show --active
 run_shell_capture ports "ss -ltnup | grep -E ':8554|:8889|:8189|:22' || true"
 run_shell_capture processes "pgrep -af 'mediamtx|image2rtsp|zed_camera.launch.py|start_zed_.*stack|component_container_isolated' || true"
-run_shell_capture git_status "cd '$REPO_ROOT' && git status --short docs scripts/zed_rtsp"
+run_shell_capture git_status "cd '$REPO_ROOT' && git status --short docs ros2_ws/src/scoutmini_streaming"
 run_shell_capture recent_ros_logs "find /home/nvidia/.ros/log -maxdepth 2 -type f -mmin -120 | sort | tail -80"
 
 if [[ -f /opt/ros/humble/setup.bash && -f "$SCOUT_WS/install/setup.bash" ]]; then
