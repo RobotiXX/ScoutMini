@@ -33,8 +33,8 @@ class PinDialog(QDialog):
         self._entered_pin = ''
 
         layout = QVBoxLayout(self)
-        layout.setSpacing(16)
-        layout.setContentsMargins(24, 24, 24, 24)
+        layout.setSpacing(8)
+        layout.setContentsMargins(16, 16, 16, 16)
         self.setStyleSheet(
             'QDialog { background-color: white; color: #111827; border: 0px; }'
             'QLabel { color: #111827; }'
@@ -69,25 +69,25 @@ class PinDialog(QDialog):
 
         for digit, row, column in digits:
             button = QPushButton(digit)
-            button.setMinimumSize(90, 70)
+            button.setMinimumSize(80, 56)
             button.setStyleSheet('font-size: 34px;')
             button.clicked.connect(lambda checked=False, value=digit: self.append_digit(value))
             keypad.addWidget(button, row, column)
 
         self.clear_button = QPushButton('Clear')
-        self.clear_button.setMinimumHeight(70)
+        self.clear_button.setMinimumHeight(56)
         self.clear_button.setStyleSheet('font-size: 24px;')
         self.clear_button.clicked.connect(self.clear_pin)
         keypad.addWidget(self.clear_button, 3, 0)
 
         zero_button = QPushButton('0')
-        zero_button.setMinimumSize(90, 70)
+        zero_button.setMinimumSize(80, 56)
         zero_button.setStyleSheet('font-size: 34px;')
         zero_button.clicked.connect(lambda checked=False, value='0': self.append_digit(value))
         keypad.addWidget(zero_button, 3, 1)
 
         self.enter_button = QPushButton('Enter')
-        self.enter_button.setMinimumHeight(70)
+        self.enter_button.setMinimumHeight(56)
         self.enter_button.setStyleSheet('font-size: 24px; font-weight: bold;')
         self.enter_button.clicked.connect(self.accept)
         keypad.addWidget(self.enter_button, 3, 2)
@@ -95,7 +95,7 @@ class PinDialog(QDialog):
         layout.addLayout(keypad)
 
         self.cancel_button = QPushButton('Cancel')
-        self.cancel_button.setMinimumHeight(60)
+        self.cancel_button.setMinimumHeight(48)
         self.cancel_button.setStyleSheet('font-size: 24px;')
         self.cancel_button.clicked.connect(self.reject)
         layout.addWidget(self.cancel_button)
@@ -155,12 +155,13 @@ class RobotDashboard(QWidget):
         self.pin_feedback_label.setStyleSheet('color: #b91c1c; font-size: 20px; font-weight: bold;')
 
         footer_wrapper = QVBoxLayout()
-        footer_wrapper.setSpacing(8)
+        footer_wrapper.setSpacing(6)
         footer_wrapper.addWidget(self.pin_feedback_label)
         footer_wrapper.addLayout(footer)
 
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(24, 24, 24, 24)
+        layout.setContentsMargins(12, 12, 12, 12)
+        layout.setSpacing(8)
         layout.addWidget(self.pages, stretch=1)
         layout.addLayout(footer_wrapper, stretch=0)
 
@@ -197,8 +198,8 @@ class RobotDashboard(QWidget):
 
     def _create_nav_button(self, label, slot):
         button = QPushButton(label)
-        button.setMinimumHeight(64)
-        button.setMaximumHeight(64)
+        button.setMinimumHeight(56)
+        button.setMaximumHeight(56)
         button.setCheckable(True)
         button.setStyleSheet(
             "QPushButton { font-size: 24px; }"
@@ -293,8 +294,9 @@ def main(args=None):
 
     signal.signal(signal.SIGINT, handle_sigint)
 
-    window.resize(1024, 600)
-    # window.show()
+    # Fullscreen uses the display's real geometry. Calling resize(1024, 600)
+    # first only sets the windowed client size and can overflow once window
+    # decorations are included.
     window.showFullScreen()
     try:
         app_exit_code = app.exec()

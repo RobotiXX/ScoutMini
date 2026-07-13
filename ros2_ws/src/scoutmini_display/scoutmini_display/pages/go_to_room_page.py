@@ -29,18 +29,18 @@ class GoToRoomPage(QWidget):
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(18)
+        layout.setSpacing(8)
 
         self.status_label = QLabel(self.default_status_text)
         self.status_label.setAlignment(Qt.AlignCenter | Qt.AlignVCenter)
         self.status_label.setWordWrap(True)
-        self.status_label.setStyleSheet('font-size: 26px; color: black; font-weight: bold;')
+        self.status_label.setStyleSheet('font-size: 22px; color: black; font-weight: bold;')
         layout.addWidget(self.status_label)
 
         self.feedback_label = QLabel('')
         self.feedback_label.setAlignment(Qt.AlignCenter | Qt.AlignVCenter)
         self.feedback_label.setWordWrap(True)
-        self.feedback_label.setStyleSheet('font-size: 18px; color: #b91c1c; font-weight: bold;')
+        self.feedback_label.setStyleSheet('font-size: 16px; color: #b91c1c; font-weight: bold;')
         layout.addWidget(self.feedback_label)
         self._transient_feedback_text = ''
 
@@ -48,14 +48,14 @@ class GoToRoomPage(QWidget):
         self.room_input.setMaxLength(20)
         self.room_input.setAlignment(Qt.AlignCenter)
         self.room_input.setPlaceholderText('Building 0000')
-        self.room_input.setStyleSheet('font-size: 30px; padding: 10px;')
+        self.room_input.setStyleSheet('font-size: 26px; padding: 6px;')
         self.room_input.setValidator(QRegularExpressionValidator(QRegularExpression(r'\d{0,4}'), self))
         self.room_input.setReadOnly(True)
         layout.addWidget(self.room_input)
 
         content = QGridLayout()
-        content.setHorizontalSpacing(16)
-        content.setVerticalSpacing(16)
+        content.setHorizontalSpacing(10)
+        content.setVerticalSpacing(8)
 
         self.building_buttons = {}
         building_specs = [
@@ -66,11 +66,11 @@ class GoToRoomPage(QWidget):
         ]
         for label, enabled, row in building_specs:
             button = QPushButton(label)
-            button.setFixedHeight(70)
+            button.setFixedHeight(56)
             button.setCheckable(True)
             button.setEnabled(enabled)
             button.setStyleSheet(
-                'QPushButton { font-size: 28px; }'
+                'QPushButton { font-size: 24px; }'
                 'QPushButton:checked { background-color: #2d6cdf; color: white; font-weight: bold; }'
                 'QPushButton:disabled { background-color: #d1d5db; color: #6b7280; }'
             )
@@ -78,11 +78,11 @@ class GoToRoomPage(QWidget):
                 button.clicked.connect(partial(self.select_building, label))
             content.addWidget(button, row, 0)
             self.building_buttons[label] = button
-            content.setRowMinimumHeight(row, 70)
+            content.setRowMinimumHeight(row, 56)
 
         keypad = QGridLayout()
-        keypad.setHorizontalSpacing(16)
-        keypad.setVerticalSpacing(16)
+        keypad.setHorizontalSpacing(10)
+        keypad.setVerticalSpacing(8)
 
         digits = [
             ('1', 0, 0), ('2', 0, 1), ('3', 0, 2),
@@ -92,25 +92,25 @@ class GoToRoomPage(QWidget):
 
         for digit, row, column in digits:
             button = QPushButton(digit)
-            button.setFixedSize(90, 70)
-            button.setStyleSheet('font-size: 34px;')
+            button.setFixedSize(80, 56)
+            button.setStyleSheet('font-size: 30px;')
             button.clicked.connect(partial(self.append_digit, digit))
             keypad.addWidget(button, row, column)
 
         self.clear_button = QPushButton('Clear')
-        self.clear_button.setFixedHeight(70)
+        self.clear_button.setFixedHeight(56)
         self.clear_button.setStyleSheet('font-size: 24px;')
         self.clear_button.clicked.connect(self.clear_room)
         keypad.addWidget(self.clear_button, 3, 0)
 
         zero_button = QPushButton('0')
-        zero_button.setFixedSize(90, 70)
-        zero_button.setStyleSheet('font-size: 34px;')
+        zero_button.setFixedSize(80, 56)
+        zero_button.setStyleSheet('font-size: 30px;')
         zero_button.clicked.connect(partial(self.append_digit, '0'))
         keypad.addWidget(zero_button, 3, 1)
 
         self.go_button = QPushButton('Go')
-        self.go_button.setFixedHeight(70)
+        self.go_button.setFixedHeight(56)
         self.go_button.setStyleSheet('font-size: 24px; font-weight: bold;')
         self.go_button.clicked.connect(self.request_room)
         keypad.addWidget(self.go_button, 3, 2)
