@@ -18,6 +18,7 @@ def generate_launch_description():
             package='nav2_controller',
             executable='controller_server',
             name='controller_server',
+            namespace='adascore_shadow',
             output='screen',
             parameters=[params_file],
             remappings=[

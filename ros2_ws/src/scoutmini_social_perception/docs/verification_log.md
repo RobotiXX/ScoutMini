@@ -484,18 +484,33 @@ ros2 launch scoutmini_social_perception adascore_shadow_controller.launch.py
 Then, while the launch was running:
 
 ```bash
-ros2 lifecycle set /controller_server configure
+ros2 service call /adascore_shadow/controller_server/get_state \
+  lifecycle_msgs/srv/GetState {}
+ros2 service call /adascore_shadow/controller_server/change_state \
+  lifecycle_msgs/srv/ChangeState \
+  "{transition: {id: 1, label: configure}}"
 ```
 
 Result:
 
-- `controller_server` launched without lifecycle activation and published no
-  live robot command topic because the launch remaps `cmd_vel` to
+- The first implementation used `/controller_server`, which collided with the
+  live robot Nav2 controller name. The launch was moved under the
+  `/adascore_shadow` namespace and lifecycle validation now uses direct service
+  calls against `/adascore_shadow/controller_server`.
+- The namespaced controller launched without lifecycle activation and published
+  no live robot command topic because the launch remaps `cmd_vel` to
   `/adascore/shadow/cmd_vel`.
-- The lifecycle configure transition succeeded.
+- The direct lifecycle configure service returned `success: true`, and
+  `get_state` reported `inactive`.
 - Nav2 created `FollowPath` with type
   `social_force_window_planner::SFWPlannerNode`.
+- The local costmap used only `obstacle_layer` and `inflation_layer`; the
+  accidental default `static_layer` fallback was removed by namespacing the
+  parameter YAML correctly.
 - The social-force sensor interface reported `/scan`,
   `/adascore/shadow/people`, and `/rko_lio/odometry`.
-- The launch shut down cleanly after `SIGINT`.
-- No activation, Nav2 goal, live `/cmd_vel`, or robot movement was used.
+- A no-goal activation attempt blocked waiting for `odom -> base_link` TF:
+  `Invalid frame ID "odom" passed to canTransform argument target_frame - frame
+  does not exist`. This is the next runtime dependency before activation can be
+  considered a passing no-motion gate.
+- No Nav2 goal, live `/cmd_vel`, or robot movement was used.

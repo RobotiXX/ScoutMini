@@ -295,10 +295,13 @@ def test_parse_expected_type_accepts_topic_equals_type_list():
 
 def test_shadow_controller_config_uses_social_force_and_shadow_people():
     config = yaml.safe_load((PACKAGE_ROOT / 'config' / 'adascore_shadow_controller.yaml').read_text())
-    params = config['controller_server']['ros__parameters']
+    shadow_config = config['adascore_shadow']
+    params = shadow_config['controller_server']['ros__parameters']
     follow_path = params['FollowPath']
     sensor_interface = follow_path['sensor_interface']
+    local_costmap = shadow_config['local_costmap']['local_costmap']['ros__parameters']
 
+    assert set(config) == {'adascore_shadow'}
     assert params['controller_plugins'] == ['FollowPath']
     assert follow_path['plugin'] == 'social_force_window_planner::SFWPlannerNode'
     assert follow_path['controller_frame'] == 'odom'
@@ -308,6 +311,12 @@ def test_shadow_controller_config_uses_social_force_and_shadow_people():
     assert sensor_interface['odom_topic'] == '/rko_lio/odometry'
     assert params['odom_topic'] == '/rko_lio/odometry'
     assert params['enable_stamped_cmd_vel'] is False
+    assert local_costmap['global_frame'] == 'odom'
+    assert local_costmap['robot_base_frame'] == 'base_link'
+    assert local_costmap['rolling_window'] is True
+    assert local_costmap['plugins'] == ['obstacle_layer', 'inflation_layer']
+    assert 'static_layer' not in local_costmap
+    assert local_costmap['obstacle_layer']['scan']['topic'] == '/scan'
 
 
 def test_shadow_controller_launch_remaps_cmd_vel_off_live_topic():
@@ -315,5 +324,6 @@ def test_shadow_controller_launch_remaps_cmd_vel_off_live_topic():
 
     assert "package='nav2_controller'" in launch_text
     assert "executable='controller_server'" in launch_text
+    assert "namespace='adascore_shadow'" in launch_text
     assert "'/adascore/shadow/cmd_vel'" in launch_text
     assert "('/cmd_vel', '/adascore/shadow/cmd_vel')" in launch_text

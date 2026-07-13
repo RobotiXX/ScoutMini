@@ -109,12 +109,14 @@ Expected result:
 ## Shadow Controller Readiness
 
 `adascore_shadow_controller.launch.py` starts only Nav2's controller server with
-`adascore_shadow_controller.yaml`. The config selects
+`adascore_shadow_controller.yaml` under the `/adascore_shadow` namespace. The
+config selects
 `social_force_window_planner::SFWPlannerNode`, uses `/adascore/shadow/people`,
 `/scan`, and `/rko_lio/odometry`, and the launch remaps controller output from
 `cmd_vel` to `/adascore/shadow/cmd_vel`.
 
-For no-motion validation, start the launch and only configure the lifecycle node:
+For no-motion validation, start the launch and configure the namespaced
+lifecycle node:
 
 ```bash
 source /opt/ros/humble/setup.bash
@@ -129,8 +131,24 @@ In another terminal:
 source /opt/ros/humble/setup.bash
 source /home/nvidia/adascore_ws/install/setup.bash
 source /home/nvidia/repos/ScoutMini-rohan-work/ros2_ws/install/setup.bash
-ros2 lifecycle set /controller_server configure
+ros2 service call /adascore_shadow/controller_server/get_state \
+  lifecycle_msgs/srv/GetState {}
+ros2 service call /adascore_shadow/controller_server/change_state \
+  lifecycle_msgs/srv/ChangeState \
+  "{transition: {id: 1, label: configure}}"
 ```
 
-Do not activate the controller, send Nav2 goals, or remap this launch back to
-live `/cmd_vel` until a supervised movement test is explicitly approved.
+Expected configure result:
+
+- `/adascore_shadow/controller_server` reaches `inactive`.
+- The local costmap uses `obstacle_layer` and `inflation_layer`, with no
+  `static_layer`.
+- Nav2 creates `FollowPath` as
+  `social_force_window_planner::SFWPlannerNode`.
+- The social-force sensor interface reports `/scan`,
+  `/adascore/shadow/people`, and `/rko_lio/odometry`.
+
+Activation is intentionally not a passing gate yet. On 2026-07-13 it blocked
+waiting for `odom -> base_link` TF, which was not available in the current robot
+graph. Do not send Nav2 goals or remap this launch back to live `/cmd_vel` until
+a supervised movement test is explicitly approved.
