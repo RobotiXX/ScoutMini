@@ -2,17 +2,18 @@
 set -euo pipefail
 
 REPO_ROOT="${REPO_ROOT:-/home/nvidia/repos/ScoutMini}"
-START_SCRIPT="${START_SCRIPT:-$REPO_ROOT/scripts/zed_rtsp/start_zed_webrtc_stack.sh}"
-STOP_SCRIPT="${STOP_SCRIPT:-$REPO_ROOT/scripts/zed_rtsp/stop_zed_stream_stack.sh}"
-CHECK_SCRIPT="${CHECK_SCRIPT:-$REPO_ROOT/scripts/zed_rtsp/check_zed_stream_stack.sh}"
-LOG_DIR="${LOG_DIR:-$REPO_ROOT/scripts/zed_rtsp/diagnostics/slack_stream_control}"
+STREAMING_ROOT="${STREAMING_ROOT:-$REPO_ROOT/ros2_ws/src/scoutmini_streaming}"
+START_SCRIPT="${START_SCRIPT:-$STREAMING_ROOT/scripts/start_zed_webrtc_stack.sh}"
+STOP_SCRIPT="${STOP_SCRIPT:-$STREAMING_ROOT/scripts/stop_zed_stream_stack.sh}"
+CHECK_SCRIPT="${CHECK_SCRIPT:-$STREAMING_ROOT/scripts/check_zed_stream_stack.sh}"
+LOG_DIR="${LOG_DIR:-$REPO_ROOT/ros2_ws/src/scoutmini_slack/logs/slack_stream_control}"
 PID_FILE="${PID_FILE:-$LOG_DIR/zed_webrtc_stack.pid}"
 LOG_FILE="${LOG_FILE:-$LOG_DIR/zed_webrtc_stack.log}"
 RECENT_LOG_LINES="${RECENT_LOG_LINES:-0}"
 WEBRTC_PORT="${WEBRTC_PORT:-8889}"
 RTSP_PORT="${RTSP_PORT:-8554}"
 ICE_PORT="${ICE_PORT:-8189}"
-SCOUT_STREAM_URL="${SCOUT_STREAM_URL:-http://100.78.242.13:8889/zed/}"
+SCOUT_STREAM_URL="${SCOUT_STREAM_URL:-http://<robot_ip_or_tailscale_ip>:8889/zed/}"
 
 usage() {
   cat <<EOF

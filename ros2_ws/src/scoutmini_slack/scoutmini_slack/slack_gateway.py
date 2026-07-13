@@ -16,12 +16,12 @@ from rclpy.node import Node
 from scoutmini_interfaces.srv import SendSlackMessage
 from std_msgs.msg import String
 
-from scoutmini_tasks.slack_status import collect_status
+from scoutmini_slack.slack_status import collect_status
 
 
 STREAM_CONTROL_SCRIPT = os.environ.get(
     "SCOUT_STREAM_CONTROL_SCRIPT",
-    "/home/nvidia/repos/ScoutMini/scripts/slack/control_zed_stream.sh",
+    "/home/nvidia/repos/ScoutMini/ros2_ws/src/scoutmini_slack/scripts/control_zed_stream.sh",
 )
 ANSI_ESCAPE_RE = re.compile(r"\x1b\[[0-?]*[ -/]*[@-~]")
 
@@ -85,6 +85,9 @@ class SlackGateway(Node):
         self.declare_parameter("send_channel_burst", 3)
         self._command_pub = self.create_publisher(
             String, "/scout/slack/command_request", 10
+        )
+        self._incoming_pub = self.create_publisher(
+            String, "/scout/slack/incoming_message", 10
         )
         self._service = self.create_service(
             SendSlackMessage,
@@ -211,6 +214,7 @@ class SlackGateway(Node):
         thread_ts = self._event_thread_ts(event)
         text = self._event_text(event)
         response, handled = self._response_for(text, event)
+        self._publish_incoming_message(event, text, handled)
         if not handled:
             self._publish_command_request(event, text)
 
@@ -298,7 +302,30 @@ class SlackGateway(Node):
         return f"{prefix}\n```{output}```"
 
     def _publish_command_request(self, event: Dict[str, Any], text: str) -> None:
-        payload = {
+        payload = self._incoming_message_payload(event, text, handled=False)
+        message = String()
+        message.data = json.dumps(payload, sort_keys=True)
+        self._command_pub.publish(message)
+
+    def _publish_incoming_message(
+        self,
+        event: Dict[str, Any],
+        text: str,
+        handled: bool,
+    ) -> None:
+        payload = self._incoming_message_payload(event, text, handled=handled)
+        message = String()
+        message.data = json.dumps(payload, sort_keys=True)
+        self._incoming_pub.publish(message)
+
+    @staticmethod
+    def _incoming_message_payload(
+        event: Dict[str, Any],
+        text: str,
+        *,
+        handled: bool,
+    ) -> Dict[str, Any]:
+        return {
             "source": "slack",
             "channel": event.get("channel"),
             "channel_type": event.get("channel_type"),
@@ -307,10 +334,8 @@ class SlackGateway(Node):
             "ts": event.get("ts"),
             "thread_ts": event.get("thread_ts") or event.get("ts"),
             "event_type": event.get("type"),
+            "handled": handled,
         }
-        message = String()
-        message.data = json.dumps(payload, sort_keys=True)
-        self._command_pub.publish(message)
 
     def _post_message(
         self,

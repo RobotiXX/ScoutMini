@@ -17,7 +17,7 @@ fi
 
 if [[ ! -f "$SLACK_ENV" ]]; then
   echo "Missing Slack env file: $SLACK_ENV" >&2
-  echo "Copy docs/remote_communication/slack.env.example to that path and fill it in." >&2
+  echo "Copy ros2_ws/src/scoutmini_slack/config/slack.env.example to that path and fill it in." >&2
   exit 1
 fi
 
@@ -39,4 +39,4 @@ if (( ${#missing[@]} > 0 )); then
   exit 1
 fi
 
-exec ros2 run scoutmini_tasks slack_command_bot
+exec ros2 run scoutmini_slack slack_gateway

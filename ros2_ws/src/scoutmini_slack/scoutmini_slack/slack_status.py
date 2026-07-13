@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Post Scout robot status to Slack without exposing robot control."""
+"""Scout status helpers used by the Slack gateway."""
 
 from __future__ import annotations
 
@@ -7,20 +7,20 @@ import os
 import socket
 import subprocess
 from dataclasses import dataclass
-from typing import List
+from typing import Sequence
 
 
 WEBRTC_PORT = 8889
 START_STREAM_COMMAND = (
     "cd /home/nvidia/repos/ScoutMini && "
-    "./scripts/slack/control_zed_stream.sh start"
+    "ros2_ws/src/scoutmini_slack/scripts/control_zed_stream.sh start"
 )
 
 
-def _run(command: List[str], timeout_sec: float = 5.0) -> str:
+def _run(command: Sequence[str], timeout_sec: float = 5.0) -> str:
     try:
         completed = subprocess.run(
-            command,
+            list(command),
             check=False,
             text=True,
             stdout=subprocess.PIPE,
@@ -34,7 +34,7 @@ def _run(command: List[str], timeout_sec: float = 5.0) -> str:
     return output if output else f"exit={completed.returncode}"
 
 
-@dataclass
+@dataclass(frozen=True)
 class ScoutStatus:
     hostname: str
     ips: str
@@ -58,7 +58,7 @@ class ScoutStatus:
             f"- Tailscale: `{self.tailscale_ip}`\n"
             f"{stream_line}\n"
             f"- Stream ports: ```{self.stream_ports}```\n"
-            "- Motion commands: disabled for this Slack prototype"
+            "- Motion commands: disabled"
         )
 
 
@@ -71,7 +71,12 @@ def collect_status() -> ScoutStatus:
     hostname = socket.gethostname()
     ips = _run(["hostname", "-I"])
     tailscale_ip = _run(["tailscale", "ip", "-4"])
-    stream_url = os.environ.get("SCOUT_STREAM_URL", "http://100.78.242.13:8889/zed/")
+    stream_host = (
+        tailscale_ip.split()[0]
+        if tailscale_ip and not tailscale_ip.startswith("unavailable:")
+        else "<robot_ip_or_tailscale_ip>"
+    )
+    stream_url = os.environ.get("SCOUT_STREAM_URL", f"http://{stream_host}:8889/zed/")
     stream_ports = _run(
         ["bash", "-lc", "ss -ltnup | grep -E ':8554|:8889|:8189' || echo 'none'"]
     )
@@ -83,40 +88,3 @@ def collect_status() -> ScoutStatus:
         stream_online=_is_port_listening(WEBRTC_PORT),
         stream_ports=stream_ports,
     )
-
-
-def post_status() -> None:
-    token = os.environ.get("SLACK_BOT_TOKEN", "").strip()
-    channel = os.environ.get("SLACK_CHANNEL_ID", "").strip()
-
-    if not token:
-        raise SystemExit("Missing SLACK_BOT_TOKEN environment variable.")
-    if not channel:
-        raise SystemExit("Missing SLACK_CHANNEL_ID environment variable.")
-
-    try:
-        from slack_sdk import WebClient
-        from slack_sdk.errors import SlackApiError
-    except ImportError as exc:
-        raise SystemExit(
-            "Missing Python package slack_sdk. Run "
-            "`python3 -m pip install slack_sdk` in the active environment."
-        ) from exc
-
-    client = WebClient(token=token)
-    status = collect_status()
-
-    try:
-        client.chat_postMessage(channel=channel, text=status.to_slack_text())
-    except SlackApiError as exc:
-        raise SystemExit(f"Slack API error: {exc.response.get('error')}") from exc
-
-    print(f"Posted Scout status to Slack channel {channel}.")
-
-
-def main() -> None:
-    post_status()
-
-
-if __name__ == "__main__":
-    main()

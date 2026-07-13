@@ -1,0 +1,30 @@
+from glob import glob
+from setuptools import find_packages, setup
+
+package_name = 'scoutmini_slack'
+
+setup(
+    name=package_name,
+    version='0.0.1',
+    packages=find_packages(exclude=['test']),
+    data_files=[
+        ('share/ament_index/resource_index/packages', ['resource/' + package_name]),
+        ('share/' + package_name, ['package.xml', 'README.md']),
+        ('share/' + package_name + '/config', glob('config/*')),
+        ('share/' + package_name + '/docs', glob('docs/*.md')),
+        ('share/' + package_name + '/scripts', glob('scripts/*.sh')),
+    ],
+    install_requires=['setuptools'],
+    zip_safe=True,
+    maintainer='nle',
+    maintainer_email='noreply@example.com',
+    description='Slack integration nodes and scripts for ScoutMini',
+    license='Apache-2.0',
+    entry_points={
+        'console_scripts': [
+            'slack_gateway = scoutmini_slack.slack_gateway:main',
+            'slack_status_poster = scoutmini_slack.slack_status_poster:main',
+            'slack_command_bot = scoutmini_slack.slack_command_bot:main',
+        ],
+    },
+)

@@ -53,7 +53,7 @@ Run after building/sourcing the ROS workspace:
 ```bash
 export SLACK_BOT_TOKEN='xoxb-...'
 export SLACK_CHANNEL_ID='C...'
-ros2 run scoutmini_tasks slack_status_poster
+ros2 run scoutmini_slack slack_status_poster
 ```
 
 Install the Slack SDK on the robot with pip, since the Ubuntu apt repositories
@@ -80,14 +80,14 @@ Run after building/sourcing the ROS workspace:
 ```bash
 export SLACK_BOT_TOKEN='xoxb-...'
 export SLACK_APP_TOKEN='xapp-...'
-ros2 run scoutmini_tasks slack_command_bot
+ros2 run scoutmini_slack slack_command_bot
 ```
 
 Or use the manual launcher, which sources the ignored local env file:
 
 ```bash
 cd /home/nvidia/repos/ScoutMini
-./scripts/slack/start_slack_bot.sh
+ros2_ws/src/scoutmini_slack/scripts/start_slack_bot.sh
 ```
 
 The Slack app needs Socket Mode enabled and event subscriptions for app
@@ -98,7 +98,7 @@ For repeated testing, copy the template into the ignored local secrets area:
 
 ```bash
 mkdir -p /home/nvidia/repos/ScoutMini/.local/secrets
-cp /home/nvidia/repos/ScoutMini/docs/remote_communication/slack.env.example \
+cp /home/nvidia/repos/ScoutMini/ros2_ws/src/scoutmini_slack/config/slack.env.example \
   /home/nvidia/repos/ScoutMini/.local/secrets/slack.env
 chmod 600 /home/nvidia/repos/ScoutMini/.local/secrets/slack.env
 ```

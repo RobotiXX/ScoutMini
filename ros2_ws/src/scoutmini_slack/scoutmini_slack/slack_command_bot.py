@@ -9,12 +9,12 @@ import subprocess
 import time
 from typing import Any, Dict, Optional
 
-from scoutmini_tasks.slack_status_poster import collect_status
+from scoutmini_slack.slack_status_poster import collect_status
 
 
 STREAM_CONTROL_SCRIPT = os.environ.get(
     "SCOUT_STREAM_CONTROL_SCRIPT",
-    "/home/nvidia/repos/ScoutMini/scripts/slack/control_zed_stream.sh",
+    "/home/nvidia/repos/ScoutMini/ros2_ws/src/scoutmini_slack/scripts/control_zed_stream.sh",
 )
 ANSI_ESCAPE_RE = re.compile(r"\x1b\[[0-?]*[ -/]*[@-~]")
 
