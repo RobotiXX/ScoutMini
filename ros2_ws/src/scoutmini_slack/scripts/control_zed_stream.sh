@@ -1,12 +1,30 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-REPO_ROOT="${REPO_ROOT:-/home/nvidia/repos/ScoutMini}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PACKAGE_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+REPO_ROOT="${REPO_ROOT:-$(cd "$PACKAGE_ROOT/../../.." && pwd)}"
 STREAMING_ROOT="${STREAMING_ROOT:-$REPO_ROOT/ros2_ws/src/scoutmini_streaming}"
-START_SCRIPT="${START_SCRIPT:-$STREAMING_ROOT/scripts/start_zed_webrtc_stack.sh}"
-STOP_SCRIPT="${STOP_SCRIPT:-$STREAMING_ROOT/scripts/stop_zed_stream_stack.sh}"
-CHECK_SCRIPT="${CHECK_SCRIPT:-$STREAMING_ROOT/scripts/check_zed_stream_stack.sh}"
-LOG_DIR="${LOG_DIR:-$REPO_ROOT/ros2_ws/src/scoutmini_slack/logs/slack_stream_control}"
+LEGACY_STREAMING_ROOT="$REPO_ROOT/scripts/zed_rtsp"
+
+if [[ -x "$STREAMING_ROOT/scripts/start_zed_webrtc_stack.sh" ]]; then
+  DEFAULT_START_SCRIPT="$STREAMING_ROOT/scripts/start_zed_webrtc_stack.sh"
+  DEFAULT_STOP_SCRIPT="$STREAMING_ROOT/scripts/stop_zed_stream_stack.sh"
+  DEFAULT_CHECK_SCRIPT="$STREAMING_ROOT/scripts/check_zed_stream_stack.sh"
+elif [[ -x "$LEGACY_STREAMING_ROOT/start_zed_webrtc_stack.sh" ]]; then
+  DEFAULT_START_SCRIPT="$LEGACY_STREAMING_ROOT/start_zed_webrtc_stack.sh"
+  DEFAULT_STOP_SCRIPT="$LEGACY_STREAMING_ROOT/stop_zed_stream_stack.sh"
+  DEFAULT_CHECK_SCRIPT="$LEGACY_STREAMING_ROOT/check_zed_stream_stack.sh"
+else
+  DEFAULT_START_SCRIPT="$STREAMING_ROOT/scripts/start_zed_webrtc_stack.sh"
+  DEFAULT_STOP_SCRIPT="$STREAMING_ROOT/scripts/stop_zed_stream_stack.sh"
+  DEFAULT_CHECK_SCRIPT="$STREAMING_ROOT/scripts/check_zed_stream_stack.sh"
+fi
+
+START_SCRIPT="${START_SCRIPT:-$DEFAULT_START_SCRIPT}"
+STOP_SCRIPT="${STOP_SCRIPT:-$DEFAULT_STOP_SCRIPT}"
+CHECK_SCRIPT="${CHECK_SCRIPT:-$DEFAULT_CHECK_SCRIPT}"
+LOG_DIR="${LOG_DIR:-$PACKAGE_ROOT/logs/slack_stream_control}"
 PID_FILE="${PID_FILE:-$LOG_DIR/zed_webrtc_stack.pid}"
 LOG_FILE="${LOG_FILE:-$LOG_DIR/zed_webrtc_stack.log}"
 RECENT_LOG_LINES="${RECENT_LOG_LINES:-0}"
