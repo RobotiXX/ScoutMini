@@ -31,6 +31,7 @@ fi
 
 getent group "${GROUP_NAME}" >/dev/null || groupadd --system "${GROUP_NAME}"
 usermod --append --groups "${GROUP_NAME}" "${TARGET_USER}"
+install --directory --owner=root --group=root --mode=0755 "$(dirname -- "${POLICY_DESTINATION}")"
 install --owner=root --group=root --mode=0644 "${POLICY_SOURCE}" "${POLICY_DESTINATION}"
 
 echo "Installed ${POLICY_DESTINATION}."
