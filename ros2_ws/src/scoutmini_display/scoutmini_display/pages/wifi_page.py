@@ -161,6 +161,12 @@ class WifiPage(QWidget):
         if completed.returncode == 0:
             return True, output
 
+        if "not authorized to control networking" in output.lower():
+            return False, (
+                "This dashboard user cannot control NetworkManager. Install the "
+                "ScoutMini network permission, then reboot the robot."
+            )
+
         if not output:
             output = f"nmcli failed with exit code {completed.returncode}."
         return False, output

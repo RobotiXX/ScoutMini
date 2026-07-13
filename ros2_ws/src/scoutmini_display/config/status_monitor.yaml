@@ -19,7 +19,7 @@ sensor_monitors:
 
   - name: IMU
     monitor_type: topic_rate
-    topic: /witmotion/imu/data
+    topic: /witmotion/imu
     message_type: sensor_msgs/msg/Imu
     expected_rate_hz: 100.0
 
