@@ -294,8 +294,8 @@ def main(args=None):
     signal.signal(signal.SIGINT, handle_sigint)
 
     window.resize(1024, 600)
-    window.show()
-    # window.showFullScreen()
+    # window.show()
+    window.showFullScreen()
     try:
         app_exit_code = app.exec()
         if exit_code == 0:
