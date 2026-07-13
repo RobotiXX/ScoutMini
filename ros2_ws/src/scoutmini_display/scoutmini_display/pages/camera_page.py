@@ -11,6 +11,7 @@ from PyQt5.QtWidgets import (
     QWidget,
 )
 
+from rclpy.qos import qos_profile_sensor_data
 from sensor_msgs.msg import CompressedImage, Image
 
 
@@ -159,7 +160,7 @@ class CameraPage(QWidget):
             msg_type,
             self._current_topic_name,
             self._image_callback,
-            10,
+            qos_profile_sensor_data,
         )
         self.set_status(f'Subscribed to {self._current_topic_name}.')
         if self._ros_node is not None:
