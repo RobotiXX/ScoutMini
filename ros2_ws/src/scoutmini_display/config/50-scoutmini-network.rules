@@ -1,0 +1,8 @@
+// Allow dashboard operators to activate and deactivate existing NetworkManager
+// connections. This does not allow them to create or modify system profiles.
+polkit.addRule(function(action, subject) {
+    if (action.id == "org.freedesktop.NetworkManager.network-control" &&
+            subject.isInGroup("scoutmini-network")) {
+        return polkit.Result.YES;
+    }
+});

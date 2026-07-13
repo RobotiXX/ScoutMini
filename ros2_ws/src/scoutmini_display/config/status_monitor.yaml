@@ -5,15 +5,21 @@ sensor_monitors:
     message_type: sensor_msgs/msg/LaserScan
     expected_rate_hz: 10.0
 
-  - name: Camera
+  - name: ZED2
     monitor_type: topic_rate
-    topic: /camera/color/image_raw
-    message_type: sensor_msgs/msg/Image
-    expected_rate_hz: 30.0
+    topic: /zed2/zed_node/rgb/color/rect/camera_info
+    message_type: sensor_msgs/msg/CameraInfo
+    expected_rate_hz: 15.0
+
+  - name: Insta360
+    monitor_type: topic_rate
+    topic: /equirectangular/image/camera_info
+    message_type: sensor_msgs/msg/CameraInfo
+    expected_rate_hz: 15.0
 
   - name: IMU
     monitor_type: topic_rate
-    topic: /imu/data
+    topic: /witmotion_imu/imu
     message_type: sensor_msgs/msg/Imu
     expected_rate_hz: 100.0
 

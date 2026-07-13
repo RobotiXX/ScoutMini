@@ -116,6 +116,29 @@ The multi-page Qt demo also includes a Network page that uses `nmcli` and only s
 
 It can be used to reconnect to networks the robot has already joined before.
 
+### Network permission on the Jetson
+
+If connection activation reports `Not authorized to control networking`, install
+the included PolicyKit rule once from the repository root. Pass the Linux account
+that runs the dashboard if it is different from your current account:
+
+```bash
+sudo ./scripts/install_dashboard_network_permissions.sh "$USER"
+sudo reboot
+```
+
+The installer adds that account to the dedicated `scoutmini-network` group and
+allows the group to activate or deactivate existing NetworkManager connections.
+It does not grant permission to create or modify system connection profiles. You
+can inspect NetworkManager's result after reboot with:
+
+```bash
+nmcli general permissions | grep network-control
+```
+
+The `network-control` permission should report `yes` in the dashboard user's
+session.
+
 ## 7) Stream page
 
 The Stream page finds image topics from the active ROS graph and subscribes only while the page is visible. It supports both raw `sensor_msgs/msg/Image` topics and compressed `sensor_msgs/msg/CompressedImage` topics, then decodes them with Qt and scales the image to fit the screen while preserving aspect ratio.
