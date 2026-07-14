@@ -50,6 +50,13 @@ bt_navigator:
     bt_loop_duration: 10
     default_server_timeout: 20
     wait_for_service_timeout: 1000
+    navigators: ['navigate_to_pose', 'navigate_through_poses']
+    default_nav_to_pose_bt_xml: $(find-pkg-share nav2_bt_navigator)/behavior_trees/navigate_to_pose_w_replanning_and_recovery.xml
+    default_nav_through_poses_bt_xml: $(find-pkg-share nav2_bt_navigator)/behavior_trees/navigate_through_poses_w_replanning_and_recovery.xml
+    navigate_to_pose:
+      plugin: 'nav2_bt_navigator/NavigateToPoseNavigator'
+    navigate_through_poses:
+      plugin: 'nav2_bt_navigator/NavigateThroughPosesNavigator'
     plugin_lib_names:
       - nav2_compute_path_to_pose_action_bt_node
       - nav2_compute_path_through_poses_action_bt_node
@@ -98,16 +105,9 @@ bt_navigator:
       - nav2_assisted_teleop_cancel_bt_node
       - nav2_drive_on_heading_cancel_bt_node
       - nav2_is_battery_charging_condition_bt_node
-    default_nav_to_pose_bt_xml: $(find-pkg-share nav2_bt_navigator)/behavior_trees/navigate_to_pose_w_replanning_and_recovery.xml
-    default_nav_through_poses_bt_xml: $(find-pkg-share nav2_bt_navigator)/behavior_trees/navigate_through_poses_w_replanning_and_recovery.xml
-
-bt_navigator_navigate_through_poses_rclcpp_node:
-  ros__parameters:
-    use_sim_time: false
-
-bt_navigator_navigate_to_pose_rclcpp_node:
-  ros__parameters:
-    use_sim_time: false
+    error_code_names:
+      - compute_path_error_code
+      - follow_path_error_code
 
 controller_server:
   ros__parameters:
@@ -119,6 +119,10 @@ controller_server:
     min_y_velocity_threshold: 0.001
     min_theta_velocity_threshold: 0.001
     failure_tolerance: 0.3
+    use_realtime_priority: false
+    publish_zero_velocity: true
+    search_window: 3.0 # default 2.0
+    enable_stamped_cmd_vel: false
 
     progress_checker_plugins: ['progress_checker']
     progress_checker:
@@ -131,7 +135,7 @@ controller_server:
       plugin: 'nav2_controller::SimpleGoalChecker'
       xy_goal_tolerance: 0.25
       yaw_goal_tolerance: 0.25
-      stateful: true
+      stateful: false
 
     controller_plugins: ['FollowPath']
     # DWB controller parameters
@@ -142,9 +146,9 @@ controller_server:
       min_vel_y: 0.0
       max_vel_x: 1.0
       max_vel_y: 0.0
-      max_vel_theta: 1.0
+      max_vel_theta: 0.5
       min_speed_xy: 0.0
-      max_speed_xy: 1.0
+      max_speed_xy: 0.5
       min_speed_theta: 0.0
       acc_lim_x: 2.5
       acc_lim_y: 0.0
@@ -176,6 +180,9 @@ controller_server:
       RotateToGoal.slowing_factor: 5.0
       RotateToGoal.lookahead_time: -1.0
 
+    path_handler_plugins: ["PathHandler"]
+    path_handler:
+      plugin: "nav2_controller::FeasiblePathHandler"
 
 
 # refer here: https://github.com/ros-navigation/navigation2/tree/main/nav2_smac_planner
@@ -184,7 +191,7 @@ planner_server:
     planner_plugins: ["GridBased"]
 
     GridBased:
-      plugin: "nav2_smac_planner::SmacPlanner2D"
+      plugin: "nav2_smac_planner/SmacPlanner2D"
       tolerance: 0.125                      # tolerance for planning if unable to reach exact pose, in meters
       downsample_costmap: false           # whether or not to downsample the map
       downsampling_factor: 1              # multiplier for the resolution of the costmap layer (e.g. 2 on a 5cm costmap would be 10cm)
@@ -216,7 +223,7 @@ local_costmap:
       update_frequency: 10.0
       publish_frequency: 5.0
       # robot_radius: 0.35
-      footprint: "[ [0.320, 0.295], [0.320, -0.295], [-0.320, -0.295], [-0.320, 0.295] ]"
+      # footprint: "[ [0.40, 0.395], [0.40, -0.395], [-0.4, -0.395], [-0.4, 0.395] ]"
       footprint_padding: 0.0
       plugins: ['obstacle_layer', 'inflation_layer']
 
@@ -235,7 +242,7 @@ local_costmap:
 
       inflation_layer:
         plugin: 'nav2_costmap_2d::InflationLayer'
-        inflation_radius: 0.3
+        inflation_radius: 0.5
 
 global_costmap:
   global_costmap:
@@ -248,7 +255,8 @@ global_costmap:
       publish_frequency: 1.0
       track_unknown_space: true
       # robot_radius: 0.35
-      footprint: "[ [0.320, 0.295], [0.320, -0.295], [-0.320, -0.295], [-0.320, 0.295] ]"
+      # footprint: "[ [0.320, 0.295], [0.320, -0.295], [-0.320, -0.295], [-0.320, 0.295] ]"
+      footprint: "[ [0.40, 0.395], [0.40, -0.395], [-0.4, -0.395], [-0.4, 0.395] ]"
       footprint_padding: 0.0
       
       plugins: ['static_layer', 'obstacle_layer', 'inflation_layer']
@@ -268,7 +276,7 @@ global_costmap:
 
       inflation_layer:
         plugin: 'nav2_costmap_2d::InflationLayer'
-        inflation_radius: 0.3
+        inflation_radius: 0.5
 
 map_server:
   ros__parameters:
@@ -299,6 +307,7 @@ velocity_smoother:
     use_sim_time: false
     smoothing_frequency: 20.0
     feedback: OPEN_LOOP
+    enable_stamped_cmd_vel: false
     odom_topic: /rko_lio/odometry
     max_velocity: [1.0, 0.0, 1.5]
     min_velocity: [-0.2, 0.0, -1.5]

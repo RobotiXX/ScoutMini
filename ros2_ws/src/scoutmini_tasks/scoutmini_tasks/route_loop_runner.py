@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""Follow a named waypoint route in a loop using Nav2.
+"""Follow a named waypoint route using Nav2.
 
 The route is defined in YAML as a list of waypoint names. The runner subscribes
 to /map_name topic to determine the current map and constructs the route YAML
 path accordingly, then queries the waypoint_server service (from map_tools) to
-resolve waypoint names to coordinates. This eliminates the need for direct file
-I/O of waypoint JSON in this node.
+resolve waypoint names to coordinates. If the service is unavailable or stalls,
+the runner can fall back to the installed waypoint JSON for the active map.
 """
 
 import threading
@@ -27,37 +27,27 @@ import yaml
 
 
 class RouteLoopRunner(Node):
-    """Load a named route and navigate it in a loop using Nav2.
+    """Load a named route and navigate it using Nav2.
 
     This node:
     1. Subscribes to /map_name to determine the current map
     2. Loads the YAML route file from map_tools/maps/<map_name>/routes/<route_name>.yaml
-    3. Queries the waypoint_server service to resolve waypoint names to PoseStamped objects
-    4. Sends a NavigateThroughPoses action to Nav2 and optionally loops the route
-
-    Attributes:
-        route_name (str): Name of the route YAML file (without .yaml extension).
-        current_map_name (str): Currently active map name from /map_name topic.
-        _route_waypoint_names (List[str]): Ordered list of waypoint names in the route.
-        _route_poses (List[PoseStamped]): Resolved poses from the waypoint service.
+    3. Resolves waypoint names to PoseStamped objects through a service or file fallback
+    4. Sends NavigateThroughPoses goals to Nav2 and optionally repeats the route
     """
 
     def __init__(self) -> None:
-        """Initialize the route loop runner and set up subscriptions/clients."""
+        """Initialize the route runner and set up subscriptions/clients."""
         super().__init__('route_loop_runner')
 
         self.declare_parameter('route_name', 'route')
-        self.declare_parameter('map_name', '')
+        self.declare_parameter('map_name', 'fuse_3rd')
         self.declare_parameter('action_name', '/navigate_through_poses')
         self.declare_parameter('auto_start', True)
-        self.declare_parameter('loop', True)
+        self.declare_parameter('loop', False)
         self.declare_parameter('repeat_delay_sec', 1.0)
         self.declare_parameter('start_delay_sec', 0.0)
-
-        # timeout for action server
         self.declare_parameter('wait_for_server_sec', 30.0)
-
-        # allow the route to skip requested waypoints not retrieved from waypoint server
         self.declare_parameter('skip_missing_waypoints', False)
 
         self.route_name = (
@@ -93,25 +83,28 @@ class RouteLoopRunner(Node):
         self._resolve_retry_period_sec = 1.0
         self._resolve_timeout_sec = 3.0
 
-        # Subscribe to /map_name to detect map changes
         self.map_name_sub = self.create_subscription(
-            String, '/map_name', self._map_name_sub_cb, qos_profile=QoSProfile(depth=10, reliability=rclpy.qos.QoSReliabilityPolicy.RELIABLE, durability=rclpy.qos.QoSDurabilityPolicy.TRANSIENT_LOCAL)
+            String,
+            '/map_name',
+            self._map_name_sub_cb,
+            qos_profile=QoSProfile(
+                depth=10,
+                reliability=rclpy.qos.QoSReliabilityPolicy.RELIABLE,
+                durability=rclpy.qos.QoSDurabilityPolicy.TRANSIENT_LOCAL,
+            ),
         )
 
-        # Action client for navigate_through_poses
         self._action_client = ActionClient(self, NavigateThroughPoses, self.action_name)
-
-        # Service client for waypoint lookup
         self._waypoint_client = self.create_client(GetWaypointsByName, 'get_waypoints')
 
-        # Internal state for goal tracking
         self._goal_active = False
         self._goal_sent_once = False
+        self._goal_finished = False
         self._start_time = self.get_clock().now()
         self._start_timer = self.create_timer(0.5, self._tick)
         self._restart_timer: Optional[object] = None
 
-        self.get_logger().info(f'Route loop runner initialized for route: {self.route_name}')
+        self.get_logger().info(f'Route runner initialized for route: {self.route_name}')
         if self.initial_map_name:
             self.current_map_name = self.initial_map_name
             self.get_logger().info(
@@ -120,42 +113,36 @@ class RouteLoopRunner(Node):
             self._load_route_for_map(self.initial_map_name)
 
     def _map_name_sub_cb(self, msg: String) -> None:
-        """Handle incoming /map_name topic and reload route for the new map.
-
-        Args:
-            msg: String message containing the map name.
-        """
+        """Handle incoming /map_name topic and reload route for the new map."""
         new_map_name = msg.data.strip()
-        if new_map_name != self.current_map_name:
-            self.current_map_name = new_map_name
-            self.get_logger().info(f'Map changed to: {new_map_name}; reloading route')
-            self._load_route_for_map(new_map_name)
+        if not new_map_name or new_map_name == self.current_map_name:
+            return
+
+        if self._goal_active or self._goal_sent_once:
+            self.get_logger().warn(
+                f'Map changed to: {new_map_name}, but goal was already sent; ignoring map change'
+            )
+            return
+
+        self.current_map_name = new_map_name
+        self.get_logger().info(f'Map changed to: {new_map_name}; reloading route')
+        self._load_route_for_map(new_map_name)
 
     def _get_route_file_path(self, map_name: str) -> Path:
-        """Construct the path to the route YAML file.
-
-        Args:
-            map_name: Name of the map (folder under map_tools/maps/).
-
-        Returns:
-            Path object pointing to the route YAML file.
-        """
+        """Construct the path to the route YAML file."""
         package_share = Path(get_package_share_directory('map_tools'))
         return package_share / 'maps' / map_name / 'routes' / f'{self.route_name}.yaml'
 
     def _load_route_for_map(self, map_name: str) -> None:
-        """Load and parse the route YAML file, then resolve waypoint names.
-
-        Args:
-            map_name: Name of the map to load the route for.
-        """
+        """Load and parse the route YAML file, then resolve waypoint names."""
         self._route_map_name = map_name
+        self._route_poses = []
+        self._resolving_waypoints = False
         route_path = self._get_route_file_path(map_name)
 
         if not route_path.exists():
             self.get_logger().error(f'Route file not found: {route_path}')
             self._route_waypoint_names = []
-            self._route_poses = []
             return
 
         try:
@@ -168,7 +155,6 @@ class RouteLoopRunner(Node):
             if not isinstance(data, dict):
                 raise ValueError(f'Route file must contain a YAML mapping or list: {route_path}')
 
-            # Extract waypoint names from the route config
             names = data.get('waypoints', [])
             if not isinstance(names, list):
                 raise ValueError('Route config key "waypoints" must be a list')
@@ -180,12 +166,10 @@ class RouteLoopRunner(Node):
                 elif isinstance(entry, dict) and isinstance(entry.get('name'), str):
                     if entry['name'].strip():
                         route_names.append(entry['name'].strip())
-            self.get_logger().info(f"{route_names=}")
+
+            self.get_logger().info(f'{route_names=}')
             self._route_waypoint_names = route_names
-
-            # Query the waypoint service to resolve names to poses
             self._resolve_route_poses()
-
             self.get_logger().info(
                 f'Loaded route {route_path} with {len(self._route_waypoint_names)} waypoint(s)'
             )
@@ -196,8 +180,12 @@ class RouteLoopRunner(Node):
             self._route_poses = []
 
     def _resolve_route_poses(self) -> None:
-        """Query the waypoint_server service to resolve waypoint names to poses."""
+        """Query the waypoint service to resolve waypoint names to poses."""
         if self._resolving_waypoints:
+            return
+
+        if not self._route_waypoint_names:
+            self._route_poses = []
             return
 
         if not self._waypoint_client.wait_for_service(timeout_sec=0.0):
@@ -208,7 +196,9 @@ class RouteLoopRunner(Node):
         try:
             request = GetWaypointsByName.Request()
             request.waypoint_names = self._route_waypoint_names
-            self.get_logger().info(f'Querying waypoint service to resolve {len(request.waypoint_names)} waypoint(s)')
+            self.get_logger().info(
+                f'Querying waypoint service to resolve {len(request.waypoint_names)} waypoint(s)'
+            )
             self._resolving_waypoints = True
             self._resolve_request_start_ns = self.get_clock().now().nanoseconds
             future = self._waypoint_client.call_async(request)
@@ -221,11 +211,7 @@ class RouteLoopRunner(Node):
             self._route_poses = []
 
     def _waypoint_service_cb(self, future) -> None:
-        """Handle response from waypoint_server service.
-
-        Args:
-            future: Service call future with GetWaypointsByName.Response.
-        """
+        """Handle response from waypoint service."""
         self._resolving_waypoints = False
         self.get_logger().info('Waypoint service response received; processing results...')
         try:
@@ -240,12 +226,17 @@ class RouteLoopRunner(Node):
                 else:
                     self.get_logger().error(msg)
                     self._route_poses = []
-            self.get_logger().info(f'Waypoint service resolved {len(self._route_poses)}/{len(self._route_waypoint_names)} waypoint(s) to poses')
+            self.get_logger().info(
+                f'Waypoint service resolved {len(self._route_poses)}/{len(self._route_waypoint_names)} waypoint(s) to poses'
+            )
 
         except Exception as exc:
             self.get_logger().error(f'Waypoint service call failed: {exc}')
             self._route_poses = []
-        self.get_logger().info(f'Resolved {len(self._route_poses)}/{len(self._route_waypoint_names)} waypoints to poses')   
+
+        self.get_logger().info(
+            f'Resolved {len(self._route_poses)}/{len(self._route_waypoint_names)} waypoints to poses'
+        )
 
     def _resolve_route_poses_from_file(self) -> None:
         """Resolve route waypoint names directly from the installed map waypoint JSON."""
@@ -310,8 +301,8 @@ class RouteLoopRunner(Node):
             self._route_poses = []
 
     def _tick(self) -> None:
-        """Main loop tick; checks conditions and sends route goal if ready."""
-        if not self.auto_start:
+        """Main tick; sends a route goal when route and action server are ready."""
+        if not self.auto_start or self._goal_finished:
             return
 
         if self._route_waypoint_names and not self._route_poses:
@@ -335,7 +326,7 @@ class RouteLoopRunner(Node):
         if not self._route_poses:
             return
 
-        if self._goal_active:
+        if self._goal_active or self._goal_sent_once:
             return
 
         if not self._action_client.wait_for_server(timeout_sec=0.0):
@@ -346,11 +337,9 @@ class RouteLoopRunner(Node):
                 )
             return
 
-        if not self._goal_sent_once:
-            elapsed_sec = (self.get_clock().now() - self._start_time).nanoseconds / 1e9
-            if elapsed_sec < self.start_delay_sec:
-                return
-            self._goal_sent_once = True
+        elapsed_sec = (self.get_clock().now() - self._start_time).nanoseconds / 1e9
+        if elapsed_sec < self.start_delay_sec:
+            return
 
         self._send_route_goal()
 
@@ -367,31 +356,49 @@ class RouteLoopRunner(Node):
             f'Sending route with {len(goal.poses)} pose(s) to {self.action_name}; loop={self.loop}'
         )
         self._goal_active = True
-        send_future = self._action_client.send_goal_async(goal)
+        self._goal_sent_once = True
+        send_future = self._action_client.send_goal_async(goal, feedback_callback=self._feedback_cb)
         send_future.add_done_callback(self._goal_response_cb)
 
-    def _goal_response_cb(self, future) -> None:
-        """Handle response from goal submission.
+    def _feedback_cb(self, feedback_msg) -> None:
+        """Log NavigateThroughPoses feedback as progress updates."""
+        feedback = feedback_msg.feedback
+        distance_remaining = getattr(feedback, 'distance_remaining', None)
+        poses_remaining = getattr(feedback, 'number_of_poses_remaining', None)
+        recoveries = getattr(feedback, 'number_of_recoveries', None)
 
-        Args:
-            future: Action goal response future.
-        """
-        goal_handle = future.result()
+        parts = ['Route progress']
+        if distance_remaining is not None:
+            parts.append(f'distance_remaining={distance_remaining:.2f}m')
+        if poses_remaining is not None:
+            parts.append(f'poses_remaining={poses_remaining}')
+        if recoveries is not None:
+            parts.append(f'recoveries={recoveries}')
+
+        self.get_logger().info(', '.join(parts))
+
+    def _goal_response_cb(self, future) -> None:
+        """Handle response from goal submission."""
+        try:
+            goal_handle = future.result()
+        except Exception as exc:
+            self._goal_active = False
+            self.get_logger().error(f'Failed to send route goal: {exc}')
+            self._schedule_restart()
+            return
+
         if not goal_handle.accepted:
             self._goal_active = False
             self.get_logger().error('Route goal was rejected by Nav2')
             self._schedule_restart()
             return
 
+        self.get_logger().info('Route goal accepted; monitoring progress...')
         result_future = goal_handle.get_result_async()
         result_future.add_done_callback(self._result_cb)
 
     def _result_cb(self, future) -> None:
-        """Handle route goal result from Nav2.
-
-        Args:
-            future: Action result future.
-        """
+        """Handle route goal result from Nav2."""
         self._goal_active = False
         try:
             result = future.result()
@@ -402,22 +409,22 @@ class RouteLoopRunner(Node):
 
         status = result.status
         self.get_logger().info(f'Route finished with Nav2 status code {status}')
-
-        if self.loop and not self.stop_event.is_set():
-            self._schedule_restart()
+        self._schedule_restart()
 
     def _schedule_restart(self) -> None:
-        """Schedule a timer to restart the route loop."""
+        """Finish or schedule another route goal when loop mode is enabled."""
         if not self.loop or self.stop_event.is_set():
+            self._goal_finished = True
             return
 
+        self._goal_sent_once = False
+        self._goal_finished = False
         if self._restart_timer is not None:
             self._restart_timer.cancel()
-
         self._restart_timer = self.create_timer(self.repeat_delay_sec, self._restart_cb)
 
     def _restart_cb(self) -> None:
-        """Callback for restart timer; sends the route goal again."""
+        """Timer callback for looped route restarts."""
         if self._restart_timer is not None:
             self._restart_timer.cancel()
             self._restart_timer = None
@@ -428,7 +435,7 @@ class RouteLoopRunner(Node):
         self._send_route_goal()
 
     def stop(self) -> None:
-        """Stop the route loop runner."""
+        """Stop the route runner."""
         self.stop_event.set()
         if self._restart_timer is not None:
             self._restart_timer.cancel()

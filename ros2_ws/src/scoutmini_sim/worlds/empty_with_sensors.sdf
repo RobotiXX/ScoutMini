@@ -1,4 +1,9 @@
 <?xml version="1.0" ?>
+<!--
+  Minimal Gazebo world for Scout Mini sensor testing.
+  It provides an empty ground plane plus the core physics, rendering, IMU,
+  and sensor systems needed for simulated robot sensors.
+-->
 <sdf version="1.8">
   <world name="empty">
     <physics type="ode">

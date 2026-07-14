@@ -14,6 +14,7 @@ class InitialPosePublisher(Node):
         self.declare_parameter('y', 0.0)
         self.declare_parameter('z', 0.0)
         self.declare_parameter('yaw', 0.0)
+        self.declare_parameter('is_sim', False)
 
         self.publisher = self.create_publisher(PoseWithCovarianceStamped, '/initialpose', 10)
         self.timer = self.create_timer(0.5, self._publish_once)
@@ -31,14 +32,18 @@ class InitialPosePublisher(Node):
         y = self.get_parameter('y').value
         z = self.get_parameter('z').value
         yaw = self.get_parameter('yaw').value
+        is_sim = self.get_parameter('is_sim').get_parameter_value().bool_value
 
         message = PoseWithCovarianceStamped()
         message.header.frame_id = frame_id
-        # AMCL accepts a zero stamp as the latest available transform. In Gazebo
-        # this avoids publishing an initial pose with a future /clock sample before
-        # lidar/odom messages have caught up.
-        message.header.stamp.sec = 0
-        message.header.stamp.nanosec = 0
+        if is_sim:
+            # AMCL accepts a zero stamp as the latest available transform. In Gazebo
+            # this avoids publishing an initial pose with a future /clock sample before
+            # lidar/odom messages have caught up.
+            message.header.stamp.sec = 0
+            message.header.stamp.nanosec = 0
+        else:
+            message.header.stamp = self.get_clock().now().to_msg()
         message.pose.pose.position.x = float(x)
         message.pose.pose.position.y = float(y)
         message.pose.pose.position.z = float(z)

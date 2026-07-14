@@ -19,11 +19,14 @@ def generate_launch_description():
     rviz_config = LaunchConfiguration('rvizconfig')
     gui = LaunchConfiguration('gui')
     use_sim_time = LaunchConfiguration('use_sim_time')
+    sim = LaunchConfiguration('sim')
 
     robot_description = Command([
         FindExecutable(name='xacro'),
         ' ',
         model,
+        ' sim:=',
+        sim,
     ])
 
     return LaunchDescription([
@@ -47,6 +50,12 @@ def generate_launch_description():
             'use_sim_time',
             default_value='false',
             description='Use simulation clock if true',
+        ),
+        DeclareLaunchArgument(
+            'sim',
+            default_value='false',
+            choices=['true', 'false'],
+            description='Use simulation-only sensor geometry instead of real sensor macros',
         ),
         Node(
             package='joint_state_publisher',

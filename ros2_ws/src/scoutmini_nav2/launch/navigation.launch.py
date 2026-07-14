@@ -25,16 +25,10 @@ def generate_launch_description():
     initial_pose_y = LaunchConfiguration('initial_pose_y')
     initial_pose_z = LaunchConfiguration('initial_pose_z')
     initial_pose_yaw = LaunchConfiguration('initial_pose_yaw')
+    initial_pose_is_sim = LaunchConfiguration('initial_pose_is_sim')
     amcl_tf_broadcast = LaunchConfiguration('amcl_tf_broadcast')
     rviz = LaunchConfiguration('rviz')
     rviz_config_file = LaunchConfiguration('rviz_config_file')
-    use_route_loop = LaunchConfiguration('use_route_loop')
-    route_name = LaunchConfiguration('route_name')
-    route_loop = LaunchConfiguration('route_loop')
-    route_repeat_delay_sec = LaunchConfiguration('route_repeat_delay_sec')
-    route_start_delay_sec = LaunchConfiguration('route_start_delay_sec')
-    route_skip_missing_waypoints = LaunchConfiguration('route_skip_missing_waypoints')
-    route_wait_for_server_sec = LaunchConfiguration('route_wait_for_server_sec')
     nav_to_pose_bt_xml = LaunchConfiguration('nav_to_pose_bt_xml')
     nav_through_poses_bt_xml = LaunchConfiguration('nav_through_poses_bt_xml')
 
@@ -76,6 +70,7 @@ def generate_launch_description():
             'y': initial_pose_y,
             'z': initial_pose_z,
             'yaw': initial_pose_yaw,
+            'is_sim': initial_pose_is_sim,
             'use_sim_time': use_sim_time,
         }],
     )
@@ -107,8 +102,7 @@ def generate_launch_description():
         arguments=['-d', rviz_config_file],
     )
 
-    # Publish the current map name so that other nodes (waypoint_server, route_loop_runner)
-    # can dynamically locate map-specific assets
+    # Publish the current map name so that other nodes can locate map-specific assets.
     map_name_publisher_node = Node(
         package='map_tools',
         executable='map_name_publisher',
@@ -129,25 +123,6 @@ def generate_launch_description():
         output='screen',
         parameters=[{
             'initial_map_name': map_name,
-            'use_sim_time': use_sim_time,
-        }],
-    )
-
-    route_loop_runner_node = Node(
-        condition=IfCondition(use_route_loop),
-        package='scoutmini_tasks',
-        executable='route_loop_runner',
-        name='route_loop_runner',
-        output='screen',
-        parameters=[{
-            'route_name': route_name,
-            'action_name': '/navigate_through_poses',
-            'auto_start': True,
-            'loop': route_loop,
-            'repeat_delay_sec': route_repeat_delay_sec,
-            'start_delay_sec': route_start_delay_sec,
-            'skip_missing_waypoints': route_skip_missing_waypoints,
-            'wait_for_server_sec': route_wait_for_server_sec,
             'use_sim_time': use_sim_time,
         }],
     )
@@ -176,6 +151,11 @@ def generate_launch_description():
         DeclareLaunchArgument('initial_pose_z', default_value='0.0'),
         DeclareLaunchArgument('initial_pose_yaw', default_value='-2.02'),
         DeclareLaunchArgument(
+            'initial_pose_is_sim',
+            default_value='false',
+            description='Use sim-safe zero timestamp for the initial pose message',
+        ),
+        DeclareLaunchArgument(
             'amcl_tf_broadcast',
             default_value='true',
             description='Allow AMCL to publish map->odom. Disable for ground-truth simulation localization.',
@@ -194,41 +174,6 @@ def generate_launch_description():
             ])
         ),
         DeclareLaunchArgument('rviz', default_value='false'),
-        DeclareLaunchArgument(
-            'use_route_loop',
-            default_value='false',
-            description='Start scoutmini_tasks route_loop_runner with Nav2',
-        ),
-        DeclareLaunchArgument(
-            'route_name',
-            default_value='route1',
-            description='Route YAML basename under map_tools/maps/<map_name>/routes',
-        ),
-        DeclareLaunchArgument(
-            'route_loop',
-            default_value='true',
-            description='Repeat the selected route after Nav2 completes it',
-        ),
-        DeclareLaunchArgument(
-            'route_repeat_delay_sec',
-            default_value='1.0',
-            description='Delay before repeating a completed route',
-        ),
-        DeclareLaunchArgument(
-            'route_start_delay_sec',
-            default_value='2.0',
-            description='Delay before sending the first route goal',
-        ),
-        DeclareLaunchArgument(
-            'route_skip_missing_waypoints',
-            default_value='false',
-            description='Allow route execution when waypoint_server cannot resolve every waypoint',
-        ),
-        DeclareLaunchArgument(
-            'route_wait_for_server_sec',
-            default_value='30.0',
-            description='Warn after this many seconds waiting for the Nav2 route action server',
-        ),
         DeclareLaunchArgument(
             'rviz_config_file',
             default_value=PathJoinSubstitution([
@@ -258,6 +203,5 @@ def generate_launch_description():
         nav2,
         map_name_publisher_node,
         waypoint_server_node,
-        route_loop_runner_node,
         rviz_node,
     ])

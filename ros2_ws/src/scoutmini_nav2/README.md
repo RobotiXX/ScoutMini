@@ -1,18 +1,20 @@
-# Scout Mini Nav2 Simulation
+# Scout Mini Nav2
 
-This package provides a Gazebo + Nav2 simulation launch for the Scout Mini.
+This package provides the Nav2 configuration and robot navigation launch for
+the Scout Mini. Gazebo simulation launches live in `scoutmini_sim`.
 
-By default, the simulation uses the vendored TurtleBot/Nav2 warehouse world:
+For the full Gazebo + Nav2 simulation flow, use:
 
-- world: `default_warehouse`
-- world file: `scoutmini_description/worlds/turtlebot4_warehouse.sdf`
-- map: `map_tools/maps/warehouse/warehouse.yaml`
+```bash
+ros2 launch scoutmini_sim simulation_2d.launch.py
+```
+
+By default, the simulation uses the Fuse 3rd floor world and map:
+
+- world: `fuse_3rd`
+- world file: `map_tools/maps/fuse_3rd/fuse_3rd.sdf`
+- map: `map_tools/maps/fuse_3rd/fuse_3rd.yaml`
 - initial pose: `x=0.0`, `y=0.0`, `yaw=0.0`
-
-The world SDF is included in this repository, so the launch does not require
-`nav2_minimal_tb4_sim` or `turtlebot4_gz_bringup`. The world references Gazebo
-Fuel model URLs, so Gazebo needs internet access the first time it loads the
-warehouse assets unless those assets are already cached.
 
 ## Build
 
@@ -20,22 +22,41 @@ From the ROS workspace inside the Docker container:
 
 ```bash
 cd /ros2_ws
-colcon build --packages-select scoutmini_description scoutmini_nav2 scoutmini_tasks map_tools
+colcon build --packages-select scoutmini_description scoutmini_sim scoutmini_nav2 scoutmini_tasks map_tools
 source install/setup.bash
 ```
 
-## Launch The Simulation
+## Launch Nav2 On The Robot
 
-Start Gazebo, spawn Scout Mini, launch Nav2, and localize on the warehouse map:
+Start the Nav2 stack for the robot:
 
 ```bash
-ros2 launch scoutmini_nav2 simulation_2d.launch.py
+ros2 launch scoutmini_nav2 navigation.launch.py
+```
+
+Useful overrides:
+
+```bash
+ros2 launch scoutmini_nav2 navigation.launch.py \
+  map_name:=fuse_3rd \
+  rviz:=true
+```
+
+`navigation.launch.py` is intentionally focused on the navigation stack. It
+does not launch Gazebo or route-loop task runners.
+
+## Launch The Simulation
+
+Start Gazebo, spawn Scout Mini, launch Nav2, and localize on the default sim map:
+
+```bash
+ros2 launch scoutmini_sim simulation_2d.launch.py
 ```
 
 Send a single autonomous Nav2 goal at launch:
 
 ```bash
-ros2 launch scoutmini_nav2 simulation_2d.launch.py \
+ros2 launch scoutmini_sim simulation_2d.launch.py \
   use_goal:=true \
   goal_x:=2.0 \
   goal_y:=0.0 \
@@ -46,7 +67,7 @@ ros2 launch scoutmini_nav2 simulation_2d.launch.py \
 Launch the Fuse 3rd floor world with its matching map:
 
 ```bash
-ros2 launch scoutmini_nav2 simulation_2d.launch.py \
+ros2 launch scoutmini_sim simulation_2d.launch.py \
   world:=fuse_3rd \
   map_name:=fuse_3rd \
   spawn_x:=13.7 \
@@ -68,7 +89,7 @@ raycasting from.
 Useful overrides:
 
 ```bash
-ros2 launch scoutmini_nav2 simulation_2d.launch.py \
+ros2 launch scoutmini_sim simulation_2d.launch.py \
   world:=empty \
   map_name:=warehouse \
   spawn_x:=0.0 \
@@ -109,7 +130,7 @@ while AMCL localizes against the PGM occupancy map. If AMCL is allowed to publis
 To test AMCL scan matching instead of ground-truth localization, launch with:
 
 ```bash
-ros2 launch scoutmini_nav2 simulation_2d.launch.py amcl_tf_broadcast:=true
+ros2 launch scoutmini_sim simulation_2d.launch.py amcl_tf_broadcast:=true
 ```
 
 When `amcl_tf_broadcast:=true`, do not also publish a static `map -> odom` from

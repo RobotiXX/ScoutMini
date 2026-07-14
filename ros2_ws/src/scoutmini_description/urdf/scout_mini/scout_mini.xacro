@@ -4,10 +4,11 @@
 
     <xacro:arg name="robot_namespace" default="/" />
     <xacro:arg name="urdf_extras" default="empty.urdf" />
+    <xacro:arg name="sim" default="false" />
 
-    <xacro:include filename="$(find scoutmini_description)/urdf/scout_mini_wheel.xacro" />
+    <xacro:include filename="../scout_mini_wheel.xacro" />
     
-    <xacro:include filename="$(find scoutmini_description)/urdf/sensors.xacro" />
+    <xacro:include filename="../sensors.xacro" />
 
     <!-- Variables -->
     <xacro:property name="M_PI" value="3.14159"/>
@@ -58,7 +59,7 @@
         <inertial>
             <mass value="23" />
             <origin xyz="0.0 0.0 0.0" />
-            <inertia ixx="0.2594" ixy="0" ixz="0" iyy="0.5567" iyz="0" izz="0.7648" />
+            <inertia ixx="2.288641" ixy="0" ixz="0" iyy="5.103976" iyz="0" izz="3.431465" />
         </inertial>
     </link>
 
@@ -100,7 +101,7 @@
         <child link="rear_mount" />
     </joint>
 
-    <xacro:sensor_macro parent_link="base_link">
+    <xacro:sensor_macro parent_link="base_link" sim="$(arg sim)">
         <origin xyz="0.01 0 0.07" rpy="0 0 0"/>
     </xacro:sensor_macro>
 
@@ -108,7 +109,7 @@
     <xacro:include filename="$(arg urdf_extras)" />
 
     <!-- Gazebo definitions  -->
-    <xacro:include filename="$(find scoutmini_description)/urdf/scout_mini/scout_mini.gazebo" />
+    <xacro:include filename="scout_mini.gazebo" />
     
     <ros2_control name="ScoutMiniSystem" type="system">
         <hardware>

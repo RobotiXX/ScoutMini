@@ -13,7 +13,7 @@ def generate_launch_description():
         DeclareLaunchArgument(
             'params_file',
             default_value=PathJoinSubstitution(
-                [FindPackageShare('scoutmini_description'), 'config', 'slam_toolbox.yaml']
+                [FindPackageShare('scoutmini_nav2'), 'config', 'mapper_params_online_async.yaml']
             ),
             description='Full path to the slam_toolbox parameters file',
         ),

@@ -14,11 +14,15 @@ def generate_launch_description():
         PathJoinSubstitution(
             [FindPackageShare("scoutmini_description"), "urdf", "scout_mini", model_name]
         ),
+        " sim:=",
+        LaunchConfiguration('sim'),
     ])
 
     return launch.LaunchDescription([
         DeclareLaunchArgument('use_sim_time', default_value='false',
             description='Use simulation clock if true'),
+        DeclareLaunchArgument('sim', default_value='false', choices=['true', 'false'],
+            description='Use simulation-only sensor geometry instead of real sensor macros'),
 
         launch.actions.LogInfo(msg='use_sim_time: '),
         launch.actions.LogInfo(msg=launch.substitutions.LaunchConfiguration('use_sim_time')),

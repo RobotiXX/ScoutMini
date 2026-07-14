@@ -1,3 +1,11 @@
+<!--
+  Adapted from:
+  https://github.com/agilexrobotics/scout_ros/scout_description/urdf/scout_mini.gazebo
+
+  Original work Copyright (c) AgileX Robotics.
+  Licensed under the BSD License.
+-->
+
 <?xml version="1.0"?>
 
 <!--
@@ -9,7 +17,7 @@ Reference:
 -->
 
 <robot xmlns:xacro="http://ros.org/wiki/xacro">
-    <xacro:include filename="$(find scoutmini_description)/urdf/scout_mini/scout_wheel.gazebo" />
+    <xacro:include filename="scout_wheel.gazebo" />
 
     <!-- Additional definitions for simulation -->
     <!-- <gazebo reference="base_link">
