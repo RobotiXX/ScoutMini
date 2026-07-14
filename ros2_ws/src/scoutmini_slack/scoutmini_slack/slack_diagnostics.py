@@ -4,7 +4,9 @@
 from __future__ import annotations
 
 import os
+from pathlib import Path
 import subprocess
+import time
 from typing import Tuple
 
 
@@ -45,7 +47,12 @@ def _bot_auth_status() -> Tuple[bool, str]:
     return False, "Slack auth.test returned an incomplete response"
 
 
-def _socket_mode_status() -> Tuple[bool, str]:
+def _socket_state_path() -> Path:
+    runtime_root = os.environ.get("XDG_RUNTIME_DIR", "/tmp")
+    return Path(runtime_root) / "scoutmini" / "slack_socket_state"
+
+
+def _socket_mode_status(max_age_sec: float = 10.0) -> Tuple[bool, str]:
     try:
         completed = subprocess.run(
             ["systemctl", "--user", "is-active", "scoutmini-slack.service"],
@@ -58,9 +65,21 @@ def _socket_mode_status() -> Tuple[bool, str]:
         return False, f"service state unavailable: {exc}"
 
     state = completed.stdout.strip() or "unknown"
-    if completed.returncode == 0 and state == "active":
-        return True, "scoutmini-slack.service is active"
-    return False, f"scoutmini-slack.service is {state}"
+    if completed.returncode != 0 or state != "active":
+        return False, f"scoutmini-slack.service is {state}"
+
+    state_path = _socket_state_path()
+    try:
+        socket_state = state_path.read_text(encoding="utf-8").strip()
+        age_sec = time.time() - state_path.stat().st_mtime
+    except OSError as exc:
+        return False, f"Socket Mode state is unavailable: {exc}"
+
+    if socket_state != "connected":
+        return False, f"Socket Mode state is {socket_state or 'unknown'}"
+    if age_sec > max_age_sec:
+        return False, f"Socket Mode state is stale ({age_sec:.1f}s old)"
+    return True, "Slack Socket Mode connection is live"
 
 
 def _report(stage: str, result: Tuple[bool, str]) -> bool:

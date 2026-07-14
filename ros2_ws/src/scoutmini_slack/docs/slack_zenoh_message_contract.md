@@ -20,11 +20,14 @@ Payloads use JSON with these fields:
   "user": "U...",
   "text": "message text",
   "ts": "message timestamp",
-  "thread_ts": "thread timestamp",
+  "thread_ts": null,
   "event_type": "app_mention",
   "handled": true
 }
 ```
+
+`thread_ts` is `null` for a top-level message and contains Slack's original
+thread timestamp for a reply.
 
 Run the installed, manually managed service with:
 

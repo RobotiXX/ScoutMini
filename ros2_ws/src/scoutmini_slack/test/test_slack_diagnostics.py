@@ -44,3 +44,49 @@ def test_socket_mode_requires_active_service(monkeypatch):
         False,
         "scoutmini-slack.service is inactive",
     )
+
+
+def test_socket_mode_requires_fresh_connected_state(monkeypatch, tmp_path):
+    monkeypatch.setattr(
+        slack_diagnostics.subprocess,
+        "run",
+        lambda *args, **kwargs: SimpleNamespace(
+            returncode=0,
+            stdout="active\n",
+        ),
+    )
+    state_path = tmp_path / "slack_socket_state"
+    state_path.write_text("connected\n", encoding="utf-8")
+    monkeypatch.setattr(
+        slack_diagnostics,
+        "_socket_state_path",
+        lambda: state_path,
+    )
+
+    assert slack_diagnostics._socket_mode_status() == (
+        True,
+        "Slack Socket Mode connection is live",
+    )
+
+
+def test_socket_mode_rejects_disconnected_state(monkeypatch, tmp_path):
+    monkeypatch.setattr(
+        slack_diagnostics.subprocess,
+        "run",
+        lambda *args, **kwargs: SimpleNamespace(
+            returncode=0,
+            stdout="active\n",
+        ),
+    )
+    state_path = tmp_path / "slack_socket_state"
+    state_path.write_text("disconnected\n", encoding="utf-8")
+    monkeypatch.setattr(
+        slack_diagnostics,
+        "_socket_state_path",
+        lambda: state_path,
+    )
+
+    assert slack_diagnostics._socket_mode_status() == (
+        False,
+        "Socket Mode state is disconnected",
+    )

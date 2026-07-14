@@ -3,8 +3,10 @@
 
 from __future__ import annotations
 
+from concurrent.futures import ThreadPoolExecutor
 import json
 import os
+from pathlib import Path
 import re
 import subprocess
 import threading
@@ -21,6 +23,7 @@ from scoutmini_slack.slack_status import collect_status
 
 
 ANSI_ESCAPE_RE = re.compile(r"\x1b\[[0-?]*[ -/]*[@-~]")
+SOCKET_STATE_INTERVAL_SEC = 2.0
 
 HELP_TEXT = (
     "*Scout Slack commands*\n"
@@ -107,6 +110,10 @@ class SlackGateway(Node):
         )
         self._slack_lock = threading.Lock()
         self._rate_limit_lock = threading.Lock()
+        self._request_executor = ThreadPoolExecutor(
+            max_workers=1,
+            thread_name_prefix="slack-request",
+        )
         self._global_send_bucket = TokenBucket(
             self.get_parameter("send_global_rate_per_sec")
             .get_parameter_value()
@@ -130,6 +137,11 @@ class SlackGateway(Node):
         self._socket_client: Any = None
         self._bot_user_id: Optional[str] = None
         self._slack_errors: Tuple[Any, ...] = ()
+        self._socket_state_path = self._runtime_state_path()
+        self._socket_state_timer = self.create_timer(
+            SOCKET_STATE_INTERVAL_SEC,
+            self._write_socket_state,
+        )
 
         self._init_slack()
 
@@ -160,11 +172,14 @@ class SlackGateway(Node):
             user_id = auth.get("user_id")
             self._bot_user_id = user_id if isinstance(user_id, str) else None
         except SlackApiError as exc:
-            self.get_logger().warning(
+            raise SystemExit(
                 f"Slack auth_test failed: {exc.response.get('error')}"
-            )
+            ) from exc
         except Exception as exc:
-            self.get_logger().warning(f"Slack auth_test unavailable: {exc}")
+            raise SystemExit(f"Slack auth_test unavailable: {exc}") from exc
+
+        if not self._bot_user_id:
+            raise SystemExit("Slack auth_test did not return a bot user ID.")
 
     @staticmethod
     def _required_env(name: str) -> str:
@@ -181,12 +196,10 @@ class SlackGateway(Node):
             client.send_socket_mode_response(
                 SocketModeResponse(envelope_id=request.envelope_id)
             )
-            try:
-                self._process_socket_request(request)
-            except Exception as exc:
-                self.get_logger().error(
-                    f"Failed to process Slack Socket Mode request: {exc}"
-                )
+            self._request_executor.submit(
+                self._process_socket_request_safely,
+                request,
+            )
 
         self._socket_client.socket_mode_request_listeners.append(process)
         try:
@@ -210,6 +223,39 @@ class SlackGateway(Node):
             "Slack gateway connected. Commands: help, status, stream, "
             "stream status, stream start, stream stop, diagnostics."
         )
+        self._write_socket_state()
+
+    def _process_socket_request_safely(self, request: Any) -> None:
+        try:
+            self._process_socket_request(request)
+        except Exception as exc:
+            self.get_logger().error(
+                f"Failed to process Slack Socket Mode request: {exc}"
+            )
+
+    @staticmethod
+    def _runtime_state_path() -> Path:
+        runtime_root = os.environ.get("XDG_RUNTIME_DIR", "/tmp")
+        return Path(runtime_root) / "scoutmini" / "slack_socket_state"
+
+    def _write_socket_state(self) -> None:
+        connected = bool(
+            self._socket_client is not None
+            and self._socket_client.is_connected()
+        )
+        self._socket_state_path.parent.mkdir(parents=True, exist_ok=True)
+        temporary_path = self._socket_state_path.with_suffix(".tmp")
+        temporary_path.write_text(
+            "connected\n" if connected else "disconnected\n",
+            encoding="utf-8",
+        )
+        temporary_path.replace(self._socket_state_path)
+
+    def close(self) -> None:
+        self._request_executor.shutdown(wait=False, cancel_futures=True)
+        if self._socket_client is not None:
+            self._socket_client.close()
+        self._socket_state_path.unlink(missing_ok=True)
 
     def _process_socket_request(self, request: Any) -> None:
         if request.type != "events_api":
@@ -397,7 +443,7 @@ class SlackGateway(Node):
             "user": event.get("user"),
             "text": text,
             "ts": event.get("ts"),
-            "thread_ts": event.get("thread_ts") or event.get("ts"),
+            "thread_ts": event.get("thread_ts"),
             "event_type": event.get("type"),
             "handled": handled,
         }
@@ -511,6 +557,7 @@ def main() -> None:
     except KeyboardInterrupt:
         pass
     finally:
+        node.close()
         node.destroy_node()
         if rclpy.ok():
             rclpy.shutdown()

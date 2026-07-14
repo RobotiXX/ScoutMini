@@ -42,6 +42,34 @@ def test_incoming_payload_keeps_routing_metadata():
     }
 
 
+def test_top_level_message_does_not_invent_thread_timestamp():
+    payload = SlackGateway._incoming_message_payload(
+        {
+            "channel": "C123",
+            "user": "U123",
+            "ts": "100.1",
+            "type": "app_mention",
+        },
+        "status",
+        handled=True,
+    )
+
+    assert payload["ts"] == "100.1"
+    assert payload["thread_ts"] is None
+
+
+def test_socket_request_wrapper_logs_processing_exception():
+    gateway = SlackGateway.__new__(SlackGateway)
+    gateway._process_socket_request = Mock(side_effect=RuntimeError("boom"))
+    logger = Mock()
+    gateway.get_logger = Mock(return_value=logger)
+
+    gateway._process_socket_request_safely(Mock())
+
+    logger.error.assert_called_once()
+    assert "boom" in logger.error.call_args.args[0]
+
+
 def test_stream_control_override_is_respected(monkeypatch):
     monkeypatch.setenv("SCOUT_STREAM_CONTROL_SCRIPT", "/tmp/control-stream")
     assert _stream_control_script() == "/tmp/control-stream"
