@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Follow a named waypoint route using Nav2.
+"""Follow a named waypoint route once using Nav2.
 
 The route is defined in YAML as a list of waypoint names. The runner subscribes
 to /map_name topic to determine the current map and constructs the route YAML
@@ -8,9 +8,8 @@ resolve waypoint names to coordinates. If the service is unavailable or stalls,
 the runner can fall back to the installed waypoint JSON for the active map.
 """
 
-import threading
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import List
 
 import rclpy
 from ament_index_python.packages import get_package_share_directory
@@ -58,10 +57,6 @@ class RouteLoopRunner(Node):
         )
         self.action_name = self.get_parameter('action_name').get_parameter_value().string_value
         self.auto_start = self.get_parameter('auto_start').get_parameter_value().bool_value
-        self.loop = self.get_parameter('loop').get_parameter_value().bool_value
-        self.repeat_delay_sec = (
-            self.get_parameter('repeat_delay_sec').get_parameter_value().double_value
-        )
         self.start_delay_sec = (
             self.get_parameter('start_delay_sec').get_parameter_value().double_value
         )
@@ -73,7 +68,6 @@ class RouteLoopRunner(Node):
         )
 
         self.current_map_name = ''
-        self.stop_event = threading.Event()
         self._route_waypoint_names: List[str] = []
         self._route_poses: List[PoseStamped] = []
         self._route_map_name = ''
@@ -102,7 +96,6 @@ class RouteLoopRunner(Node):
         self._goal_finished = False
         self._start_time = self.get_clock().now()
         self._start_timer = self.create_timer(0.5, self._tick)
-        self._restart_timer: Optional[object] = None
 
         self.get_logger().info(f'Route runner initialized for route: {self.route_name}')
         if self.initial_map_name:
@@ -353,7 +346,7 @@ class RouteLoopRunner(Node):
         goal.poses = list(self._route_poses)
 
         self.get_logger().info(
-            f'Sending route with {len(goal.poses)} pose(s) to {self.action_name}; loop={self.loop}'
+            f'Sending route with {len(goal.poses)} pose(s) to {self.action_name}'
         )
         self._goal_active = True
         self._goal_sent_once = True
@@ -389,8 +382,8 @@ class RouteLoopRunner(Node):
 
         if not goal_handle.accepted:
             self._goal_active = False
+            self._goal_finished = True
             self.get_logger().error('Route goal was rejected by Nav2')
-            self._schedule_restart()
             return
 
         self.get_logger().info('Route goal accepted; monitoring progress...')
@@ -400,11 +393,11 @@ class RouteLoopRunner(Node):
     def _result_cb(self, future) -> None:
         """Handle route goal result from Nav2."""
         self._goal_active = False
+        self._goal_finished = True
         try:
             result = future.result()
         except Exception as exc:
             self.get_logger().error(f'Failed to retrieve route result: {exc}')
-            self._schedule_restart()
             return
 
         status = result.status

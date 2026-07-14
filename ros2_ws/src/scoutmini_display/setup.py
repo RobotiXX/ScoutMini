@@ -10,6 +10,10 @@ setup(
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml', 'README.md']),
+        ('share/' + package_name + '/config', [
+            'config/status_monitor.yaml',
+            'config/50-scoutmini-network.rules',
+        ]),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
@@ -29,6 +33,7 @@ setup(
             'example_subscriber_display = scoutmini_display.example_subscriber_display:main',
             'example_no_ros_hello_world = scoutmini_display.example_no_ros_hello_world:main',
             'example_no_ros_multi_page = scoutmini_display.example_no_ros_multi_page:main',
+            'robot_dashboard = scoutmini_display.robot_dashboard:main',
         ],
     },
 )

@@ -1,0 +1,50 @@
+sensor_monitors:
+  - name: Lidar
+    monitor_type: topic_rate
+    topic: /scan
+    message_type: sensor_msgs/msg/LaserScan
+    expected_rate_hz: 10.0
+
+  - name: ZED2
+    monitor_type: topic_rate
+    topic: /zed2/zed_node/rgb/color/rect/camera_info
+    message_type: sensor_msgs/msg/CameraInfo
+    expected_rate_hz: 15.0
+
+  - name: Insta360
+    monitor_type: topic_rate
+    topic: /equirectangular/image/camera_info
+    message_type: sensor_msgs/msg/CameraInfo
+    expected_rate_hz: 15.0
+
+  - name: IMU
+    monitor_type: topic_rate
+    topic: /witmotion_imu/imu
+    message_type: sensor_msgs/msg/Imu
+    expected_rate_hz: 100.0
+
+  # Example diagnostics-backed monitor. Enable and adjust keys if a driver
+  # publishes a diagnostic value with its measured frequency.
+  # - name: Lidar diagnostics
+  #   monitor_type: diagnostics_rate
+  #   topic: /diagnostics
+  #   hardware_id: lidar
+  #   diagnostic_name: lidar
+  #   rate_key: Frequency
+  #   expected_rate_hz: 10.0
+
+rate_monitor:
+  window_seconds: 5.0
+  stale_after_seconds: 3.0
+  failure_fraction: 0.10
+
+battery:
+  topic: /scout_status
+  message_type: scout_msgs/msg/ScoutStatus
+  voltage_field: battery_voltage
+  empty_voltage: 21.0
+  full_voltage: 29.4
+
+jetson:
+  enabled: true
+  poll_seconds: 2.0

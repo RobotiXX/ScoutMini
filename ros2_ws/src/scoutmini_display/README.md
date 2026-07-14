@@ -61,13 +61,37 @@ ros2 run scoutmini_display example_no_ros_hello_world
 ros2 run scoutmini_display example_no_ros_multi_page
 ```
 
+### D. Run the actual robot dashboard
+
+```bash
+cd ros2_ws
+ros2 run scoutmini_display robot_dashboard
+```
+
+This is the page-based UI built from the examples. It includes:
+- a Go to Room page that sends a Nav2 goal using the room/waypoint name,
+- a Stream page that subscribes only while it is visible,
+- a Network page that shows saved NetworkManager profiles,
+- a Status page that monitors configured sensor rates, Scout battery, and Jetson power.
+
+The Stream, Network, and Status pages are protected by a 4-digit PIN prompt. The PIN is read from `ROBOT_UI_PIN` in your shell environment and falls back to a default value if it is not set.
+
+To set it from `~/.bashrc`, add:
+
+```bash
+# example
+export ROBOT_UI_PIN=1234
+```
+
+If you want a different PIN for your own development shell, change that value in `~/.bashrc` and reopen the terminal.
+
 ## 3) Recommended development path
 
-1. Start from `example_no_ros_multi_page.py` to design your layout and page flow.
-2. Add robot state variables (battery, mode, mission state).
-3. Add ROS subscribers and keep the latest message in class members.
-4. Use a Qt timer to refresh widgets from those class members.
-5. Add command buttons and publish ROS messages when clicked.
+1. Start from `robot_dashboard.py` for the full UI and `example_no_ros_multi_page.py` for a simpler Qt-only reference.
+2. Add new pages in `scoutmini_display/pages/` and export them from `scoutmini_display/pages/__init__.py`.
+3. Use the `DashboardBackend` node for Nav2/waypoint lookups and page-level ROS behavior.
+4. Keep stream subscriptions on-demand by activating them only when the Stream page is shown.
+5. Reuse the `Go to Room` pattern for other Nav2 destinations.
 
 ## 4) Pattern for ROS + Qt in one process
 
@@ -86,14 +110,63 @@ This avoids blocking the GUI while still processing ROS callbacks.
 - Calling blocking ROS spin APIs from the UI thread.
 - Updating widgets directly inside long-running callbacks.
 
-## 6) Next extension ideas
+## 6) Network page
+
+The multi-page Qt demo also includes a Network page that uses `nmcli` and only shows saved NetworkManager Wi-Fi profiles.
+
+It can be used to reconnect to networks the robot has already joined before.
+
+### Network permission on the Jetson
+
+If connection activation reports `Not authorized to control networking`, install
+the included PolicyKit rule once from the repository root. Pass the Linux account
+that runs the dashboard if it is different from your current account:
+
+```bash
+sudo ./scripts/install_dashboard_network_permissions.sh "$USER"
+sudo reboot
+```
+
+The installer adds that account to the dedicated `scoutmini-network` group and
+allows the group to activate or deactivate existing NetworkManager connections.
+It does not grant permission to create or modify system connection profiles. You
+can inspect NetworkManager's result after reboot with:
+
+```bash
+nmcli general permissions | grep network-control
+```
+
+The `network-control` permission should report `yes` in the dashboard user's
+session.
+
+## 7) Stream page
+
+The Stream page finds image topics from the active ROS graph and subscribes only while the page is visible. It supports both raw `sensor_msgs/msg/Image` topics and compressed `sensor_msgs/msg/CompressedImage` topics, then decodes them with Qt and scales the image to fit the screen while preserving aspect ratio.
+
+## 8) Status page
+
+The Status page reads health data from `DashboardBackend` and shows:
+- configured sensor topic rates, marked failing when measured rate is 10% or more below the expected rate,
+- Scout battery voltage and estimated percentage from `/scout_status`,
+- Jetson power draw from `jetson-stats` when available on the robot.
+
+Status monitoring is configured in:
+
+```bash
+ros2_ws/src/scoutmini_display/config/status_monitor.yaml
+```
+
+Update that file for the robot's actual sensor topic names, message types, and expected rates. The default config includes topic-rate monitors for lidar, camera, and IMU. It also includes a commented diagnostics example for drivers that publish useful frequency data on `/diagnostics`.
+
+`jetson-stats` is optional. On a normal Ubuntu development machine without `jtop`, the dashboard keeps running and shows Jetson power as unavailable.
+
+## 9) Next extension ideas
 
 - Replace `std_msgs/String` with your own message types.
-- Add a diagnostics page (CPU, battery, network, topics heartbeat).
 - Add a teleop page with speed slider and emergency stop button.
 - Add log panel with color-coded status lines.
 
-## 7) Add your own Python GUI script
+## 10) Add your own Python GUI script
 
 When you create a new file in this package, you need two things:
 1. A Python file inside `ros2_ws/src/scoutmini_display/scoutmini_display/`.
