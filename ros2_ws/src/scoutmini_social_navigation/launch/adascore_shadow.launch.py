@@ -16,13 +16,26 @@ def generate_launch_description():
     ])
     return LaunchDescription([
         DeclareLaunchArgument('autostart', default_value='true'),
+        DeclareLaunchArgument('use_sim_time', default_value='false'),
+        DeclareLaunchArgument('odom_topic', default_value='/rko_lio/odometry'),
         Node(
             package='nav2_controller',
             executable='controller_server',
             name='controller_server',
             namespace='adascore_shadow',
             output='screen',
-            parameters=[config],
+            parameters=[
+                config,
+                {
+                    'use_sim_time': ParameterValue(
+                        LaunchConfiguration('use_sim_time'),
+                        value_type=bool,
+                    ),
+                    'odom_topic': LaunchConfiguration('odom_topic'),
+                    'FollowPath.sensor_interface.odom_topic':
+                        LaunchConfiguration('odom_topic'),
+                },
+            ],
             remappings=[
                 ('cmd_vel', '/adascore/shadow/cmd_vel'),
                 ('/cmd_vel', '/adascore/shadow/cmd_vel'),
@@ -37,6 +50,10 @@ def generate_launch_description():
             parameters=[{
                 'autostart': ParameterValue(
                     LaunchConfiguration('autostart'),
+                    value_type=bool,
+                ),
+                'use_sim_time': ParameterValue(
+                    LaunchConfiguration('use_sim_time'),
                     value_type=bool,
                 ),
                 'node_names': ['controller_server'],

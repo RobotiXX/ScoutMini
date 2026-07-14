@@ -15,6 +15,7 @@ setup(
         (f'share/{package_name}', ['package.xml', 'README.md']),
         (os.path.join('share', package_name, 'config'), glob('config/*.yaml')),
         (os.path.join('share', package_name, 'launch'), glob('launch/*.launch.py')),
+        (os.path.join('share', package_name, 'scripts'), glob('scripts/*')),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
@@ -25,8 +26,18 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
+            'odometry_restamper = '
+            'scoutmini_social_navigation.odometry_restamp_node:main',
+            'odometry_transform_publisher = '
+            'scoutmini_social_navigation.odometry_tf_node:main',
+            'pointcloud_restamper = '
+            'scoutmini_social_navigation.pointcloud_restamp_node:main',
+            'render_bag_analysis = '
+            'scoutmini_social_navigation.bag_analysis_renderer:main',
             'scan_people_fusion = '
             'scoutmini_social_navigation.scan_people_fusion_node:main',
+            'shadow_path_driver = '
+            'scoutmini_social_navigation.shadow_path_driver_node:main',
         ],
     },
 )

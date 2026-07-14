@@ -11,7 +11,9 @@ from typing import List, Optional
 from ament_index_python.packages import get_package_share_directory
 from cv_bridge import CvBridge
 from diagnostic_msgs.msg import DiagnosticArray, DiagnosticStatus, KeyValue
+import cv2
 import rclpy
+from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
 from rclpy.qos import qos_profile_sensor_data
 from sensor_msgs.msg import CompressedImage, Image
@@ -229,7 +231,7 @@ class YoloPeopleDetector(Node):
                     )
                 )
         self.tracks_pub.publish(output)
-        self._publish_debug(result, header)
+        self._publish_debug(image_bgr, output)
         self._publish_diagnostics(
             header,
             elapsed_ms,
@@ -294,15 +296,66 @@ class YoloPeopleDetector(Node):
         detection.results.append(hypothesis)
         return detection
 
-    def _publish_debug(self, result, header) -> None:
+    def _publish_debug(self, image_bgr, tracks: Detection2DArray) -> None:
         if not bool(self.get_parameter('publish_debug_image').value):
             return
         try:
-            msg = self.bridge.cv2_to_imgmsg(result.plot(), encoding='bgr8')
-            msg.header = header
+            annotated = image_bgr.copy()
+            for detection in tracks.detections:
+                center = detection.bbox.center.position
+                half_width = 0.5 * detection.bbox.size_x
+                half_height = 0.5 * detection.bbox.size_y
+                top_left = (
+                    max(0, int(round(center.x - half_width))),
+                    max(0, int(round(center.y - half_height))),
+                )
+                bottom_right = (
+                    min(annotated.shape[1] - 1, int(round(center.x + half_width))),
+                    min(annotated.shape[0] - 1, int(round(center.y + half_height))),
+                )
+                score = (
+                    detection.results[0].hypothesis.score
+                    if detection.results else 0.0
+                )
+                label = f'person {detection.id} {score:.2f}'
+                cv2.rectangle(annotated, top_left, bottom_right, (40, 220, 40), 3)
+                self._draw_label(annotated, label, top_left)
+            msg = self.bridge.cv2_to_imgmsg(annotated, encoding='bgr8')
+            msg.header = tracks.header
             self.debug_pub.publish(msg)
         except Exception as exc:  # noqa: BLE001
             self.get_logger().warning(f'Debug image publishing failed: {exc}')
+
+    @staticmethod
+    def _draw_label(image, label: str, top_left) -> None:
+        font = cv2.FONT_HERSHEY_SIMPLEX
+        scale = 0.65
+        thickness = 2
+        (width, height), baseline = cv2.getTextSize(
+            label,
+            font,
+            scale,
+            thickness,
+        )
+        x = top_left[0]
+        y = max(height + baseline + 4, top_left[1])
+        cv2.rectangle(
+            image,
+            (x, y - height - baseline - 4),
+            (x + width + 8, y + 2),
+            (40, 220, 40),
+            -1,
+        )
+        cv2.putText(
+            image,
+            label,
+            (x + 4, y - baseline - 1),
+            font,
+            scale,
+            (0, 0, 0),
+            thickness,
+            cv2.LINE_AA,
+        )
 
     def _publish_diagnostics(
         self,
@@ -339,7 +392,7 @@ def main() -> None:
     node = YoloPeopleDetector()
     try:
         rclpy.spin(node)
-    except KeyboardInterrupt:
+    except (KeyboardInterrupt, ExternalShutdownException):
         pass
     finally:
         node.destroy_node()
