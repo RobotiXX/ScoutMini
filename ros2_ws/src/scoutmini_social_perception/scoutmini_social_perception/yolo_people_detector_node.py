@@ -12,6 +12,7 @@ from ament_index_python.packages import get_package_share_directory
 from cv_bridge import CvBridge
 from diagnostic_msgs.msg import DiagnosticArray, DiagnosticStatus, KeyValue
 import cv2
+import numpy as np
 import rclpy
 from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
@@ -37,7 +38,7 @@ class YoloPeopleDetector(Node):
         self.declare_parameter('confidence_threshold', 0.35)
         self.declare_parameter('iou_threshold', 0.45)
         self.declare_parameter('target_fps', 8.0)
-        self.declare_parameter('imgsz', 640)
+        self.declare_parameter('imgsz', 960)
         self.declare_parameter('tracker_config', '')
         self.declare_parameter('reid_model_path', '')
         self.declare_parameter('publish_debug_image', True)
@@ -110,9 +111,21 @@ class YoloPeopleDetector(Node):
             from ultralytics import YOLO
 
             self.model = YOLO(str(model_path), task='detect')
+            self._warm_model()
             self.get_logger().info(f'Loaded model: {model_path}')
         except Exception as exc:  # noqa: BLE001
             self.get_logger().error(f'Failed to load model {model_path}: {exc}')
+
+    def _warm_model(self) -> None:
+        """Initialize the inference backend before live frames can arrive."""
+        image_size = int(self.get_parameter('imgsz').value)
+        dummy_image = np.zeros((image_size, image_size, 3), dtype=np.uint8)
+        self.model.predict(
+            source=dummy_image,
+            imgsz=image_size,
+            device=str(self.get_parameter('device').value),
+            verbose=False,
+        )
 
     def _prepare_tracker_config(self) -> str:
         configured = str(self.get_parameter('tracker_config').value).strip()

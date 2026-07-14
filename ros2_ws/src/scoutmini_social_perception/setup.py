@@ -26,6 +26,12 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
+            'build_tracking_corpus = '
+            'scoutmini_social_perception.corpus_manifest:main',
+            'evaluate_tracking_bag = '
+            'scoutmini_social_perception.tracking_evaluator:main',
+            'run_tracking_corpus = '
+            'scoutmini_social_perception.corpus_runner:main',
             'yolo_people_detector = '
             'scoutmini_social_perception.yolo_people_detector_node:main',
         ],

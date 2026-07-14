@@ -26,13 +26,14 @@ download_model \
   https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26n-cls.pt \
   0dd6f8dbc448870ac98a3cbb7156f923f7ce21fed3755d4019169ffffd279e81
 
-python3 - "${model_dir}/yolo11n.pt" <<'PY'
+cp -f "${model_dir}/yolo11n.pt" "${model_dir}/yolo11n_960.pt"
+python3 - "${model_dir}/yolo11n_960.pt" <<'PY'
 import sys
 from ultralytics import YOLO
 
 YOLO(sys.argv[1], task='detect').export(
     format='onnx',
-    imgsz=640,
+    imgsz=960,
     opset=17,
     simplify=False,
     dynamic=False,
@@ -41,14 +42,14 @@ YOLO(sys.argv[1], task='detect').export(
 PY
 
 "${trtexec}" \
-  --onnx="${model_dir}/yolo11n.onnx" \
-  --saveEngine="${model_dir}/yolo11n.engine" \
+  --onnx="${model_dir}/yolo11n_960.onnx" \
+  --saveEngine="${model_dir}/yolo11n_960.engine" \
   --fp16 \
   --memPoolSize=workspace:1024 \
   --builderOptimizationLevel=3 \
   --skipInference
 
 "${trtexec}" \
-  --loadEngine="${model_dir}/yolo11n.engine" \
+  --loadEngine="${model_dir}/yolo11n_960.engine" \
   --warmUp=200 \
   --duration=3

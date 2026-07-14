@@ -10,7 +10,7 @@ yolo_people_detector:
     confidence_threshold: 0.35
     iou_threshold: 0.45
     target_fps: 8.0
-    imgsz: 640
+    imgsz: 960
     tracker_config: ''
     reid_model_path: ''
     publish_debug_image: true
