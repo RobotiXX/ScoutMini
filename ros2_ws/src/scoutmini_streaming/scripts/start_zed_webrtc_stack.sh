@@ -17,7 +17,7 @@ export CAMERA_TIMEOUT RTSP_TIMEOUT ZED_IMAGE_TOPIC
 
 [[ -x "$MEDIAMTX_BIN" ]] || {
   echo "Missing MediaMTX binary: $MEDIAMTX_BIN" >&2
-  echo "Run scoutmini_streaming/test/install_mediamtx_local.sh." >&2
+  echo "Run scoutmini_streaming/scripts/install_mediamtx_local.sh." >&2
   exit 1
 }
 [[ -f "$MEDIAMTX_CONFIG" ]] || { echo "Missing config: $MEDIAMTX_CONFIG" >&2; exit 1; }
@@ -61,7 +61,13 @@ cleanup() {
     wait "$MEDIAMTX_PID" 2>/dev/null || true
   fi
 }
-trap cleanup EXIT INT TERM
+shutdown() {
+  cleanup
+  trap - EXIT
+  exit 0
+}
+trap cleanup EXIT
+trap shutdown INT TERM
 
 "$MEDIAMTX_BIN" "$MEDIAMTX_CONFIG" &
 MEDIAMTX_PID=$!
@@ -69,7 +75,7 @@ printf '%s\n' "$MEDIAMTX_PID" > "$PID_FILE"
 
 for ((second = 0; second < STARTUP_TIMEOUT; second++)); do
   if "$HEALTH_SCRIPT" --webrtc; then
-    echo "WebRTC ready: http://<robot_ip_or_tailscale_ip>:8889/zed/"
+    echo "WebRTC HTTP endpoint ready: http://<robot_ip_or_tailscale_ip>:8889/zed/"
     wait "$MEDIAMTX_PID"
     exit $?
   fi

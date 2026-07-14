@@ -4,7 +4,7 @@
   <version>0.0.1</version>
   <description>ROS interfaces for ScoutMini integration nodes.</description>
 
-  <maintainer email="noreply@example.com">nle</maintainer>
+  <maintainer email="nhatleminh1997@gmail.com">nle</maintainer>
   <license>Apache-2.0</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>

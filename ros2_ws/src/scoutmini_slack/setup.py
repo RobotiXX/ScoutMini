@@ -21,7 +21,7 @@ setup(
     install_requires=['setuptools', 'slack_sdk>=3,<4'],
     zip_safe=True,
     maintainer='nle',
-    maintainer_email='noreply@example.com',
+    maintainer_email='nhatleminh1997@gmail.com',
     description='Slack integration nodes and scripts for ScoutMini',
     license='Apache-2.0',
     extras_require={

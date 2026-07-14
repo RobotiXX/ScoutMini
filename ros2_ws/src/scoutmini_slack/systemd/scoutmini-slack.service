@@ -6,8 +6,8 @@ StartLimitBurst=3
 
 [Service]
 Type=simple
-Environment=REPO_ROOT=%h/repos/ScoutMini
-ExecStart=%h/repos/ScoutMini/ros2_ws/install/scoutmini_slack/share/scoutmini_slack/scripts/start_slack_gateway.sh
+Environment=REPO_ROOT=@REPO_ROOT@
+ExecStart=@REPO_ROOT@/ros2_ws/install/scoutmini_slack/share/scoutmini_slack/scripts/start_slack_gateway.sh
 Restart=on-failure
 RestartSec=5
 

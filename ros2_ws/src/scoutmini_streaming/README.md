@@ -16,7 +16,7 @@ ros2_ws/src/scoutmini_streaming/test/start_standalone_zed_rtsp.sh
 Install MediaMTX and the user service once:
 
 ```bash
-ros2_ws/src/scoutmini_streaming/test/install_mediamtx_local.sh
+ros2_ws/src/scoutmini_streaming/scripts/install_mediamtx_local.sh
 ros2_ws/src/scoutmini_streaming/scripts/install_user_service.sh
 ```
 

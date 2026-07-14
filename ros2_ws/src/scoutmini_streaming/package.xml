@@ -4,7 +4,7 @@
   <name>scoutmini_streaming</name>
   <version>0.0.1</version>
   <description>ZED camera streaming helpers for ScoutMini.</description>
-  <maintainer email="noreply@example.com">nle</maintainer>
+  <maintainer email="nhatleminh1997@gmail.com">nle</maintainer>
   <license>Apache-2.0</license>
 
   <exec_depend>rclpy</exec_depend>

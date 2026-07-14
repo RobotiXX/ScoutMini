@@ -17,7 +17,7 @@ git submodule update --init --recursive
 ./scripts/build_ros2_ws.sh
 source /opt/ros/humble/setup.bash
 source ros2_ws/install/setup.bash
-ros2_ws/src/scoutmini_streaming/test/install_mediamtx_local.sh
+ros2_ws/src/scoutmini_streaming/scripts/install_mediamtx_local.sh
 ros2_ws/src/scoutmini_streaming/scripts/install_user_service.sh
 ```
 

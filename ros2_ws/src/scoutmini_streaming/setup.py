@@ -24,7 +24,7 @@ setup(
     install_requires=['setuptools'],
     zip_safe=True,
     maintainer='nle',
-    maintainer_email='noreply@example.com',
+    maintainer_email='nhatleminh1997@gmail.com',
     description='ZED camera streaming helpers for ScoutMini',
     license='Apache-2.0',
     extras_require={

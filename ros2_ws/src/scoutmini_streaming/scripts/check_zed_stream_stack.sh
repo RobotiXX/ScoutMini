@@ -87,13 +87,11 @@ if command -v tailscale >/dev/null 2>&1; then
     echo "PASS ICE_NETWORK         Tailscale IPv4 is $tailscale_ip"
     echo "SKIP WEBRTC_MEDIA        verify ICE and advancing frames from a remote browser"
   else
-    echo "FAIL ICE_NETWORK         Tailscale IPv4 is unavailable"
-    status=1
+    echo "SKIP ICE_NETWORK         Tailscale is unavailable; LAN viewing remains supported"
   fi
   tailscale status 2>&1 | sed -n '/# Health check:/,$p' || true
 else
-  echo "FAIL ICE_NETWORK         tailscale command is missing"
-  status=1
+  echo "SKIP ICE_NETWORK         tailscale command is missing; LAN viewing remains supported"
 fi
 
 echo

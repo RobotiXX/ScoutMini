@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 import stat
 import subprocess
+import time
 
 
 PACKAGE_ROOT = Path(__file__).resolve().parents[1]
@@ -63,7 +64,8 @@ def _fake_environment(tmp_path: Path) -> dict[str, str]:
     _write_executable(
         bin_dir / "tailscale",
         '#!/usr/bin/env bash\n'
-        '[[ "${1:-}" == "ip" ]] && echo 100.64.0.1\n'
+        '[[ "${1:-}" == "ip" ]] && '
+        'printf "%s" "${FAKE_TAILSCALE_IP-100.64.0.1}"\n'
         'exit 0\n',
     )
     mediamtx = tmp_path / "mediamtx"
@@ -141,6 +143,22 @@ def test_diagnostic_check_propagates_unhealthy_exit(tmp_path):
     assert "PASS CONFIG" in completed.stdout
 
 
+def test_diagnostic_allows_lan_without_tailscale_ip(tmp_path):
+    env = _fake_environment(tmp_path)
+    env["FAKE_TAILSCALE_IP"] = ""
+    completed = subprocess.run(
+        [str(CHECK_SCRIPT)],
+        check=False,
+        capture_output=True,
+        text=True,
+        env=env,
+    )
+
+    assert completed.returncode == 0
+    assert "SKIP ICE_NETWORK" in completed.stdout
+    assert "LAN viewing remains supported" in completed.stdout
+
+
 def test_stack_retries_transient_camera_preflight(tmp_path):
     count_file = tmp_path / "camera-count"
     health = _write_executable(
@@ -181,3 +199,45 @@ def test_stack_retries_transient_camera_preflight(tmp_path):
     assert completed.returncode == 0
     assert count_file.read_text(encoding="utf-8").strip() == "2"
     assert "retrying" in completed.stderr
+
+
+def test_stack_exits_cleanly_on_sigterm(tmp_path):
+    health = _write_executable(
+        tmp_path / "health.sh",
+        "#!/usr/bin/env bash\nexit 0\n",
+    )
+    mediamtx = _write_executable(
+        tmp_path / "mediamtx",
+        "#!/usr/bin/env bash\n"
+        "trap 'exit 0' TERM INT\n"
+        "while true; do sleep 1; done\n",
+    )
+    runtime_dir = tmp_path / "runtime"
+    env = os.environ.copy()
+    env.update(
+        {
+            "HEALTH_SCRIPT": str(health),
+            "MEDIAMTX_BIN": str(mediamtx),
+            "SCOUTMINI_RUNTIME_DIR": str(runtime_dir),
+            "PREFLIGHT_ATTEMPTS": "1",
+            "STARTUP_TIMEOUT": "1",
+        }
+    )
+    process = subprocess.Popen(
+        [str(STACK_SCRIPT)],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        env=env,
+    )
+    deadline = time.monotonic() + 5.0
+    while not (runtime_dir / "webrtc.pid").exists():
+        assert process.poll() is None
+        assert time.monotonic() < deadline
+        time.sleep(0.05)
+
+    process.terminate()
+    process.communicate(timeout=5.0)
+
+    assert process.returncode == 0
+    assert not (runtime_dir / "webrtc.pid").exists()

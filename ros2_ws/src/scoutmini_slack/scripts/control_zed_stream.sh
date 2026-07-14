@@ -41,7 +41,8 @@ start_stream() {
   systemctl --user start "$SERVICE_NAME"
   for ((second = 0; second < 75; second++)); do
     if "$HEALTH_SCRIPT" --ready; then
-      echo "ZED WebRTC stream is healthy."
+      echo "Camera, RTSP, and the WebRTC HTTP endpoint are healthy."
+      echo "Remote playback still requires browser validation."
       print_status
       return 0
     fi

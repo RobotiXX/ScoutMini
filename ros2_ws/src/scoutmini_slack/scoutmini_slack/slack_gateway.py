@@ -30,7 +30,7 @@ HELP_TEXT = (
     "- `status`: show IPs, Tailscale, stream state, and stream ports\n"
     "- `stream`: show the current ZED WebRTC viewer URL\n"
     "- `stream status`: show ZED stream process and port status\n"
-    "- `stream start`: start the ZED RTSP/WebRTC stream\n"
+    "- `stream start`: start the WebRTC gateway after camera/RTSP bringup\n"
     "- `stream stop`: stop the ZED RTSP/WebRTC stream\n"
     "- `diagnostics`: show stream and robot communication diagnostics\n"
     "- `help`: show this command list\n"
@@ -365,10 +365,10 @@ class SlackGateway(Node):
 
     def _stream_text(self) -> str:
         status = collect_status()
-        state = "online" if status.stream_online else "offline"
+        state = "reachable" if status.stream_online else "unreachable"
         return (
             "*Scout ZED stream*\n"
-            f"- State: *{state}*\n"
+            f"- Gateway: *{state}*\n"
             f"- URL: {status.stream_url}\n"
             "- Motion/navigation commands: disabled"
         )

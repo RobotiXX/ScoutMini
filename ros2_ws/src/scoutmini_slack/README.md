@@ -10,6 +10,7 @@ service, and delegates WebRTC start/stop to `scoutmini-webrtc.service`.
 mkdir -p .local/secrets
 cp ros2_ws/src/scoutmini_slack/config/slack.env.example .local/secrets/slack.env
 chmod 600 .local/secrets/slack.env
+python3 -m pip install 'slack_sdk>=3,<4'
 cd ros2_ws
 colcon build --symlink-install --packages-select scoutmini_interfaces scoutmini_streaming scoutmini_slack
 cd ..

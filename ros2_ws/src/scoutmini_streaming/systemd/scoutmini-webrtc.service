@@ -6,8 +6,8 @@ StartLimitBurst=3
 
 [Service]
 Type=simple
-Environment=SCOUT_REPO_ROOT=%h/repos/ScoutMini
-ExecStart=%h/repos/ScoutMini/ros2_ws/install/scoutmini_streaming/share/scoutmini_streaming/scripts/start_zed_webrtc_stack.sh
+Environment=SCOUT_REPO_ROOT=@REPO_ROOT@
+ExecStart=@REPO_ROOT@/ros2_ws/install/scoutmini_streaming/share/scoutmini_streaming/scripts/start_zed_webrtc_stack.sh
 Restart=on-failure
 RestartSec=5
 
