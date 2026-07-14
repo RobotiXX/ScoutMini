@@ -33,7 +33,7 @@ print_status() {
   service_state="$(systemctl --user is-active "$SERVICE_NAME" 2>/dev/null || true)"
   echo "WebRTC service: ${service_state:-unknown}"
   echo "URL: $SCOUT_STREAM_URL"
-  "$HEALTH_SCRIPT" --status || true
+  "$HEALTH_SCRIPT" --status
 }
 
 start_stream() {
@@ -62,9 +62,13 @@ stop_stream() {
 
 diagnostics() {
   resolve_scripts
-  "$CHECK_SCRIPT" || true
+  local status=0
+  ros2 run scoutmini_slack slack_diagnostics || status=$?
+  echo
+  "$CHECK_SCRIPT" || status=$?
   echo
   journalctl --user -u "$SERVICE_NAME" -n 40 --no-pager || true
+  return "$status"
 }
 
 case "${1:-status}" in

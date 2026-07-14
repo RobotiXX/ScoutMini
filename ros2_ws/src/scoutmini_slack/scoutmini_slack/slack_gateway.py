@@ -24,7 +24,7 @@ ANSI_ESCAPE_RE = re.compile(r"\x1b\[[0-?]*[ -/]*[@-~]")
 
 HELP_TEXT = (
     "*Scout Slack commands*\n"
-    "- `status`: show robot IPs, Tailscale IP, stream state, and stream ports\n"
+    "- `status`: show IPs, Tailscale, stream state, and stream ports\n"
     "- `stream`: show the current ZED WebRTC viewer URL\n"
     "- `stream status`: show ZED stream process and port status\n"
     "- `stream start`: start the ZED RTSP/WebRTC stream\n"
@@ -69,7 +69,10 @@ class TokenBucket:
 
     def refill(self, now: float) -> None:
         elapsed = max(now - self.updated_at, 0.0)
-        self.tokens = min(self.burst, self.tokens + elapsed * self.rate_per_sec)
+        self.tokens = min(
+            self.burst,
+            self.tokens + elapsed * self.rate_per_sec,
+        )
         self.updated_at = now
 
     def can_consume(self) -> bool:
@@ -108,7 +111,9 @@ class SlackGateway(Node):
             self.get_parameter("send_global_rate_per_sec")
             .get_parameter_value()
             .double_value,
-            self.get_parameter("send_global_burst").get_parameter_value().integer_value,
+            self.get_parameter("send_global_burst")
+            .get_parameter_value()
+            .integer_value,
         )
         self._channel_send_buckets: Dict[str, TokenBucket] = {}
         self._channel_send_rate_per_sec = (
@@ -117,7 +122,9 @@ class SlackGateway(Node):
             .double_value
         )
         self._channel_send_burst = (
-            self.get_parameter("send_channel_burst").get_parameter_value().integer_value
+            self.get_parameter("send_channel_burst")
+            .get_parameter_value()
+            .integer_value
         )
         self._web_client: Any = None
         self._socket_client: Any = None
@@ -137,7 +144,8 @@ class SlackGateway(Node):
         except ImportError as exc:
             raise SystemExit(
                 "Missing Python package slack_sdk. Install it in the active "
-                "ROS environment, for example with `python3 -m pip install slack_sdk`."
+                "ROS environment, for example with "
+                "`python3 -m pip install slack_sdk`."
             ) from exc
 
         self._slack_errors = (SlackApiError,)
@@ -173,7 +181,12 @@ class SlackGateway(Node):
             client.send_socket_mode_response(
                 SocketModeResponse(envelope_id=request.envelope_id)
             )
-            self._process_socket_request(request)
+            try:
+                self._process_socket_request(request)
+            except Exception as exc:
+                self.get_logger().error(
+                    f"Failed to process Slack Socket Mode request: {exc}"
+                )
 
         self._socket_client.socket_mode_request_listeners.append(process)
         try:
@@ -182,7 +195,8 @@ class SlackGateway(Node):
             error = exc.response.get("error")
             if error == "invalid_auth":
                 raise SystemExit(
-                    "Slack rejected SLACK_APP_TOKEN while opening Socket Mode. "
+                    "Slack rejected SLACK_APP_TOKEN while opening Socket "
+                    "Mode. "
                     "Use an xapp token with connections:write on the same app "
                     "as SLACK_BOT_TOKEN, and make sure Socket Mode is enabled."
                 ) from exc
@@ -227,7 +241,15 @@ class SlackGateway(Node):
         if not handled:
             self._publish_command_request(event, text)
 
-        self._post_message(channel=channel, text=response, thread_ts=thread_ts)
+        posted, error, _ = self._post_message(
+            channel=channel,
+            text=response,
+            thread_ts=thread_ts,
+        )
+        if not posted:
+            self.get_logger().error(
+                f"Failed to reply to Slack channel {channel}: {error}"
+            )
 
     @staticmethod
     def _event_channel(event: Dict[str, Any]) -> Optional[str]:
@@ -244,7 +266,11 @@ class SlackGateway(Node):
         thread_ts = event.get("thread_ts") or event.get("ts")
         return thread_ts if isinstance(thread_ts, str) and thread_ts else None
 
-    def _response_for(self, text: str, event: Dict[str, Any]) -> Tuple[str, bool]:
+    def _response_for(
+        self,
+        text: str,
+        event: Dict[str, Any],
+    ) -> Tuple[str, bool]:
         command = _clean_command(text)
 
         if command in ("status", "scout status"):
@@ -253,19 +279,38 @@ class SlackGateway(Node):
             return self._stream_text(), True
         if command in ("stream status", "zed status", "stream check"):
             return self._run_stream_control("status", timeout_sec=10.0), True
-        if command in ("stream start", "start stream", "zed start", "start zed stream"):
+        if command in (
+            "stream start",
+            "start stream",
+            "zed start",
+            "start zed stream",
+        ):
             return self._run_stream_control("start"), True
-        if command in ("stream stop", "stop stream", "zed stop", "stop zed stream"):
+        if command in (
+            "stream stop",
+            "stop stream",
+            "zed stop",
+            "stop zed stream",
+        ):
             return self._run_stream_control("stop", timeout_sec=30.0), True
-        if command in ("diagnostics", "diagnostic", "diag", "stream diagnostics"):
-            return self._run_stream_control("diagnostics", timeout_sec=30.0), True
+        if command in (
+            "diagnostics",
+            "diagnostic",
+            "diag",
+            "stream diagnostics",
+        ):
+            return (
+                self._run_stream_control("diagnostics", timeout_sec=30.0),
+                True,
+            )
         if command in ("help", "commands", ""):
             return HELP_TEXT, True
 
         user = event.get("user", "unknown")
         return (
-            "I published that request for ROS-side handling, but this gateway "
-            "does not execute motion, navigation, or shell commands directly.\n"
+            "I published that request for ROS-side handling, but this "
+            "gateway does not execute motion, navigation, or shell "
+            "commands directly.\n"
             f"- Requester: `{user}`\n"
             "- Try `status`, `stream`, `stream status`, `stream start`, "
             "`stream stop`, `diagnostics`, or `help`.",
@@ -282,7 +327,11 @@ class SlackGateway(Node):
             "- Motion/navigation commands: disabled"
         )
 
-    def _run_stream_control(self, action: str, timeout_sec: float = 95.0) -> str:
+    def _run_stream_control(
+        self,
+        action: str,
+        timeout_sec: float = 95.0,
+    ) -> str:
         control_script = _stream_control_script()
         if not os.path.exists(control_script):
             return f"Missing stream control script: `{control_script}`"
@@ -305,13 +354,19 @@ class SlackGateway(Node):
         except Exception as exc:
             return f"Failed to run stream `{action}`: `{exc}`"
 
-        output = _format_command_output(completed.stdout or f"exit={completed.returncode}")
+        output = _format_command_output(
+            completed.stdout or f"exit={completed.returncode}"
+        )
         prefix = f"*ZED stream {action}*"
         if completed.returncode != 0:
             prefix += f" failed with exit code {completed.returncode}"
         return f"{prefix}\n```{output}```"
 
-    def _publish_command_request(self, event: Dict[str, Any], text: str) -> None:
+    def _publish_command_request(
+        self,
+        event: Dict[str, Any],
+        text: str,
+    ) -> None:
         payload = self._incoming_message_payload(event, text, handled=False)
         message = String()
         message.data = json.dumps(payload, sort_keys=True)
@@ -390,7 +445,10 @@ class SlackGateway(Node):
 
             if not channel_bucket.can_consume():
                 retry_after = channel_bucket.retry_after_sec()
-                return False, f"channel={channel} retry_after={retry_after:.1f}s"
+                return (
+                    False,
+                    f"channel={channel} retry_after={retry_after:.1f}s",
+                )
 
             self._global_send_bucket.consume()
             channel_bucket.consume()
@@ -421,7 +479,9 @@ class SlackGateway(Node):
             response.ts = ""
             return response
 
-        allowed, rate_limit_reason = self._check_service_send_rate_limit(channel)
+        allowed, rate_limit_reason = self._check_service_send_rate_limit(
+            channel
+        )
         if not allowed:
             self.get_logger().warning(
                 f"Rate-limited /scout/slack/send_message: {rate_limit_reason}"

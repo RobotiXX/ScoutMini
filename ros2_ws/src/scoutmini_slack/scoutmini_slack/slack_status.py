@@ -12,6 +12,10 @@ from typing import Sequence
 
 START_STREAM_COMMAND = "stream start"
 RTSP_URL = os.environ.get("SCOUT_RTSP_URL", "rtsp://127.0.0.1:8554/zed")
+WEBRTC_HEALTH_URL = os.environ.get(
+    "SCOUT_WEBRTC_HEALTH_URL",
+    "http://127.0.0.1:8889/zed/",
+)
 
 
 def _run(command: Sequence[str], timeout_sec: float = 5.0) -> str:
@@ -96,7 +100,7 @@ def _rtsp_ready(url: str) -> bool:
         ],
         timeout_sec=8.0,
     )
-    return result == "h264"
+    return "h264" in result.splitlines()
 
 
 def collect_status() -> ScoutStatus:
@@ -108,15 +112,24 @@ def collect_status() -> ScoutStatus:
         if tailscale_ip and not tailscale_ip.startswith("unavailable:")
         else "<robot_ip_or_tailscale_ip>"
     )
-    stream_url = os.environ.get("SCOUT_STREAM_URL", f"http://{stream_host}:8889/zed/")
+    stream_url = os.environ.get(
+        "SCOUT_STREAM_URL",
+        f"http://{stream_host}:8889/zed/",
+    )
     stream_ports = _run(
-        ["bash", "-lc", "ss -ltnup | grep -E ':8554|:8889|:8189' || echo 'none'"]
+        [
+            "bash",
+            "-lc",
+            "ss -ltnup | grep -E ':8554|:8889|:8189' || echo 'none'",
+        ]
     )
     return ScoutStatus(
         hostname=hostname,
         ips=ips,
         tailscale_ip=tailscale_ip,
         stream_url=stream_url,
-        stream_online=_rtsp_ready(RTSP_URL) and _webrtc_ready(stream_url),
+        stream_online=(
+            _rtsp_ready(RTSP_URL) and _webrtc_ready(WEBRTC_HEALTH_URL)
+        ),
         stream_ports=stream_ports,
     )

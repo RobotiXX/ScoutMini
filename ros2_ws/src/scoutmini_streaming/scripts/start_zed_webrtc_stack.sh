@@ -9,6 +9,11 @@ MEDIAMTX_BIN="${MEDIAMTX_BIN:-$HOME/.local/lib/scoutmini/mediamtx/mediamtx}"
 STATE_DIR="${SCOUTMINI_RUNTIME_DIR:-${XDG_RUNTIME_DIR:-/tmp}/scoutmini}"
 PID_FILE="$STATE_DIR/webrtc.pid"
 STARTUP_TIMEOUT="${STARTUP_TIMEOUT:-15}"
+ZED_IMAGE_TOPIC="${ZED_IMAGE_TOPIC:-/zed2/zed_node/rgb/color/rect/image/compressed}"
+CAMERA_TIMEOUT="${CAMERA_TIMEOUT:-10}"
+RTSP_TIMEOUT="${RTSP_TIMEOUT:-10}"
+PREFLIGHT_ATTEMPTS="${PREFLIGHT_ATTEMPTS:-3}"
+export CAMERA_TIMEOUT RTSP_TIMEOUT ZED_IMAGE_TOPIC
 
 [[ -x "$MEDIAMTX_BIN" ]] || {
   echo "Missing MediaMTX binary: $MEDIAMTX_BIN" >&2
@@ -18,15 +23,31 @@ STARTUP_TIMEOUT="${STARTUP_TIMEOUT:-15}"
 [[ -f "$MEDIAMTX_CONFIG" ]] || { echo "Missing config: $MEDIAMTX_CONFIG" >&2; exit 1; }
 [[ -x "$HEALTH_SCRIPT" ]] || { echo "Missing health script: $HEALTH_SCRIPT" >&2; exit 1; }
 
+wait_for_preflight() {
+  local probe="$1"
+  local label="$2"
+  local attempt
+  for ((attempt = 1; attempt <= PREFLIGHT_ATTEMPTS; attempt++)); do
+    if "$HEALTH_SCRIPT" "$probe"; then
+      return 0
+    fi
+    if (( attempt < PREFLIGHT_ATTEMPTS )); then
+      echo "$label preflight attempt $attempt failed; retrying..." >&2
+      sleep 1
+    fi
+  done
+  return 1
+}
+
 echo "Checking externally managed ZED camera..."
-"$HEALTH_SCRIPT" --camera || {
-  echo "No frame received from /zed2/zed_node/rgb/color/rect/image/compressed." >&2
+wait_for_preflight --camera "ZED camera" || {
+  echo "No frame received from $ZED_IMAGE_TOPIC." >&2
   echo "Start robot camera bringup before WebRTC." >&2
   exit 1
 }
 
 echo "Checking externally managed image2rtsp stream..."
-"$HEALTH_SCRIPT" --rtsp || {
+wait_for_preflight --rtsp "RTSP" || {
   echo "RTSP is not producing an H.264 video track at rtsp://127.0.0.1:8554/zed." >&2
   echo "Start the scoutmini_streaming image2rtsp launch before WebRTC." >&2
   exit 1

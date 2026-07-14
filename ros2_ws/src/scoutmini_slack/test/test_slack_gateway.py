@@ -1,5 +1,8 @@
 """Unit tests for Slack command parsing and ROS event metadata."""
 
+from types import SimpleNamespace
+from unittest.mock import Mock
+
 from scoutmini_slack.slack_gateway import SlackGateway
 from scoutmini_slack.slack_gateway import TokenBucket
 from scoutmini_slack.slack_gateway import _clean_command
@@ -52,3 +55,37 @@ def test_token_bucket_refills_without_exceeding_burst(monkeypatch):
     bucket.consume()
     bucket.refill(12.0)
     assert bucket.tokens == 2.0
+
+
+def test_socket_event_logs_failed_reply():
+    gateway = SlackGateway.__new__(SlackGateway)
+    gateway._bot_user_id = "UBOT"
+    gateway._response_for = Mock(return_value=("reply", True))
+    gateway._publish_incoming_message = Mock()
+    gateway._publish_command_request = Mock()
+    gateway._post_message = Mock(return_value=(False, "channel_not_found", ""))
+    logger = Mock()
+    gateway.get_logger = Mock(return_value=logger)
+    request = SimpleNamespace(
+        type="events_api",
+        payload={
+            "event": {
+                "type": "app_mention",
+                "channel": "C123",
+                "channel_type": "channel",
+                "user": "U123",
+                "text": "status",
+                "ts": "100.1",
+            }
+        },
+    )
+
+    gateway._process_socket_request(request)
+
+    gateway._post_message.assert_called_once_with(
+        channel="C123",
+        text="reply",
+        thread_ts="100.1",
+    )
+    logger.error.assert_called_once()
+    assert "channel_not_found" in logger.error.call_args.args[0]

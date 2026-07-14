@@ -35,11 +35,11 @@ camera_ready() {
 
 rtsp_ready() {
   command -v ffprobe >/dev/null 2>&1 || return 1
-  local codec
-  codec="$(timeout "$RTSP_TIMEOUT" ffprobe -v error -rtsp_transport tcp \
+  local probe_output
+  probe_output="$(timeout "$RTSP_TIMEOUT" ffprobe -v error -rtsp_transport tcp \
     -select_streams v:0 -show_entries stream=codec_name \
     -of default=noprint_wrappers=1:nokey=1 "$RTSP_URL" 2>/dev/null || true)"
-  [[ "$codec" == "h264" ]]
+  grep -Fxq "h264" <<< "$probe_output"
 }
 
 webrtc_ready() {
@@ -48,15 +48,41 @@ webrtc_ready() {
     "$WEBRTC_HEALTH_URL" >/dev/null 2>&1
 }
 
+report_probe() {
+  local stage="$1"
+  local success_message="$2"
+  local failure_message="$3"
+  shift 3
+
+  if "$@"; then
+    printf 'PASS %-18s %s\n' "$stage" "$success_message"
+    return 0
+  fi
+
+  printf 'FAIL %-18s %s\n' "$stage" "$failure_message"
+  return 1
+}
+
 print_status() {
-  local camera="unavailable"
-  local rtsp="unavailable"
-  local webrtc="unavailable"
-  camera_ready && camera="healthy"
-  rtsp_ready && rtsp="healthy (H.264)"
-  webrtc_ready && webrtc="ready"
-  printf 'camera: %s\nrtsp: %s\nwebrtc: %s\n' "$camera" "$rtsp" "$webrtc"
-  [[ "$camera" == "healthy" && "$rtsp" == "healthy (H.264)" && "$webrtc" == "ready" ]]
+  local status=0
+
+  report_probe \
+    "CAMERA_TOPIC" \
+    "fresh frame received from $ZED_IMAGE_TOPIC" \
+    "no fresh frame from $ZED_IMAGE_TOPIC within ${CAMERA_TIMEOUT}s" \
+    camera_ready || status=1
+  report_probe \
+    "RTSP_MEDIA" \
+    "H.264 video detected at $RTSP_URL" \
+    "no H.264 video detected at $RTSP_URL within ${RTSP_TIMEOUT}s" \
+    rtsp_ready || status=1
+  report_probe \
+    "WEBRTC_HTTP" \
+    "gateway responded at $WEBRTC_HEALTH_URL" \
+    "gateway did not respond at $WEBRTC_HEALTH_URL within ${WEBRTC_TIMEOUT}s" \
+    webrtc_ready || status=1
+
+  return "$status"
 }
 
 case "${1:---status}" in

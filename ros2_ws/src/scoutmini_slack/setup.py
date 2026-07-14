@@ -8,7 +8,10 @@ setup(
     version='0.0.1',
     packages=find_packages(exclude=['test']),
     data_files=[
-        ('share/ament_index/resource_index/packages', ['resource/' + package_name]),
+        (
+            'share/ament_index/resource_index/packages',
+            ['resource/' + package_name],
+        ),
         ('share/' + package_name, ['package.xml', 'README.md']),
         ('share/' + package_name + '/config', glob('config/*')),
         ('share/' + package_name + '/docs', glob('docs/*.md')),
@@ -27,6 +30,7 @@ setup(
     entry_points={
         'console_scripts': [
             'slack_gateway = scoutmini_slack.slack_gateway:main',
+            'slack_diagnostics = scoutmini_slack.slack_diagnostics:main',
             'slack_status_poster = scoutmini_slack.slack_status_poster:main',
         ],
     },

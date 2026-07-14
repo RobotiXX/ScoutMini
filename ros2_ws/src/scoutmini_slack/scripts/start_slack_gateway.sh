@@ -21,6 +21,12 @@ if [[ ! -f "$SLACK_ENV" ]]; then
   exit 1
 fi
 
+if [[ -n "$(find "$SLACK_ENV" -maxdepth 0 -perm /077 -print -quit)" ]]; then
+  echo "Slack env file is readable or writable by group/other: $SLACK_ENV" >&2
+  echo "Run: chmod 600 $SLACK_ENV" >&2
+  exit 1
+fi
+
 set +u
 source /opt/ros/humble/setup.bash
 source "$SCOUT_WS/install/setup.bash"

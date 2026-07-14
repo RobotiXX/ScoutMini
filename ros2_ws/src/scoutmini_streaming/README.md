@@ -39,7 +39,12 @@ ros2_ws/src/scoutmini_streaming/scripts/collect_zed_stream_diagnostics.sh
 ```
 
 Health requires an actual compressed ROS image, an H.264 RTSP video track, and
-a successful WebRTC HTTP response. Open ports alone are not considered healthy.
+a successful local WebRTC HTTP response. Open ports alone are not considered
+healthy. Each probe emits a stable stage name (`CAMERA_TOPIC`, `RTSP_MEDIA`, or
+`WEBRTC_HTTP`) and the command exits nonzero if any stage fails. The local HTTP
+probe establishes robot-side gateway health; LAN/Tailscale playback must still
+be validated from a browser because an HTTP response does not prove ICE or
+video-frame delivery.
 
 Runtime state is stored under `$XDG_RUNTIME_DIR/scoutmini`; MediaMTX is under
 `~/.local/lib/scoutmini`; diagnostics and bags are under

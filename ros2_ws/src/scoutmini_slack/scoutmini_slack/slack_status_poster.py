@@ -31,7 +31,8 @@ def post_status() -> None:
     try:
         client.chat_postMessage(channel=channel, text=status.to_slack_text())
     except SlackApiError as exc:
-        raise SystemExit(f"Slack API error: {exc.response.get('error')}") from exc
+        error = exc.response.get("error")
+        raise SystemExit(f"Slack API error: {error}") from exc
 
     print(f"Posted Scout status to Slack channel {channel}.")
 

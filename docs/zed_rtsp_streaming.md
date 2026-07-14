@@ -54,3 +54,7 @@ journalctl --user -u scoutmini-webrtc.service -n 100 --no-pager
 The check distinguishes camera frame delivery, H.264 RTSP delivery, and the
 WebRTC endpoint. It also reports recent USB/UVC errors because a listed USB
 device or ROS topic does not prove that the camera is delivering frames.
+Failures are labeled with stable stage names and return a nonzero status so
+operators and the Slack gateway do not mistake an unhealthy stack for success.
+Robot-side WebRTC health uses the localhost endpoint; the advertised LAN or
+Tailscale URL is tested separately from a browser to cover ICE and routing.

@@ -27,6 +27,10 @@ The gateway handles `help`, `status`, `stream`, `stream status`, `stream start`,
 `stream stop`, and `diagnostics`. Motion, navigation, and arbitrary shell
 commands are not executed.
 
+`diagnostics` reports redacted Slack configuration/authentication state before
+the stage-coded camera, RTSP, WebRTC, service, and Tailscale checks. A failed
+stage returns a failed command result instead of being presented as success.
+
 ## ROS API
 
 - `/scout/slack/send_message`: `scoutmini_interfaces/srv/SendSlackMessage`
@@ -36,3 +40,8 @@ commands are not executed.
 Incoming JSON includes `source`, `channel`, `channel_type`, `user`, `text`,
 `ts`, `thread_ts`, `event_type`, and `handled`. Outgoing service calls are
 limited globally and per Slack channel.
+
+`SCOUT_STREAM_URL` is the private LAN or Tailscale URL shown to users.
+`SCOUT_WEBRTC_HEALTH_URL` defaults to localhost and is used only for robot-side
+health, preventing a remote routing failure from being misreported as a local
+MediaMTX failure.
