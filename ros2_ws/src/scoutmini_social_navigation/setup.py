@@ -36,6 +36,8 @@ setup(
             'scoutmini_social_navigation.bag_analysis_renderer:main',
             'scan_people_fusion = '
             'scoutmini_social_navigation.scan_people_fusion_node:main',
+            'shadow_health_monitor = '
+            'scoutmini_social_navigation.shadow_health_monitor_node:main',
             'shadow_path_driver = '
             'scoutmini_social_navigation.shadow_path_driver_node:main',
         ],

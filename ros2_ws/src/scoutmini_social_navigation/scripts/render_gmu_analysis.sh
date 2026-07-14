@@ -71,6 +71,7 @@ setsid ros2 bag record -o "${analysis_bag}" \
   /people/tracks_2d \
   /people/detector_diagnostics \
   /people/fusion_diagnostics \
+  /adascore/shadow/diagnostics \
   /adascore/shadow/people \
   /adascore/shadow/cmd_vel \
   /adascore_shadow/robot_local_trajectories \

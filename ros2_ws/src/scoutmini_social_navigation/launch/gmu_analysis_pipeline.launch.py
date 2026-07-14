@@ -3,7 +3,8 @@
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, LogInfo
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import Command, FindExecutable, LaunchConfiguration
+from launch.substitutions import Command, EnvironmentVariable, FindExecutable
+from launch.substitutions import LaunchConfiguration
 from launch.substitutions import PathJoinSubstitution
 from launch_ros.actions import Node
 from launch_ros.parameter_descriptions import ParameterValue
@@ -35,12 +36,23 @@ def generate_launch_description():
         DeclareLaunchArgument('use_sim_time', default_value='true'),
         DeclareLaunchArgument(
             'model_path',
-            default_value='/home/nvidia/models/yolo/yolo11n.engine',
+            default_value=PathJoinSubstitution([
+                EnvironmentVariable('HOME'),
+                'models',
+                'yolo',
+                'yolo11n_960.engine',
+            ]),
         ),
         DeclareLaunchArgument(
             'reid_model_path',
-            default_value='/home/nvidia/models/yolo/yolo26n-cls.pt',
+            default_value=PathJoinSubstitution([
+                EnvironmentVariable('HOME'),
+                'models',
+                'yolo',
+                'yolo26n-cls.pt',
+            ]),
         ),
+        DeclareLaunchArgument('scan_angle_increment', default_value='0.035'),
         LogInfo(msg='OFFLINE ANALYSIS ONLY: no Scout base node is launched.'),
         Node(
             package='robot_state_publisher',
@@ -84,7 +96,10 @@ def generate_launch_description():
                 'max_height': 1.5,
                 'angle_min': -3.141592653589793,
                 'angle_max': 3.141592653589793,
-                'angle_increment': 0.007,
+                'angle_increment': ParameterValue(
+                    LaunchConfiguration('scan_angle_increment'),
+                    value_type=float,
+                ),
                 'scan_time': 0.1,
                 'range_min': 0.35,
                 'range_max': 10.0,
@@ -108,6 +123,7 @@ def generate_launch_description():
                 'reid_model_path': LaunchConfiguration('reid_model_path'),
                 'device': '0',
                 'target_fps': 8.0,
+                'imgsz': 960,
                 'publish_debug_image': False,
                 'frame_id_override': '360_link',
             }],
@@ -140,5 +156,11 @@ def generate_launch_description():
                 'odom_topic': '/analysis/odom',
                 'path_length_m': 4.0,
             }],
+        ),
+        Node(
+            package='scoutmini_social_navigation',
+            executable='shadow_health_monitor',
+            name='analysis_shadow_health_monitor',
+            parameters=[{'use_sim_time': use_sim_time}],
         ),
     ])

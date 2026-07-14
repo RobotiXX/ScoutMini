@@ -29,6 +29,7 @@ LOCAL_PATH = '/adascore_shadow/robot_local_plan'
 SHADOW_CMD = '/adascore/shadow/cmd_vel'
 OBSTACLES = '/sfm/markers/obstacle_points'
 DETECTOR_DIAGNOSTICS = '/people/detector_diagnostics'
+SHADOW_DIAGNOSTICS = '/adascore/shadow/diagnostics'
 
 
 def header_stamp_ns(msg) -> Optional[int]:
@@ -433,6 +434,16 @@ def track_counts_update(counts: Dict[str, int], detections) -> None:
         counts[detection.id] = counts.get(detection.id, 0) + 1
 
 
+def diagnostic_level(message) -> Optional[int]:
+    """Return a DiagnosticArray's first status level as an integer."""
+    if message is None or not message.status:
+        return None
+    level = message.status[0].level
+    if isinstance(level, (bytes, bytearray)):
+        return level[0]
+    return int(level)
+
+
 def render(args) -> Dict[str, object]:
     """Render the complete analysis and return summary metrics."""
     source_bag = Path(args.source_bag).resolve()
@@ -451,7 +462,7 @@ def render(args) -> Dict[str, object]:
     analysis = read_topics(
         analysis_bag,
         [TRACKS, PEOPLE, TRAJECTORIES, LOCAL_PATH, SHADOW_CMD,
-         OBSTACLES, DETECTOR_DIAGNOSTICS],
+         OBSTACLES, DETECTOR_DIAGNOSTICS, SHADOW_DIAGNOSTICS],
     )
     if not len(analysis[TRACKS]):
         raise RuntimeError('Analysis bag contains no current-pipeline tracks')
@@ -503,6 +514,10 @@ def render(args) -> Dict[str, object]:
             shadow_cmd = analysis[SHADOW_CMD].nearest(timestamp, 0.35)
             obstacles = analysis[OBSTACLES].nearest(timestamp, 0.35)
             diagnostics = analysis[DETECTOR_DIAGNOSTICS].nearest(timestamp, 0.05)
+            shadow_diagnostics = analysis[SHADOW_DIAGNOSTICS].nearest(
+                timestamp,
+                0.25,
+            )
             odom = source[ODOMETRY].nearest(timestamp, 0.15)
 
             ours_view = image.copy()
@@ -574,6 +589,7 @@ def render(args) -> Dict[str, object]:
                 'shadow_angular_radps': getattr(getattr(shadow_cmd, 'angular', None), 'z', 0.0),
                 'mean_matched_iou': float(np.mean(ious)) if ious else 0.0,
                 'inference_ms': diagnostic_value(diagnostics, 'elapsed_ms'),
+                'adascore_health_level': diagnostic_level(shadow_diagnostics),
             })
             frame_index += 1
     finally:
@@ -608,6 +624,9 @@ def render(args) -> Dict[str, object]:
             int(abs(row['shadow_linear_mps']) > 1e-6 or
                 abs(row['shadow_angular_radps']) > 1e-6) for row in rows
         ),
+        'adascore_stall_frames': sum(
+            int(row['adascore_health_level'] == 2) for row in rows
+        ),
         'notes': [
             'Recorded baseline tracks are not human-annotated ground truth.',
             'Range comes from the synchronized VLP16 point cloud converted to LaserScan.',
@@ -618,11 +637,17 @@ def render(args) -> Dict[str, object]:
         ],
         'outputs': [str(main_path), str(comparison_path)],
     }
-    if metrics['frames_with_adascore_trajectories'] < frame_index:
+    if metrics['adascore_stall_frames']:
         metrics['notes'].append(
             'AdaSCoRe output is intentionally shown as missing when no fresh '
-            'trajectory was published; the recorded shadow run stalled under '
-            'fused social input and was not interpolated.'
+            'trajectory was published; the health monitor observed a stall '
+            'under fresh social input, and output was not interpolated.'
+        )
+    elif metrics['frames_with_adascore_trajectories'] < frame_index:
+        metrics['notes'].append(
+            'AdaSCoRe output is intentionally shown as missing when no fresh '
+            'trajectory was published; completed or inactive action output '
+            'was not interpolated.'
         )
     with (output_dir / f'{scene}_analysis_metrics.json').open(
         'w', encoding='utf-8'

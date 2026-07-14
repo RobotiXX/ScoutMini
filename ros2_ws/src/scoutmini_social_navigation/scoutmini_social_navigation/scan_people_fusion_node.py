@@ -22,6 +22,7 @@ from .fusion import (
     numeric_track_id,
     robust_scan_range,
     rotate_vector_by_quaternion,
+    spatially_separated_indices,
     transform_point,
 )
 
@@ -51,6 +52,8 @@ class ScanPeopleFusion(Node):
         self.declare_parameter('track_timeout_sec', 1.0)
         self.declare_parameter('max_range_rate_mps', 4.0)
         self.declare_parameter('velocity_alpha', 0.35)
+        self.declare_parameter('min_track_observations', 2)
+        self.declare_parameter('min_person_separation_m', 0.30)
 
         self._scan: Optional[LaserScan] = None
         self._image_width = int(self.get_parameter('fallback_image_width').value)
@@ -136,6 +139,17 @@ class ScanPeopleFusion(Node):
             else:
                 output.people.append(person)
 
+        candidates = [
+            (person.position.x, person.position.y, person.reliability)
+            for person in output.people
+        ]
+        selected = spatially_separated_indices(
+            candidates,
+            float(self.get_parameter('min_person_separation_m').value),
+        )
+        rejected += len(output.people) - len(selected)
+        output.people = [output.people[index] for index in selected]
+
         self._drop_stale(self._stamp_sec(msg.header.stamp))
         self._people_pub.publish(output)
         self._publish_diagnostics(msg, len(output.people), rejected, 'tracking')
@@ -182,6 +196,10 @@ class ScanPeopleFusion(Node):
         motion = self._motion(detection.id, point_output, stamp_sec)
         if motion is None:
             return None
+        if self._states[detection.id]['observations'] < int(
+            self.get_parameter('min_track_observations').value
+        ):
+            return None
         velocity_x, velocity_y, yaw = motion
 
         person = Person()
@@ -215,6 +233,15 @@ class ScanPeopleFusion(Node):
             if math.hypot(raw_vx, raw_vy) > float(
                 self.get_parameter('max_range_rate_mps').value
             ):
+                self._states[track_id] = {
+                    'x': position[0],
+                    'y': position[1],
+                    'stamp': stamp_sec,
+                    'vx': 0.0,
+                    'vy': 0.0,
+                    'yaw': previous.get('yaw', 0.0),
+                    'observations': 0,
+                }
                 return None
             alpha = float(self.get_parameter('velocity_alpha').value)
             vx = alpha * raw_vx + (1.0 - alpha) * previous['vx']
@@ -233,6 +260,7 @@ class ScanPeopleFusion(Node):
             'vx': vx,
             'vy': vy,
             'yaw': yaw,
+            'observations': previous.get('observations', 0) + 1 if previous else 1,
         }
         return vx, vy, yaw
 

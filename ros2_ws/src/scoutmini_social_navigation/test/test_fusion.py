@@ -8,6 +8,7 @@ from scoutmini_social_navigation.fusion import (
     numeric_track_id,
     robust_scan_range,
     rotate_vector_by_quaternion,
+    spatially_separated_indices,
     transform_point,
 )
 
@@ -61,3 +62,13 @@ def test_quaternion_rotation_and_translation():
 
 def test_numeric_track_id_matches_social_force_contract():
     assert numeric_track_id('person_000042') == 42
+
+
+def test_spatial_separation_keeps_highest_confidence_candidate():
+    candidates = [
+        (0.0, 0.0, 0.7),
+        (0.1, 0.1, 0.9),
+        (1.0, 0.0, 0.6),
+    ]
+
+    assert spatially_separated_indices(candidates, 0.3) == [1, 2]

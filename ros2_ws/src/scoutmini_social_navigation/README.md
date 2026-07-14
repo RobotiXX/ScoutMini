@@ -48,6 +48,13 @@ the derived ROS bag, and the replay logs. Recorded tracks are a baseline, not
 human-annotated ground truth. The synthetic four-meter path exists only to make
 AdaSCoRe publish its candidate trajectories and shadow command.
 
+The replay scan is reduced to roughly 180 angular samples before AdaSCoRe.
+This preserves two-degree obstacle coverage while bounding the social
+force planner's per-agent obstacle work. `/adascore/shadow/diagnostics` reports
+an error if command output stalls while People input remains fresh.
+New fused tracks require two observations, and lower-confidence range
+associations within 0.30 m of another person are withheld from AdaSCoRe.
+
 The GMU bags do not provide camera-to-LiDAR calibration. The replay uses the
 ScoutMini URDF transform only to exercise the full interface, and the video
 labels resulting ranges as unverified scan associations. Do not treat those

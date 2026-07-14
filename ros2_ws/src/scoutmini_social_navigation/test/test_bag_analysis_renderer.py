@@ -1,5 +1,6 @@
 """Tests for deterministic bag-analysis rendering helpers."""
 
+from diagnostic_msgs.msg import DiagnosticArray, DiagnosticStatus
 from geometry_msgs.msg import Point
 from nav_msgs.msg import Odometry
 from visualization_msgs.msg import Marker, MarkerArray
@@ -9,6 +10,7 @@ from scoutmini_social_navigation.bag_analysis_renderer import (
     TimedMessages,
     align_receive_time,
     detection_box,
+    diagnostic_level,
     greedy_match_iou,
     header_stamp_ns,
     scale_detections,
@@ -68,3 +70,11 @@ def test_align_receive_time_interpolates_replay_clock():
     assert align_receive_time(150, anchors) == 1_025
     assert align_receive_time(50, anchors) == 950
     assert align_receive_time(250, anchors) == 1_100
+
+
+def test_diagnostic_level_decodes_ros_byte_field():
+    status = DiagnosticStatus()
+    status.level = DiagnosticStatus.ERROR
+    message = DiagnosticArray(status=[status])
+
+    assert diagnostic_level(message) == 2

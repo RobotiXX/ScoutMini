@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import math
 from statistics import median
-from typing import Optional, Sequence, Tuple
+from typing import List, Optional, Sequence, Tuple
 
 
 def normalize_angle(angle: float) -> float:
@@ -83,3 +83,23 @@ def numeric_track_id(track_id: str) -> int:
     """Produce the numeric ID required by the social-force planner."""
     digits = ''.join(character for character in track_id if character.isdigit())
     return int(digits) if digits else 0
+
+
+def spatially_separated_indices(
+    candidates: Sequence[Tuple[float, float, float]],
+    min_separation_m: float,
+) -> List[int]:
+    """Keep highest-score candidates that are physically distinguishable."""
+    accepted = []
+    for index in sorted(
+        range(len(candidates)),
+        key=lambda value: (-candidates[value][2], value),
+    ):
+        x, y, _ = candidates[index]
+        if all(
+            math.hypot(x - candidates[other][0], y - candidates[other][1])
+            >= min_separation_m
+            for other in accepted
+        ):
+            accepted.append(index)
+    return sorted(accepted)
