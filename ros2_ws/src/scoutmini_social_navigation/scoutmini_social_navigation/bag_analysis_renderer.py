@@ -17,6 +17,7 @@ import numpy as np
 import rosbag2_py
 from rclpy.serialization import deserialize_message
 from rosidl_runtime_py.utilities import get_message
+from scoutmini_social_perception.track_colors import track_color
 
 
 SOURCE_IMAGE = '/insta360_x4/image_raw/compressed'
@@ -250,6 +251,7 @@ def draw_tracks(image, detections, color, prefix: str, people=None, odom=None) -
         person.name: person for person in getattr(people, 'people', [])
     }
     for detection in detections:
+        box_color = color if color is not None else track_color(detection.id)
         x1, y1, x2, y2 = detection_box(detection)
         x1 = max(0, min(width - 1, int(round(x1))))
         y1 = max(0, min(height - 1, int(round(y1))))
@@ -268,8 +270,8 @@ def draw_tracks(image, detections, color, prefix: str, people=None, odom=None) -
             label += f' scan~{range_m:.1f}m'
         elif person is not None:
             label += ' range-fused'
-        cv2.rectangle(image, (x1, y1), (x2, y2), color, 3)
-        _label(image, label, (x1, y1), color)
+        cv2.rectangle(image, (x1, y1), (x2, y2), box_color, 3)
+        _label(image, label, (x1, y1), box_color)
 
 
 def world_to_panel(point, odom, center=(256, 430), scale=42.0):
@@ -308,7 +310,8 @@ def draw_topdown(people, odom, trajectories, local_path, obstacles, shadow_cmd):
             pixel = world_to_panel(person.position, odom)
             if not (0 <= pixel[0] < 512 and 0 <= pixel[1] < 512):
                 continue
-            cv2.circle(panel, pixel, 9, (40, 220, 40), -1)
+            color = track_color(person.name)
+            cv2.circle(panel, pixel, 9, color, -1)
             yaw = yaw_from_odometry(odom)
             forward_velocity = (
                 math.cos(yaw) * person.velocity.x +
@@ -322,10 +325,10 @@ def draw_topdown(people, odom, trajectories, local_path, obstacles, shadow_cmd):
                 int(pixel[0] - left_velocity * 42),
                 int(pixel[1] - forward_velocity * 42),
             )
-            cv2.arrowedLine(panel, pixel, velocity_end, (40, 220, 40), 2)
+            cv2.arrowedLine(panel, pixel, velocity_end, color, 2)
             cv2.putText(
                 panel, person.name, (pixel[0] + 10, pixel[1] - 8),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.45, (220, 235, 220), 1,
+                cv2.FONT_HERSHEY_SIMPLEX, 0.45, color, 1,
                 cv2.LINE_AA,
             )
     cv2.fillPoly(
@@ -341,7 +344,7 @@ def draw_topdown(people, odom, trajectories, local_path, obstacles, shadow_cmd):
         0.62, (70, 190, 255), 2, cv2.LINE_AA,
     )
     cv2.putText(
-        panel, 'people green | obstacles red', (16, 80),
+        panel, 'people colored by track ID | obstacles red', (16, 80),
         cv2.FONT_HERSHEY_SIMPLEX, 0.43, (220, 220, 220), 1, cv2.LINE_AA,
     )
     cv2.putText(
@@ -400,8 +403,8 @@ def draw_status_panel(frame_index, relative_sec, tracks, reference, people,
                     0.53, (15, 18, 22), 2, cv2.LINE_AA)
         y += 36
     cv2.putText(
-        panel, 'green: current pipeline', (18, 457), cv2.FONT_HERSHEY_SIMPLEX,
-        0.52, (15, 135, 15), 2, cv2.LINE_AA,
+        panel, 'current pipeline: stable color per track ID', (18, 457),
+        cv2.FONT_HERSHEY_SIMPLEX, 0.48, (45, 80, 165), 2, cv2.LINE_AA,
     )
     cv2.putText(
         panel, 'cyan: recorded baseline (not ground truth)', (18, 486),
@@ -524,7 +527,7 @@ def render(args) -> Dict[str, object]:
             draw_tracks(
                 ours_view,
                 tracks.detections,
-                (40, 220, 40),
+                None,
                 '',
                 people,
                 odom,
@@ -549,11 +552,14 @@ def render(args) -> Dict[str, object]:
             reference_scaled = scale_detections(
                 reference, 1280.0 / image.shape[1], 640.0 / image.shape[0],
             )
-            draw_tracks(ours_compare, ours_scaled.detections, (40, 220, 40), '')
+            draw_tracks(ours_compare, ours_scaled.detections, None, '')
             draw_tracks(
                 reference_compare, reference_scaled.detections, (230, 205, 20), '',
             )
-            annotate_title(ours_compare, 'Current pipeline', (40, 220, 40))
+            annotate_title(
+                ours_compare, 'Current pipeline - color identifies track ID',
+                (235, 235, 235),
+            )
             annotate_title(reference_compare,
                            'Recorded baseline - not ground truth', (230, 205, 20))
             comparison = np.full((720, 2560, 3), (20, 22, 25), dtype=np.uint8)

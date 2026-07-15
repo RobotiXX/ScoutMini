@@ -3,6 +3,7 @@
 from diagnostic_msgs.msg import DiagnosticArray, DiagnosticStatus
 from geometry_msgs.msg import Point
 from nav_msgs.msg import Odometry
+import numpy as np
 from visualization_msgs.msg import Marker, MarkerArray
 from vision_msgs.msg import Detection2D, Detection2DArray
 
@@ -11,17 +12,20 @@ from scoutmini_social_navigation.bag_analysis_renderer import (
     align_receive_time,
     detection_box,
     diagnostic_level,
+    draw_tracks,
     greedy_match_iou,
     header_stamp_ns,
     scale_detections,
     world_to_panel,
 )
+from scoutmini_social_perception.track_colors import track_color
 
 
-def make_detection(center_x=10.0, center_y=20.0, width=8.0, height=12.0):
+def make_detection(center_x=10.0, center_y=20.0, width=8.0, height=12.0,
+                   track_id='person_7'):
     """Create a minimal Detection2D for geometry tests."""
     detection = Detection2D()
-    detection.id = 'person_7'
+    detection.id = track_id
     detection.bbox.center.position.x = center_x
     detection.bbox.center.position.y = center_y
     detection.bbox.size_x = width
@@ -78,3 +82,14 @@ def test_diagnostic_level_decodes_ros_byte_field():
     message = DiagnosticArray(status=[status])
 
     assert diagnostic_level(message) == 2
+
+
+def test_track_colors_distinguish_ids_used_by_renderer():
+    image = np.zeros((80, 80, 3), dtype=np.uint8)
+    first = make_detection()
+    second = make_detection(center_x=50.0, track_id='person_8')
+
+    draw_tracks(image, [first, second], None, '')
+
+    assert tuple(image[14, 6]) == track_color('person_7')
+    assert tuple(image[14, 46]) == track_color('person_8')

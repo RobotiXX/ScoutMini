@@ -20,6 +20,7 @@ from rclpy.qos import qos_profile_sensor_data
 from sensor_msgs.msg import CompressedImage, Image
 from vision_msgs.msg import Detection2D, Detection2DArray, ObjectHypothesisWithPose
 
+from .track_colors import track_color
 from .track_schema import TrackObservation, TrackReconciler
 
 
@@ -331,8 +332,9 @@ class YoloPeopleDetector(Node):
                     if detection.results else 0.0
                 )
                 label = f'person {detection.id} {score:.2f}'
-                cv2.rectangle(annotated, top_left, bottom_right, (40, 220, 40), 3)
-                self._draw_label(annotated, label, top_left)
+                color = track_color(detection.id)
+                cv2.rectangle(annotated, top_left, bottom_right, color, 3)
+                self._draw_label(annotated, label, top_left, color)
             msg = self.bridge.cv2_to_imgmsg(annotated, encoding='bgr8')
             msg.header = tracks.header
             self.debug_pub.publish(msg)
@@ -340,7 +342,7 @@ class YoloPeopleDetector(Node):
             self.get_logger().warning(f'Debug image publishing failed: {exc}')
 
     @staticmethod
-    def _draw_label(image, label: str, top_left) -> None:
+    def _draw_label(image, label: str, top_left, color) -> None:
         font = cv2.FONT_HERSHEY_SIMPLEX
         scale = 0.65
         thickness = 2
@@ -356,7 +358,7 @@ class YoloPeopleDetector(Node):
             image,
             (x, y - height - baseline - 4),
             (x + width + 8, y + 2),
-            (40, 220, 40),
+            color,
             -1,
         )
         cv2.putText(
