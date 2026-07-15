@@ -547,12 +547,15 @@ ros2 topic echo /people/detector_diagnostics
 ```bash
 ros2 launch scoutmini_social_navigation people_fusion.launch.py \
   output_frame:=odom \
+  bearing_direction:=-1.0 \
   bearing_offset_rad:=0.0
 ```
 
 Before treating output range or velocity as physically valid, calibrate and
 verify `360_link -> velodyne`, confirm the panorama forward center and bearing
-sign, and confirm timestamp alignment under actual sensor load.
+sign, and confirm timestamp alignment under actual sensor load. The physical
+X4 pipeline uses `bearing_direction:=-1.0` because horizontal image coordinates
+increase clockwise relative to ROS's counterclockwise-positive yaw convention.
 
 ### 11.5 Reproduce a corpus evaluation
 

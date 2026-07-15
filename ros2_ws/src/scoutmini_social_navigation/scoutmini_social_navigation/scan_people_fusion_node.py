@@ -9,7 +9,7 @@ from diagnostic_msgs.msg import DiagnosticArray, DiagnosticStatus, KeyValue
 from people_msgs.msg import People, Person
 import rclpy
 from rclpy.duration import Duration
-from rclpy.executors import ExternalShutdownException
+from rclpy.executors import ExternalShutdownException, MultiThreadedExecutor
 from rclpy.node import Node
 from rclpy.qos import qos_profile_sensor_data
 from rclpy.time import Time
@@ -42,6 +42,8 @@ class ScanPeopleFusion(Node):
         self.declare_parameter('fallback_image_width', 1920)
         self.declare_parameter('equirectangular_center_x_norm', 0.5)
         self.declare_parameter('bearing_offset_rad', 0.0)
+        self.declare_parameter('bearing_direction', -1.0)
+        self.declare_parameter('transform_timeout_sec', 0.20)
         self.declare_parameter('max_scan_age_sec', 0.25)
         self.declare_parameter('min_window_rad', 0.025)
         self.declare_parameter('max_window_rad', 0.18)
@@ -106,6 +108,12 @@ class ScanPeopleFusion(Node):
         output.header.frame_id = str(self.get_parameter('output_frame').value)
         rejected = 0
 
+        if not msg.detections:
+            self._drop_stale(self._stamp_sec(msg.header.stamp))
+            self._people_pub.publish(output)
+            self._publish_diagnostics(msg, 0, 0, 'tracking')
+            return
+
         scan = self._scan
         if scan is None or not self._scan_is_current(msg, scan):
             self._publish_diagnostics(msg, 0, len(msg.detections), 'scan unavailable or stale')
@@ -161,6 +169,7 @@ class ScanPeopleFusion(Node):
             width,
             float(self.get_parameter('equirectangular_center_x_norm').value),
             float(self.get_parameter('bearing_offset_rad').value),
+            float(self.get_parameter('bearing_direction').value),
         )
         scan_quaternion = self._quaternion(scan_from_camera)
         direction_scan = rotate_vector_by_quaternion(
@@ -294,7 +303,11 @@ class ScanPeopleFusion(Node):
             target,
             source,
             Time.from_msg(stamp),
-            timeout=Duration(seconds=0.10),
+            timeout=Duration(
+                seconds=float(
+                    self.get_parameter('transform_timeout_sec').value
+                )
+            ),
         )
 
     def _drop_stale(self, stamp_sec: float) -> None:
@@ -339,13 +352,16 @@ class ScanPeopleFusion(Node):
 def main() -> None:
     rclpy.init()
     node = ScanPeopleFusion()
+    executor = MultiThreadedExecutor(num_threads=2)
+    executor.add_node(node)
     try:
-        rclpy.spin(node)
+        executor.spin()
     except (KeyboardInterrupt, ExternalShutdownException):
         pass
     finally:
-        node.destroy_node()
         if rclpy.ok():
+            executor.shutdown()
+            node.destroy_node()
             rclpy.shutdown()
 
 

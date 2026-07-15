@@ -19,6 +19,20 @@ def test_equirectangular_cardinal_bearings():
     assert equirectangular_bearing(480, 1920) == pytest.approx(-math.pi / 2)
 
 
+def test_equirectangular_bearing_can_reverse_image_direction():
+    assert equirectangular_bearing(
+        1440, 1920, direction=-1.0,
+    ) == pytest.approx(-math.pi / 2)
+    assert equirectangular_bearing(
+        480, 1920, direction=-1.0,
+    ) == pytest.approx(math.pi / 2)
+
+
+def test_equirectangular_bearing_rejects_invalid_direction():
+    with pytest.raises(ValueError, match='direction'):
+        equirectangular_bearing(960, 1920, direction=0.0)
+
+
 def test_normalize_angle_wraps():
     assert normalize_angle(3.0 * math.pi) == pytest.approx(math.pi)
 

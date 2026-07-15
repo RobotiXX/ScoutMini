@@ -17,12 +17,15 @@ def equirectangular_bearing(
     image_width: int,
     center_x_norm: float = 0.5,
     offset_rad: float = 0.0,
+    direction: float = 1.0,
 ) -> float:
     """Convert an equirectangular horizontal pixel to camera-frame bearing."""
     if image_width <= 0:
         raise ValueError('image_width must be positive')
+    if direction not in (-1.0, 1.0):
+        raise ValueError('direction must be -1.0 or 1.0')
     bearing = (center_x / image_width - center_x_norm) * 2.0 * math.pi
-    return normalize_angle(bearing + offset_rad)
+    return normalize_angle(direction * bearing + offset_rad)
 
 
 def robust_scan_range(

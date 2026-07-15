@@ -66,7 +66,7 @@ class ShadowHealthMonitor(Node):
             status.status == GoalStatus.STATUS_EXECUTING
             for status in msg.status_list
         )
-        self._health.observe_action(active)
+        self._health.observe_action(active, self._now_sec())
 
     def _publish(self) -> None:
         level, reason, people_age, output_age = self._health.evaluate(

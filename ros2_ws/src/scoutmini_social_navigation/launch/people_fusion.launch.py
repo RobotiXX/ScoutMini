@@ -21,6 +21,7 @@ def generate_launch_description():
             default_value='/adascore/shadow/people',
         ),
         DeclareLaunchArgument('bearing_offset_rad', default_value='0.0'),
+        DeclareLaunchArgument('bearing_direction', default_value='-1.0'),
         Node(
             package='scoutmini_social_navigation',
             executable='scan_people_fusion',
@@ -32,6 +33,10 @@ def generate_launch_description():
                     'people_topic': LaunchConfiguration('people_topic'),
                     'bearing_offset_rad': ParameterValue(
                         LaunchConfiguration('bearing_offset_rad'),
+                        value_type=float,
+                    ),
+                    'bearing_direction': ParameterValue(
+                        LaunchConfiguration('bearing_direction'),
                         value_type=float,
                     ),
                 },
