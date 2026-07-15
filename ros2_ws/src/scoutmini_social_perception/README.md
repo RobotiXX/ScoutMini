@@ -4,6 +4,11 @@ This package publishes timestamp-preserving, typed person tracks from an
 Insta360 equirectangular image. Public IDs are reconciled across the panorama
 seam and short BoT-SORT gaps.
 
+See the
+[technical algorithm walkthrough](../../../docs/social_perception_algorithm_walkthrough.md)
+for the implemented equations, thresholds, data contracts, validation
+heuristics, and reproduction procedure.
+
 ## Jetson setup
 
 From this package directory:
