@@ -22,12 +22,23 @@ message contract without hardware:
 python3 src/scoutmini_social_navigation/test/fusion_smoke.py
 ```
 
-The AdaSCoRe shadow controller is lifecycle-managed but cannot command the
+The AdaSCoRe shadow controller is lifecycle-managed and isolated from the
 robot. Its only velocity output is `/adascore/shadow/cmd_vel`:
 
 ```bash
 ros2 launch scoutmini_social_navigation adascore_shadow.launch.py
 ```
+
+Supervised hardware tests use a separate gate that starts disarmed, clamps
+velocity, stops on stale input, and automatically disarms after two seconds:
+
+```bash
+ros2 launch scoutmini_social_navigation supervised_motion_gate.launch.py
+ros2 service call /adascore/motion_gate/enable std_srvs/srv/SetBool "{data: true}"
+```
+
+Do not arm the gate without a clear test area, an operator at the emergency
+stop, healthy shadow diagnostics, and a verified isolated ROS domain.
 
 ## Recorded verification video
 

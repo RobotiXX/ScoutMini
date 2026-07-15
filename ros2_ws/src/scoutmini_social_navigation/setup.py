@@ -40,6 +40,8 @@ setup(
             'scoutmini_social_navigation.shadow_health_monitor_node:main',
             'shadow_path_driver = '
             'scoutmini_social_navigation.shadow_path_driver_node:main',
+            'supervised_motion_gate = '
+            'scoutmini_social_navigation.motion_gate_node:main',
         ],
     },
 )
