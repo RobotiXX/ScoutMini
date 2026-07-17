@@ -120,14 +120,33 @@ waypoints:
    - 3304
 ```
 
-Then start Nav2 with the route loop enabled:
+Save the route as `map_tools/maps/<map_name>/routes/<route_name>.yaml`.
+
+For Gazebo simulation, start the simulator and Nav2 first:
 
 ```bash
-ros2 launch scoutmini_nav2 navigation.launch.py \
-   map:=/absolute/path/to/fuse_3rd.yaml \
+ros2 launch scoutmini_sim simulation_2d.launch.py \
+   world:=fuse_3rd \
+   map_name:=fuse_3rd
+```
+
+Then launch the route runner in another terminal:
+
+```bash
+ros2 launch scoutmini_sim route_loop_runner.launch.py \
    map_name:=fuse_3rd \
-   use_route_loop:=true \
-   route_file:=/home/nle/repos/ScoutMini/ros2_ws/src/map_tools/maps/fuse_3rd/routes/route.yaml
+   route_name:=route1 \
+   route_loop:=true
+```
+
+For the real robot, start Nav2 separately, then run the task node from `scoutmini_tasks`:
+
+```bash
+ros2 launch scoutmini_nav2 navigation.launch.py map_name:=fuse_3rd
+ros2 run scoutmini_tasks route_loop_runner --ros-args \
+   -p map_name:=fuse_3rd \
+   -p route_name:=route1 \
+   -p loop:=false
 ```
 
 ## Launch File Parameters

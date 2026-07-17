@@ -4,6 +4,7 @@ from launch.conditions import IfCondition, UnlessCondition
 from launch.substitutions import Command, FindExecutable, LaunchConfiguration, PathJoinSubstitution
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
+from launch_ros.parameter_descriptions import ParameterValue
 
 
 def generate_launch_description():
@@ -18,11 +19,14 @@ def generate_launch_description():
     rviz_config = LaunchConfiguration('rvizconfig')
     gui = LaunchConfiguration('gui')
     use_sim_time = LaunchConfiguration('use_sim_time')
+    sim = LaunchConfiguration('sim')
 
     robot_description = Command([
         FindExecutable(name='xacro'),
         ' ',
         model,
+        ' sim:=',
+        sim,
     ])
 
     return LaunchDescription([
@@ -47,6 +51,12 @@ def generate_launch_description():
             default_value='false',
             description='Use simulation clock if true',
         ),
+        DeclareLaunchArgument(
+            'sim',
+            default_value='false',
+            choices=['true', 'false'],
+            description='Use simulation-only sensor geometry instead of real sensor macros',
+        ),
         Node(
             package='joint_state_publisher',
             executable='joint_state_publisher',
@@ -66,7 +76,7 @@ def generate_launch_description():
             output='screen',
             parameters=[{
                 'use_sim_time': use_sim_time,
-                'robot_description': robot_description,
+                'robot_description': ParameterValue(robot_description, value_type=str),
             }],
         ),
         Node(

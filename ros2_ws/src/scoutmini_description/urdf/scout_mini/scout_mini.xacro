@@ -1,11 +1,12 @@
 <?xml version="1.0"?>
 
-<robot name="scout_mini" 
-    xmlns:xacro="http://ros.org/wiki/xacro">
+<robot name="scout_mini" xmlns:xacro="http://ros.org/wiki/xacro">
 
-    <xacro:arg name="robot_namespace" default="/" /> 
+    <xacro:arg name="robot_namespace" default="/" />
+    <xacro:arg name="urdf_extras" default="empty.urdf" />
+    <xacro:arg name="sim" default="false" />
 
-    <xacro:include filename="$(find scout_description)/urdf/scout_mini/scout_mini_wheel.xacro" />
+    <xacro:include filename="$(find scoutmini_description)/urdf/scout_mini_wheel.xacro" />
     <!-- Sensors -->
     <xacro:include filename="$(find scoutmini_description)/urdf/sensors.xacro" />
 
@@ -14,44 +15,49 @@
 
     <!-- Vehicle Geometries -->
     <xacro:property name="base_x_size" value="0.595000" />
-    <!-- <xacro:property name="base_y_size" value="0.335000" /> -->
     <xacro:property name="base_y_size" value="0.395000" />
     <xacro:property name="base_z_size" value="0.130000" />
 
-    <xacro:property name="wheelbase" value="0.452" />
-    <xacro:property name="track" value="0.49" />
+    <xacro:property name="wheelbase" value="0.452"/>
+    <xacro:property name="track" value="0.49"/>
     <xacro:property name="wheel_vertical_offset" value="-0.0905" />
 
     <xacro:property name="wheel_length" value="0.8520e-01" />
     <xacro:property name="wheel_radius" value="0.8750e-01" />
 
-    <!-- Base link -->
-    <link name="base_link">
-        <visual>
-            <origin xyz="0 0 0" rpy="0 0 0" />
-            <geometry>
-                <mesh filename="package://scout_description/meshes/scout_mini/mini_base_link.dae" />
-            </geometry>
-        </visual>
-        <collision>
-            <origin xyz="0 0 0.008" rpy="0 0 0" />
-            <geometry>
-                <box size="${base_x_size} ${base_y_size} ${base_z_size}"/>
-            </geometry>
-        </collision>
-    </link>
-
+    <!-- Nav2 uses base_footprint as the planar ground frame. -->
     <link name="base_footprint"/>
 
     <joint name="base_footprint_joint" type="fixed">
-        <origin xyz="0 0 ${wheel_vertical_offset - wheel_radius}" rpy="0 0 0" />
-        <parent link="base_link" />
-        <child link="base_footprint" />
+        <origin xyz="0 0 ${wheel_radius - wheel_vertical_offset}" rpy="0 0 0" />
+        <parent link="base_footprint" />
+        <child link="base_link" />
     </joint>
+
+    <!-- Base link -->
+    <link name="base_link">
+        <visual>
+            <origin
+                    xyz="0 0 0"
+                    rpy="1.5707 0 -1.5707" />
+            <geometry>
+                <mesh filename="file://$(find scoutmini_description)/meshes/scout_mini_base_link.dae" />
+            </geometry>
+        </visual>
+        <collision>
+            <origin
+                    xyz="0 0 0"
+                    rpy="1.5707 0 -1.5707" />
+          <geometry>
+            <mesh
+              filename="file://$(find scoutmini_description)/meshes/scout_mini_base_link.dae" />
+          </geometry>
+        </collision>
+    </link>
 
     <link name="inertial_link">
         <inertial>
-            <mass value="18" />
+            <mass value="23" />
             <origin xyz="0.0 0.0 0.0" />
             <inertia ixx="2.288641" ixy="0" ixz="0" iyy="5.103976" iyz="0" izz="3.431465" />
         </inertial>
@@ -67,20 +73,60 @@
     <!-- wheel labeled from 0 to 3, conter-clockwise, starting from front right wheel -->
     <!-- motor 1 and 2 (left side) are mechanically installed in a reversed direction -->
     <xacro:scout_mini_wheel wheel_prefix="front_right">
-        <origin xyz="${wheelbase/2} ${-track/2} ${wheel_vertical_offset}" rpy="3.14 0 0" />
+        <origin xyz="${wheelbase/2} ${-track/2} ${wheel_vertical_offset}" rpy="1.57 0 0" />
     </xacro:scout_mini_wheel>
-    <xacro:scout_mini_wheel wheel_prefix="front_left">
-        <origin xyz="${wheelbase/2} ${track/2} ${wheel_vertical_offset}" rpy="0 0 0" />
+    <xacro:scout_mini_wheel wheel_prefix="front_left" wheel_axis="0 0 1">
+        <origin xyz="${wheelbase/2} ${track/2} ${wheel_vertical_offset}" rpy="-1.57 0 0" />
     </xacro:scout_mini_wheel>
-    <xacro:scout_mini_wheel wheel_prefix="rear_left">
-        <origin xyz="${-wheelbase/2} ${track/2} ${wheel_vertical_offset}" rpy="0 0 0" />
+    <xacro:scout_mini_wheel wheel_prefix="rear_left" wheel_axis="0 0 1">
+        <origin xyz="${-wheelbase/2} ${track/2} ${wheel_vertical_offset}" rpy="-1.57 0 0" />
     </xacro:scout_mini_wheel>
     <xacro:scout_mini_wheel wheel_prefix="rear_right">
-        <origin xyz="${-wheelbase/2} ${-track/2} ${wheel_vertical_offset}" rpy="3.14 0 0" />
+        <origin xyz="${-wheelbase/2} ${-track/2} ${wheel_vertical_offset}" rpy="1.57 0 0" />
     </xacro:scout_mini_wheel>
 
-    <xacro:sensor_macro parent_link="base_link">
+    
+
+    <xacro:sensor_macro parent_link="base_link" sim="$(arg sim)">
         <origin xyz="0.01 0 0.07" rpy="0 0 0"/>
     </xacro:sensor_macro>
+
+    <!-- Additional definitions -->
+    <xacro:include filename="$(arg urdf_extras)" />
+
+    <!-- Gazebo definitions  -->
+    <xacro:include filename="scout_mini.gazebo" />
+    
+    <ros2_control name="ScoutMiniSystem" type="system">
+        <hardware>
+            <plugin>gz_ros2_control/GazeboSimSystem</plugin>
+        </hardware>
+
+        <joint name="front_left_wheel">
+            <command_interface name="velocity"/>
+            <state_interface name="position"/>
+            <state_interface name="velocity"/>
+        </joint>
+
+        <joint name="front_right_wheel">
+            <command_interface name="velocity"/>
+            <state_interface name="position"/>
+            <state_interface name="velocity"/>
+
+
+        </joint>
+
+        <joint name="rear_left_wheel">
+            <command_interface name="velocity"/>
+            <state_interface name="position"/>
+            <state_interface name="velocity"/>
+        </joint>
+
+        <joint name="rear_right_wheel">
+            <command_interface name="velocity"/>
+            <state_interface name="position"/>
+            <state_interface name="velocity"/>
+        </joint>
+    </ros2_control>
 
 </robot>

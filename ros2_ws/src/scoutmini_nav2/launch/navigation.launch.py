@@ -11,6 +11,7 @@ from nav2_common.launch import RewrittenYaml
 def generate_launch_description():
     use_sim_time = LaunchConfiguration('use_sim_time')
     port_name = LaunchConfiguration('port_name')
+    launch_sensors_odometry = LaunchConfiguration('launch_sensors_odometry')
     map_name = LaunchConfiguration('map_name')
     # Compose the map file path from the map name to avoid two sources of truth
     map_file = PathJoinSubstitution([
@@ -24,9 +25,10 @@ def generate_launch_description():
     initial_pose_y = LaunchConfiguration('initial_pose_y')
     initial_pose_z = LaunchConfiguration('initial_pose_z')
     initial_pose_yaw = LaunchConfiguration('initial_pose_yaw')
+    initial_pose_is_sim = LaunchConfiguration('initial_pose_is_sim')
+    amcl_tf_broadcast = LaunchConfiguration('amcl_tf_broadcast')
     rviz = LaunchConfiguration('rviz')
     rviz_config_file = LaunchConfiguration('rviz_config_file')
-    # route loop runner is launched separately in the `scoutmini_tasks` package
     nav_to_pose_bt_xml = LaunchConfiguration('nav_to_pose_bt_xml')
     nav_through_poses_bt_xml = LaunchConfiguration('nav_through_poses_bt_xml')
 
@@ -34,8 +36,10 @@ def generate_launch_description():
         source_file=params_file,
         param_rewrites={
             'use_sim_time': use_sim_time,
+            'yaml_filename': map_file,
             'default_nav_to_pose_bt_xml': nav_to_pose_bt_xml,
             'default_nav_through_poses_bt_xml': nav_through_poses_bt_xml,
+            'tf_broadcast': amcl_tf_broadcast,
         },
         convert_types=True,
     )
@@ -48,6 +52,7 @@ def generate_launch_description():
                 'sensors_odometry.launch.py',
             ])
         ),
+        condition=IfCondition(launch_sensors_odometry),
         launch_arguments={
             'use_sim_time': use_sim_time,
             'port_name': port_name,
@@ -65,6 +70,7 @@ def generate_launch_description():
             'y': initial_pose_y,
             'z': initial_pose_z,
             'yaw': initial_pose_yaw,
+            'is_sim': initial_pose_is_sim,
             'use_sim_time': use_sim_time,
         }],
     )
@@ -96,8 +102,7 @@ def generate_launch_description():
         arguments=['-d', rviz_config_file],
     )
 
-    # Publish the current map name so that other nodes (waypoint_server, route_loop_runner)
-    # can dynamically locate map-specific assets
+    # Publish the current map name so that other nodes can locate map-specific assets.
     map_name_publisher_node = Node(
         package='map_tools',
         executable='map_name_publisher',
@@ -125,6 +130,11 @@ def generate_launch_description():
     return LaunchDescription([
         DeclareLaunchArgument('use_sim_time', default_value='false'),
         DeclareLaunchArgument('port_name', default_value='can2'),
+        DeclareLaunchArgument(
+            'launch_sensors_odometry',
+            default_value='true',
+            description='Launch hardware Scout Mini bringup and RKO LIO odometry',
+        ),
         # # Initial pose in 3401
         # DeclareLaunchArgument('initial_pose_x', default_value='0.15'),
         # DeclareLaunchArgument('initial_pose_y', default_value='0.5'),
@@ -140,6 +150,16 @@ def generate_launch_description():
         DeclareLaunchArgument('initial_pose_y', default_value='26.0'),
         DeclareLaunchArgument('initial_pose_z', default_value='0.0'),
         DeclareLaunchArgument('initial_pose_yaw', default_value='-2.02'),
+        DeclareLaunchArgument(
+            'initial_pose_is_sim',
+            default_value='false',
+            description='Use sim-safe zero timestamp for the initial pose message',
+        ),
+        DeclareLaunchArgument(
+            'amcl_tf_broadcast',
+            default_value='true',
+            description='Allow AMCL to publish map->odom. Disable for ground-truth simulation localization.',
+        ),
         DeclareLaunchArgument(
             'map_name',
             default_value='fuse_3rd',
@@ -178,12 +198,10 @@ def generate_launch_description():
                 'navigate_through_poses_w_replanning_and_recovery.xml',
             ])
         ),
-        # Route runner is not auto-launched here; run `route_loop_runner` from the
-        # `scoutmini_tasks` package separately when desired.
         sensors_odometry,
         initial_pose_publisher,
         nav2,
         map_name_publisher_node,
         waypoint_server_node,
-        # rviz_node,
+        rviz_node,
     ])
