@@ -66,6 +66,10 @@ layout_tiled() {
   byobu select-layout -t "$(target_window)" tiled >/dev/null
 }
 
+# Start the Zenoh RMW router first so it is available before other ROS 2 nodes.
+new_window "zenoh"
+send_command 0 "ros2 run rmw_zenoh_cpp rmw_zenohd"
+
 # Scout base and description share a window. Pass all node parameters through
 # launch arguments because ROS 2 parameters are node-scoped, not global.
 new_window "base_description"
