@@ -6,9 +6,9 @@
     <xacro:arg name="urdf_extras" default="empty.urdf" />
     <xacro:arg name="sim" default="false" />
 
-    <xacro:include filename="../scout_mini_wheel.xacro" />
-    
-    <xacro:include filename="../sensors.xacro" />
+    <xacro:include filename="$(find scoutmini_description)/urdf/scout_mini_wheel.xacro" />
+    <!-- Sensors -->
+    <xacro:include filename="$(find scoutmini_description)/urdf/sensors.xacro" />
 
     <!-- Variables -->
     <xacro:property name="M_PI" value="3.14159"/>
@@ -85,21 +85,7 @@
         <origin xyz="${-wheelbase/2} ${-track/2} ${wheel_vertical_offset}" rpy="1.57 0 0" />
     </xacro:scout_mini_wheel>
 
-    <link name="front_mount" />
-
-    <joint name="front_mount_joint" type="fixed">
-        <origin xyz="0.175 0 0.068999" rpy="0 0 0" />
-        <parent link="base_link" />
-        <child link="front_mount" />
-    </joint>
-
-    <link name="rear_mount" />
-
-    <joint name="rear_mount_joint" type="fixed">
-        <origin xyz="-0.175 0 0.068999" rpy="0 0 0" />
-        <parent link="base_link" />
-        <child link="rear_mount" />
-    </joint>
+    
 
     <xacro:sensor_macro parent_link="base_link" sim="$(arg sim)">
         <origin xyz="0.01 0 0.07" rpy="0 0 0"/>

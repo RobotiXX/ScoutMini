@@ -51,7 +51,7 @@ Reference:
     </gazebo>
 
     <!-- Wheel contact is tuned per wheel in scout_mini_wheel.xacro. -->
-
+    <!-- The plugins below are for legacy purpose with gazebo classic. -->
     <!-- <gazebo>
         <plugin name="skid_steer_drive_controller" filename="libgazebo_ros_skid_steer_drive.so">
             <updateRate>100.0</updateRate>
