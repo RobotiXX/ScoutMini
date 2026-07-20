@@ -93,7 +93,7 @@ class WaypointServer(Node):
             map_name: Name of the map to load waypoints for.
         """
         waypoints_path = self._get_waypoints_file_path(map_name)
-    
+
         if not waypoints_path.exists():
             self.get_logger().warn(f'Waypoints file not found: {waypoints_path}')
             with self.waypoint_lock:
@@ -119,7 +119,6 @@ class WaypointServer(Node):
             self.get_logger().error(f'Failed to load waypoints from {waypoints_path}: {exc}')
             with self.waypoint_lock:
                 self.waypoints = []
-               
 
     def _handle_get_waypoints(
         self, request: GetWaypointsByName.Request, response: GetWaypointsByName.Response

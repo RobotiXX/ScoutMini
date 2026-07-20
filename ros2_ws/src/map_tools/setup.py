@@ -42,6 +42,8 @@ setup(
             'waypoint_collector = map_tools.waypoint_collector:main',
             'waypoint_collector_2 = map_tools.waypoint_collector_2:main',
             'apriltag_tag_collector = map_tools.apriltag_tag_collector:main',
+            'click_to_nav = map_tools.click_to_nav:main',
+            'waypoint_navigator = map_tools.waypoint_navigator:main'
         ],
     },
 )

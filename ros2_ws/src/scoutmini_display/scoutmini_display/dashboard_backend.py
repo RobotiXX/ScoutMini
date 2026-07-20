@@ -22,6 +22,7 @@ class DashboardBackend(Node):
     """Handle waypoint lookup and Nav2 goal sending for the dashboard."""
 
     def __init__(self):
+
         super().__init__('scoutmini_dashboard_backend')
         self._waypoint_client = self.create_client(GetWaypointsByName, 'get_waypoints')
         self._nav_to_pose_client = ActionClient(self, NavigateToPose, '/navigate_to_pose')
@@ -55,18 +56,32 @@ class DashboardBackend(Node):
     def navigate_to_room(self, room_name: str, status_callback: StatusCallback) -> None:
         """Resolve a room name to a waypoint pose and send a Nav2 goal."""
         room_name = room_name.strip()
+
         if not room_name:
-            status_callback('Enter a room name first.')
+            StatusCallback('Enter a room name first.')
+            return
+        self.get_logger().info(f"Original room name: '{room_name}'")
+        # Remove FUSE prefix if present
+        if room_name.upper().startswith("FUSE_"):
+            room_name = room_name[5:].strip()
+        self.get_logger().info(f"After conversion: '{room_name}'")
+        if not room_name:
+            StatusCallback('Enter a valid room number.')
             return
 
         if not self._waypoint_client.wait_for_service(timeout_sec=1.0):
-            status_callback('Waypoint service is not available yet.')
+            StatusCallback('Waypoint service is not available yet.')
             return
 
         request = GetWaypointsByName.Request()
         request.waypoint_names = [room_name]
+
         future = self._waypoint_client.call_async(request)
-        future.add_done_callback(lambda done_future: self._handle_waypoint_response(done_future, room_name, status_callback))
+        future.add_done_callback(
+            lambda done_future: self._handle_waypoint_response(
+                done_future, room_name, status_callback
+            )
+        )
 
     def _handle_waypoint_response(self, future, room_name: str, status_callback: StatusCallback) -> None:
         try:

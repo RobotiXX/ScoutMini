@@ -20,7 +20,7 @@ from PyQt5.QtWidgets import (
 )
 
 from scoutmini_display.dashboard_backend import DashboardBackend
-from scoutmini_display.pages import CameraPage, GoToRoomPage, StatusPage, WifiPage
+from scoutmini_display.pages import CameraPage, GoToRoomPage, StatusPage, WifiPage, RatingPage
 
 
 class PinDialog(QDialog):
@@ -130,11 +130,13 @@ class RobotDashboard(QWidget):
         self.camera_page = CameraPage(self._ros_node)
         self.wifi_page = WifiPage()
         self.status_page = StatusPage(self._ros_node)
+        self.rating_page = RatingPage()
 
         self.pages.addWidget(self.room_page)
         self.pages.addWidget(self.camera_page)
         self.pages.addWidget(self.wifi_page)
         self.pages.addWidget(self.status_page)
+        self.pages.addWidget(self.rating_page)
 
         self.room_page.room_requested.connect(self.go_to_room)
 
@@ -152,8 +154,6 @@ class RobotDashboard(QWidget):
 
         self.pin_feedback_label = QLabel('')
         self.pin_feedback_label.setAlignment(Qt.AlignCenter)
-        self.pin_feedback_label.setStyleSheet('color: #b91c1c; font-size: 20px; font-weight: bold;')
-
         footer_wrapper = QVBoxLayout()
         footer_wrapper.setSpacing(6)
         footer_wrapper.addWidget(self.pin_feedback_label)
