@@ -1,3 +1,6 @@
+import csv
+import os
+from datetime import datetime
 from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtWidgets import (
     QWidget,
@@ -12,17 +15,23 @@ from PyQt5.QtWidgets import (
 class RatingPage(QWidget):
     """Page where users rate how helpful the robot was."""
 
-    rating_submitted = pyqtSignal(int, str)
+    feedback_submited = pyqtSignal(bool,int,str)
 
     def __init__(self):
         super().__init__()
 
         self.selected_rating = 0
+        self.reached_location = None
+        self.help_rating = 0
         self.star_buttons = []
 
         layout = QVBoxLayout(self)
         layout.setSpacing(20)
         layout.setContentsMargins(30, 30, 30, 30)
+
+        self.feedback_file = os.path.expanduser(
+            "~/robot_feedback.csv"
+        )
 
         # Creating the Title of the page
         title = QLabel("Navigation Feedback")
@@ -184,6 +193,12 @@ class RatingPage(QWidget):
             return
 
         comment = self.comment_box.toPlainText()
+        
+        self.save_feedback(
+            self.reached_location,
+            self.help_rating,
+            comment
+        )
 
         self.feedback_submitted.emit(
             self.reached_location,
@@ -194,4 +209,26 @@ class RatingPage(QWidget):
         self.location_status.setText(
             "Thank you for your feedback!"
         )  
+
+    # Saves all information submitted by user in a csv file
+    def save_feedback(self, reached_location, rating, comment):
+        file_exists = os.path.exists(self.feedback_file)
+
+        with open(self.feedback_file, "a", newline="", encoding="utf-8") as file:
+            writer = csv.writer(file)
+
+            if not file_exists:
+                writer.writerow([
+                    "timestamp",
+                    "destination_reached",
+                    "helpfulness_rating",
+                    "comment"
+                ])
+
+            writer.writerow([
+                datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                reached_location,
+                rating,
+                comment
+            ])
 

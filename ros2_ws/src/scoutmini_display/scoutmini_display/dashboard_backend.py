@@ -3,6 +3,7 @@
 from collections import deque
 import os
 from typing import Callable
+from PyQt5.QtCore import QObject, pyqtSignal
 
 from ament_index_python.packages import PackageNotFoundError, get_package_share_directory
 from diagnostic_msgs.msg import DiagnosticArray
@@ -21,6 +22,7 @@ StatusCallback = Callable[[str], None]
 class DashboardBackend(Node):
     """Handle waypoint lookup and Nav2 goal sending for the dashboard."""
 
+    navigation_finished = pyqtSignal()
     def __init__(self):
 
         super().__init__('scoutmini_dashboard_backend')
@@ -140,6 +142,10 @@ class DashboardBackend(Node):
             return
 
         status_callback(f'Nav2 finished room "{room_name}" with status {result.status}.')
+
+        # Navigation succeeded
+        if result.status == 4:
+            self.navigation_finished.emit()
 
     def get_status_snapshot(self) -> dict:
         """Return current robot health data for the Qt status page."""

@@ -166,12 +166,16 @@ class RobotDashboard(QWidget):
         layout.addLayout(footer_wrapper, stretch=0)
 
         self._current_page_index = 0
-        self.show_page(0)
+        self.show_page(1)
         self.wifi_page.refresh_networks()
 
         self._ros_spin_timer = QTimer(self)
         self._ros_spin_timer.timeout.connect(self._spin_ros_once)
         self._ros_spin_timer.start(20)
+
+        self._ros_node.navigation_finished.connect(
+            self.show_rating_page
+        )
 
     def _spin_ros_once(self):
         if not rclpy.ok():
@@ -195,6 +199,10 @@ class RobotDashboard(QWidget):
     @Slot(bool)
     def show_status_page(self, checked=False):
         self._request_protected_page(3, "Status")
+
+    @Slot()
+    def show_rating_page(self):
+        self.show_page(4)
 
     def _create_nav_button(self, label, slot):
         button = QPushButton(label)
