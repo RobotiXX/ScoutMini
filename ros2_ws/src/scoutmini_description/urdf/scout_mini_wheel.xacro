@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+
 <!--
   Adapted from:
   https://github.com/agilexrobotics/scout_ros/scout_description/urdf/scout_mini_wheel.xacro
@@ -6,7 +8,6 @@
   Licensed under the BSD License.
 -->
 
-<?xml version="1.0"?>
 <robot xmlns:xacro="http://ros.org/wiki/xacro" name="scout_wheel">
 
     <xacro:macro name="scout_mini_wheel" params="wheel_prefix wheel_axis:='0 0 -1' *joint_pose">
