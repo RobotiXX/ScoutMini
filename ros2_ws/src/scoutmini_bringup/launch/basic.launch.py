@@ -14,7 +14,7 @@ def generate_launch_description():
     # Get package share directories
     zed_pkg = get_package_share_directory('zed_wrapper')
     witmotion_pkg = get_package_share_directory('witmotion_ros')
-    velodyne_pkg = get_package_share_directory('velodyne')
+    bringup_pkg = get_package_share_directory('scoutmini_bringup')
     insta360_pkg = get_package_share_directory('insta360_ros_driver')
     scout_pkg = get_package_share_directory('scout_base')
     scout_description_pkg = get_package_share_directory(
@@ -99,9 +99,9 @@ def generate_launch_description():
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(
                 os.path.join(
-                    velodyne_pkg,
+                    bringup_pkg,
                     'launch',
-                    'velodyne-all-nodes-VLP16-launch.py',
+                    'velodyne_all_nodes.launch.py',
                 )
             ),
         ),

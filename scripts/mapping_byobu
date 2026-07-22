@@ -85,7 +85,7 @@ layout_tiled
 new_window "imu_lidar"
 send_command 0 "ros2 launch witmotion_ros wt901.launch.py"
 split_pane -h
-send_command 1 "ros2 launch velodyne velodyne-all-nodes-VLP16-launch.py"
+send_command 1 "ros2 launch scoutmini_bringup velodyne_all_nodes.launch.py"
 layout_tiled
 
 # RKO LIO gets its own window and must receive its config file explicitly.
