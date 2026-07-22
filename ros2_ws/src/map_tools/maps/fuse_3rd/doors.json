@@ -22,7 +22,7 @@
         "hit_tolerance": 0.18,
         "min_hits": 3,
         "max_range": 8.0,
-        "max_abs_scan_angle": 1.35
+        "max_abs_scan_angle": 0.261799
       }
     },
     {
@@ -31,8 +31,7 @@
       "route_gate": {
         "pre_waypoint": "door2_pre",
         "post_waypoint": "door2_post",
-        "crossing_tolerance": 1.0,
-        "gate_crossing_radius": 8.0
+        "path_crossing_tolerance": 0.6
       },
       "detection": {
         "enabled": true,
@@ -40,7 +39,7 @@
         "hit_tolerance": 0.2,
         "min_hits": 3,
         "max_range": 4.0,
-        "max_abs_scan_angle": 1.8,
+        "max_abs_scan_angle": 0.261799,
         "front_scan_fallback": true,
         "forward_min": 0.05,
         "forward_max": 2.8,

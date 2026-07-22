@@ -808,5 +808,41 @@
       "sec": 0,
       "nanosec": 0
     }
+  },
+  {
+    "name": "origin",
+    "description": "",
+    "frame_id": "map",
+    "x": 0.0,
+    "y": 0.0,
+    "z": 0.0,
+    "orientation": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 1.0
+    },
+    "stamp": {
+      "sec": 0,
+      "nanosec": 0
+    }
+  },
+  {
+    "name": "test",
+    "description": "",
+    "frame_id": "map",
+    "x": 0.0,
+    "y": -5.0,
+    "z": 0.0,
+    "orientation": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 1.0
+    },
+    "stamp": {
+      "sec": 0,
+      "nanosec": 0
+    }
   }
 ]
