@@ -53,7 +53,28 @@ def generate_launch_description():
             'amcl_tf_broadcast': LaunchConfiguration('amcl_tf_broadcast'),
             'nav_to_pose_bt_xml': LaunchConfiguration('nav_to_pose_bt_xml'),
             'nav_through_poses_bt_xml': LaunchConfiguration('nav_through_poses_bt_xml'),
+            'scan_topic': LaunchConfiguration('scan_topic'),
+            'global_scan_topic': LaunchConfiguration('global_scan_topic'),
+            'door_global_filter_radius': LaunchConfiguration('door_global_filter_radius'),
+            'start_door_scan_filter': 'false',
         }.items(),
+    )
+
+
+    door_scan_filter = Node(
+        package='scoutmini_tasks',
+        executable='door_scan_filter',
+        name='door_scan_filter',
+        output='screen',
+        parameters=[{
+            'use_sim_time': LaunchConfiguration('use_sim_time'),
+            'map_name': LaunchConfiguration('map_name'),
+            'doors_file': LaunchConfiguration('doors_file'),
+            'input_scan_topic': LaunchConfiguration('scan_topic'),
+            'output_scan_topic': LaunchConfiguration('global_scan_topic'),
+            'target_frame': 'map',
+            'filter_radius': LaunchConfiguration('door_global_filter_radius'),
+        }],
     )
 
     static_map_to_odom = Node(
@@ -113,6 +134,19 @@ def generate_launch_description():
         DeclareLaunchArgument('spawn_z', default_value='0.05'),
         DeclareLaunchArgument('spawn_yaw', default_value='0.0'),
         DeclareLaunchArgument('map_name', default_value='fuse_3rd'),
+        DeclareLaunchArgument('scan_topic', default_value='/scan'),
+        DeclareLaunchArgument('global_scan_topic', default_value='/scan_global_filtered'),
+        DeclareLaunchArgument('door_global_filter_radius', default_value='0.2'),
+        DeclareLaunchArgument(
+            'doors_file',
+            default_value=PathJoinSubstitution([
+                FindPackageShare('map_tools'),
+                'maps',
+                LaunchConfiguration('map_name'),
+                'doors.json',
+            ]),
+            description='JSON file containing closed-door geometry for global scan filtering.',
+        ),
         DeclareLaunchArgument('initial_pose_x', default_value='0.0'),
         DeclareLaunchArgument('initial_pose_y', default_value='0.0'),
         DeclareLaunchArgument('initial_pose_z', default_value='0.0'),
@@ -164,6 +198,7 @@ def generate_launch_description():
         ),
         gazebo,
         static_map_to_odom,
+        door_scan_filter,
         nav_to_pose_runner,
         navigation,
     ])

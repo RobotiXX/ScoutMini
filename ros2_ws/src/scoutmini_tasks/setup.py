@@ -24,6 +24,7 @@ setup(
             'route_loop_runner = scoutmini_tasks.route_loop_runner:main',
             'nav_to_pose_runner = scoutmini_tasks.nav_to_pose_runner:main',
             'door_aware_route_runner = scoutmini_tasks.door_aware_route_runner:main',
+            'door_scan_filter = scoutmini_tasks.door_scan_filter:main',
         ],
     },
 )
