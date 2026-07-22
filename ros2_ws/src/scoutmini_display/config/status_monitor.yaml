@@ -23,6 +23,11 @@ sensor_monitors:
     message_type: sensor_msgs/msg/Imu
     expected_rate_hz: 100.0
 
+status_monitor:
+	ros__parameters:
+		monitored_topics:
+			- "high_freq_topic:std_msgs/msg/Header: Dummy 100Hz Sensor"
+
   # Example diagnostics-backed monitor. Enable and adjust keys if a driver
   # publishes a diagnostic value with its measured frequency.
   # - name: Lidar diagnostics

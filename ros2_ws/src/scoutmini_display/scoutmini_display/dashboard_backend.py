@@ -14,6 +14,9 @@ from rclpy.node import Node
 from rosidl_runtime_py.utilities import get_message
 import yaml
 
+import json
+from std_msgs.msg import String
+
 
 StatusCallback = Callable[[str], None]
 
@@ -29,9 +32,16 @@ class DashboardBackend(Node):
         self._rate_window_seconds = float(self._status_config.get('rate_monitor', {}).get('window_seconds', 5.0))
         self._stale_after_seconds = float(self._status_config.get('rate_monitor', {}).get('stale_after_seconds', 3.0))
         self._failure_fraction = float(self._status_config.get('rate_monitor', {}).get('failure_fraction', 0.10))
-        self._rate_monitors = {}
-        self._monitor_subscriptions = []
-        self._diagnostics_subscription = None
+        #self._rate_monitors = {}
+        #self._monitor_subscriptions = []
+        #self._diagnostics_subscription = None
+        self._aggregated_status = {}
+	self._aggregated_sub = self.create_subscription(
+		String,
+		'/robot/sensor_status_aggregated',
+		self._aggregated_status_callback,
+		10,
+	)
         self._battery_status = {
             'available': False,
             'topic': self._status_config.get('battery', {}).get('topic', '/scout_status'),
@@ -126,11 +136,37 @@ class DashboardBackend(Node):
 
         status_callback(f'Nav2 finished room "{room_name}" with status {result.status}.')
 
+    def _aggregated_status_callback(self, msg: String) -> None:
+	"""Parse incoming JSON payload from the independent sensor_rate_monitor node."""
+	try:
+		self._aggregated_status = json.loads(msg.data)
+	except Exception as exc:
+		self.get_logger().error(f'Failed to parse aggregated status payload: {exc}')
+
+
     def get_status_snapshot(self) -> dict:
         """Return current robot health data for the Qt status page."""
         now = self.get_clock().now()
         sensors = []
+	
+	for topic_name, metrics in self._aggregated_status.items():
+		rate_hz = float(metrics.get('rate', 0.0))
+		status_str = metrics.get('status', 'OFFLINE')
+		label = metrics.get('label', topic_name)
+		failing = (status_str != 'ONLINE')
+		
+		sensors.append({
+			'name': label,
+			'topic': topic_name,
+			'monitor_type': 'aggregated_rate',
+			'expected_rate_hz': 0.0,
+			'rate_hz': rate_hz,
+			'last_update_age': 0.0 if not failing else None,
+			'failing': failing,
+			'message': 'OK' if not failing else 'Sensor Offline or Stale',
+		})	
 
+	'''
         for monitor in self._rate_monitors.values():
             self._prune_monitor_samples(monitor, now)
             rate_hz = self._monitor_rate_hz(monitor, now)
@@ -157,7 +193,7 @@ class DashboardBackend(Node):
                 'failing': failing,
                 'message': message,
             })
-
+	'''
         if self._battery_last_time is not None:
             self._battery_status['last_update_age'] = self._age_seconds(self._battery_last_time, now)
 
@@ -168,6 +204,9 @@ class DashboardBackend(Node):
         }
 
     def _setup_status_monitoring(self):
+	
+
+	'''
         for spec in self._status_config.get('sensor_monitors', []):
             monitor_type = spec.get('monitor_type', 'topic_rate')
             monitor = {
@@ -191,10 +230,10 @@ class DashboardBackend(Node):
                 self._create_diagnostics_subscription(monitor['topic'])
             else:
                 self._create_rate_subscription(monitor)
-
+	'''
         self._create_battery_subscription()
         self._setup_jetson_stats()
-
+    '''
     def _create_rate_subscription(self, monitor):
         try:
             msg_type = get_message(monitor['message_type'])
@@ -282,7 +321,7 @@ class DashboardBackend(Node):
             return 0.0
 
         return max(0.0, (len(samples) - 1) / elapsed)
-
+    '''
     def _create_battery_subscription(self):
         battery_config = self._status_config.get('battery', {})
         topic = battery_config.get('topic', '/scout_status')

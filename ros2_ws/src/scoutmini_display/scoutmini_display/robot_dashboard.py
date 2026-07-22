@@ -297,7 +297,8 @@ def main(args=None):
     # Fullscreen uses the display's real geometry. Calling resize(1024, 600)
     # first only sets the windowed client size and can overflow once window
     # decorations are included.
-    window.showFullScreen()
+    #window.showFullScreen()
+    window.show()
     try:
         app_exit_code = app.exec()
         if exit_code == 0:
