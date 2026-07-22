@@ -37,7 +37,7 @@ class RatingPage(QWidget):
         title = QLabel("Navigation Feedback")
         title.setAlignment(Qt.AlignCenter)
         title.setStyleSheet(
-            "font-size: 112px; font-weight: bold;"
+            "font-size: 40px; font-weight: bold;"
         )
         layout.addWidget(title)
 
@@ -47,7 +47,7 @@ class RatingPage(QWidget):
         )
         location_question.setAlignment(Qt.AlignCenter)
         location_question.setStyleSheet(
-            "font-size: 64px;"
+            "font-size: 20px;"
         )
         layout.addWidget(location_question)
 
@@ -58,9 +58,9 @@ class RatingPage(QWidget):
         no_button = QPushButton("No")
 
         for button in [yes_button, no_button]:
-            button.setMinimumSize(250, 250)
+            button.setMinimumSize(180, 80)
             button.setStyleSheet(
-                "font-size: 50px; font-weight: bold;"
+                "font-size: 24px; font-weight: bold;"
             )
         # Location is correct 
         yes_button.clicked.connect(
@@ -81,7 +81,7 @@ class RatingPage(QWidget):
         )
         self.location_status.setAlignment(Qt.AlignCenter)
         self.location_status.setStyleSheet(
-            "font-size: 44px;"
+            "font-size: 20px;"
         )
         layout.addWidget(self.location_status)
 
@@ -91,7 +91,7 @@ class RatingPage(QWidget):
         )
         help_question.setAlignment(Qt.AlignCenter)
         help_question.setStyleSheet(
-            "font-size: 64px;"
+            "font-size: 20px;"
         )
         layout.addWidget(help_question)
 
@@ -100,9 +100,9 @@ class RatingPage(QWidget):
 
         for rating in range(1, 6):
             button = QPushButton(f"☆")
-            button.setMinimumSize(140, 240)
+            button.setMinimumSize(80, 80)
             button.setStyleSheet(
-                "font-size: 204px; font-weight: bold; border: none;"
+                "font-size: 24px; font-weight: bold; border: none;"
             )
 
             button.clicked.connect( 
@@ -120,7 +120,7 @@ class RatingPage(QWidget):
         )
         self.rating_status.setAlignment(Qt.AlignCenter)
         self.rating_status.setStyleSheet(
-            "font-size: 44px;"
+            "font-size: 20px;"
         )
         layout.addWidget(self.rating_status)
 
@@ -129,19 +129,19 @@ class RatingPage(QWidget):
             "Comments (optional) :"
         )
         comment_label.setStyleSheet(
-            "font-size: 64px;"
+            "font-size: 20px;"
         )
         layout.addWidget(comment_label)
 
         self.comment_box = QTextEdit()
-        self.comment_box.setFixedHeight(880)
+        self.comment_box.setFixedHeight(120)
         layout.addWidget(self.comment_box)
 
         # The button for people to submit their comments and overall feedback
         submit = QPushButton(
             "Submit Feedback"
         )
-        submit.setMinimumHeight(90)
+        submit.setMinimumHeight(60)
         submit.setStyleSheet(
             "font-size: 28px; font-weight: bold;"
         )
