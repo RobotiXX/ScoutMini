@@ -9,6 +9,7 @@ from PyQt5.QtWidgets import (
     QPushButton,
     QHBoxLayout,
     QTextEdit,
+    QSizePolicy
 )
 
 
@@ -20,6 +21,10 @@ class RatingPage(QWidget):
     def __init__(self):
         super().__init__()
 
+        self.setSizePolicy(
+            QSizePolicy.Ignored,
+            QSizePolicy.Ignored
+        )
         self.selected_rating = 0
         self.reached_location = None
         self.help_rating = 0
@@ -207,6 +212,12 @@ class RatingPage(QWidget):
 
         self.location_status.setText(
             "Thank you for your feedback!"
+        )
+
+        self.feedback_submitted.emit(
+            self.reached_location,
+            self.help_rating,
+            comment
         )  
 
     # Saves all information submitted by user in a csv file

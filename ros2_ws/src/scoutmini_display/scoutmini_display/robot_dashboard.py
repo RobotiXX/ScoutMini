@@ -132,6 +132,10 @@ class RobotDashboard(QWidget):
         self.status_page = StatusPage(self._ros_node)
         self.rating_page = RatingPage()
 
+        self.rating_page.feedback_submitted.connect(
+            self.show_room_page_after_feedback
+        )
+
         self.pages.addWidget(self.room_page)
         self.pages.addWidget(self.camera_page)
         self.pages.addWidget(self.wifi_page)
@@ -203,6 +207,14 @@ class RobotDashboard(QWidget):
     @Slot()
     def show_rating_page(self):
         self.show_page(4)
+
+    @Slot(bool, int, str)
+    def show_room_page_after_feedback(self, reached, rating, comment) :
+        self._rod_node.get_logger().info(
+            f"Feedback received: reached={reached}, rating={rating}, comment={comment}"
+        )
+
+        self.show_page(0)
 
     def _create_nav_button(self, label, slot):
         button = QPushButton(label)
