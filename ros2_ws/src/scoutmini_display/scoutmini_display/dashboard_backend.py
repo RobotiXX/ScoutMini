@@ -19,13 +19,14 @@ import yaml
 StatusCallback = Callable[[str], None]
 
 
-class DashboardBackend(Node):
+class DashboardBackend(Node, QObject):
     """Handle waypoint lookup and Nav2 goal sending for the dashboard."""
 
     navigation_finished = pyqtSignal()
     def __init__(self):
-
-        super().__init__('scoutmini_dashboard_backend')
+        QObject.__init__(self)
+        Node.__init__(self, 'scoutmini_dashboard_backend')
+        
         self._waypoint_client = self.create_client(GetWaypointsByName, 'get_waypoints')
         self._nav_to_pose_client = ActionClient(self, NavigateToPose, '/navigate_to_pose')
         self._status_config = self._load_status_config()

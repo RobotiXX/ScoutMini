@@ -6,5 +6,6 @@ from scoutmini_display.pages.go_to_room_page import GoToRoomPage
 from scoutmini_display.pages.keypad_page import KeypadPage
 from scoutmini_display.pages.status_page import StatusPage
 from scoutmini_display.pages.wifi_page import WifiPage
+from scoutmini_display.pages.rating_page import RatingPage
 
-__all__ = ["CameraPage", "CounterPage", "GoToRoomPage", "KeypadPage", "StatusPage", "WifiPage"]
+__all__ = ["CameraPage", "CounterPage", "GoToRoomPage", "KeypadPage", "StatusPage", "WifiPage","RatingPage"]

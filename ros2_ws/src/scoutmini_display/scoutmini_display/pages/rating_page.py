@@ -15,7 +15,7 @@ from PyQt5.QtWidgets import (
 class RatingPage(QWidget):
     """Page where users rate how helpful the robot was."""
 
-    feedback_submited = pyqtSignal(bool,int,str)
+    feedback_submitted = pyqtSignal(bool,int,str)
 
     def __init__(self):
         super().__init__()
@@ -26,8 +26,9 @@ class RatingPage(QWidget):
         self.star_buttons = []
 
         layout = QVBoxLayout(self)
-        layout.setSpacing(20)
-        layout.setContentsMargins(30, 30, 30, 30)
+        layout.setSpacing(16)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addStretch()
 
         self.feedback_file = os.path.expanduser(
             "~/robot_feedback.csv"
@@ -58,7 +59,6 @@ class RatingPage(QWidget):
         no_button = QPushButton("No")
 
         for button in [yes_button, no_button]:
-            button.setMinimumSize(180, 80)
             button.setStyleSheet(
                 "font-size: 24px; font-weight: bold;"
             )
@@ -100,9 +100,8 @@ class RatingPage(QWidget):
 
         for rating in range(1, 6):
             button = QPushButton(f"☆")
-            button.setMinimumSize(80, 80)
             button.setStyleSheet(
-                "font-size: 24px; font-weight: bold; border: none;"
+                "font-size: 32px; font-weight: bold; border: none;"
             )
 
             button.clicked.connect( 
@@ -134,14 +133,14 @@ class RatingPage(QWidget):
         layout.addWidget(comment_label)
 
         self.comment_box = QTextEdit()
-        self.comment_box.setFixedHeight(120)
+        self.comment_box.setFixedHeight(80)
         layout.addWidget(self.comment_box)
 
         # The button for people to submit their comments and overall feedback
         submit = QPushButton(
             "Submit Feedback"
         )
-        submit.setMinimumHeight(60)
+
         submit.setStyleSheet(
             "font-size: 28px; font-weight: bold;"
         )

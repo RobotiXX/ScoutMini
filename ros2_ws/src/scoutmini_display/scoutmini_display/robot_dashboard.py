@@ -166,7 +166,7 @@ class RobotDashboard(QWidget):
         layout.addLayout(footer_wrapper, stretch=0)
 
         self._current_page_index = 0
-        self.show_page(1)
+        self.show_page(0)
         self.wifi_page.refresh_networks()
 
         self._ros_spin_timer = QTimer(self)
