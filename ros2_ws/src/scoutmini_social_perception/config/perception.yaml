@@ -1,0 +1,20 @@
+yolo_people_detector:
+  ros__parameters:
+    image_topic: /equirectangular/image
+    input_type: raw
+    tracks_topic: /people/tracks_2d
+    debug_image_topic: /people/debug_image
+    diagnostics_topic: /people/detector_diagnostics
+    model_path: ''
+    device: cpu
+    confidence_threshold: 0.35
+    iou_threshold: 0.45
+    target_fps: 8.0
+    imgsz: 960
+    tracker_config: ''
+    reid_model_path: ''
+    publish_debug_image: true
+    frame_id_override: 360_link
+    person_class_id: 0
+    track_timeout_sec: 1.0
+    max_reconcile_distance_norm: 0.12

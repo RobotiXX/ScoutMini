@@ -1,0 +1,26 @@
+scan_people_fusion:
+  ros__parameters:
+    tracks_topic: /people/tracks_2d
+    camera_info_topic: /equirectangular/image/camera_info
+    scan_topic: /scan
+    people_topic: /adascore/shadow/people
+    diagnostics_topic: /people/fusion_diagnostics
+    camera_frame: 360_link
+    output_frame: odom
+    fallback_image_width: 1920
+    equirectangular_center_x_norm: 0.5
+    bearing_offset_rad: 0.0
+    bearing_direction: -1.0
+    transform_timeout_sec: 0.20
+    max_scan_age_sec: 0.25
+    min_window_rad: 0.025
+    max_window_rad: 0.18
+    window_scale: 0.30
+    min_range_m: 0.35
+    max_range_m: 10.0
+    min_scan_samples: 2
+    min_track_observations: 2
+    min_person_separation_m: 0.30
+    track_timeout_sec: 1.0
+    max_range_rate_mps: 4.0
+    velocity_alpha: 0.35

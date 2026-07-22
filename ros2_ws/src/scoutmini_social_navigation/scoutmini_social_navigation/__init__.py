@@ -1,0 +1,1 @@
+"""ScoutMini social navigation integration."""
