@@ -30,7 +30,9 @@
       "frame_id": "map",
       "route_gate": {
         "pre_waypoint": "door2_pre",
-        "post_waypoint": "door2_post"
+        "post_waypoint": "door2_post",
+        "crossing_tolerance": 1.0,
+        "gate_crossing_radius": 8.0
       },
       "detection": {
         "enabled": true,
@@ -38,7 +40,11 @@
         "hit_tolerance": 0.2,
         "min_hits": 3,
         "max_range": 4.0,
-        "max_abs_scan_angle": 1.6
+        "max_abs_scan_angle": 1.8,
+        "front_scan_fallback": true,
+        "forward_min": 0.05,
+        "forward_max": 2.8,
+        "half_width": 1.0
       },
       "sdf_model": "door_2",
       "closed_pose": {
@@ -48,10 +54,10 @@
         "yaw": 0.9792
       },
       "leaf": {
-        "length": 1.2,
+        "length": 1.6,
         "thickness": 0.1,
         "height": 2.0,
-        "hinge_to_center_y": 0.6
+        "hinge_to_center_y": 0.8
       }
     }
   ]
