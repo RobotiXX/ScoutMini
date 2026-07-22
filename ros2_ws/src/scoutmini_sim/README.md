@@ -39,6 +39,16 @@ ros2 launch scoutmini_sim gazebo_mini.launch.py world:=tb3_sandbox
 ros2 launch scoutmini_sim gazebo_mini.launch.py world:=fuse_3rd
 ```
 
+The Fuse 3rd floor world includes `door_1`, a hinged door that is closed at
+`0.0` radians and can swing from `-1.5708` to `1.5708` radians. The slider commands exact Gazebo model poses about the hinge, so it does not depend on PID tuning or physics settling:
+
+```bash
+ros2 launch scoutmini_sim gazebo_mini.launch.py world:=fuse_3rd door_slider:=true
+```
+
+The launch file bridges Gazebo's `/world/fuse_3rd/set_pose` service into ROS, and the slider calls that ROS service directly. It does not require the `gz` command to be on `PATH`.
+
+
 Spawn pose:
 
 ```bash

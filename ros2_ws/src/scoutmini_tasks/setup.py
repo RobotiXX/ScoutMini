@@ -23,6 +23,7 @@ setup(
         'console_scripts': [
             'route_loop_runner = scoutmini_tasks.route_loop_runner:main',
             'nav_to_pose_runner = scoutmini_tasks.nav_to_pose_runner:main',
+            'door_aware_route_runner = scoutmini_tasks.door_aware_route_runner:main',
         ],
     },
 )

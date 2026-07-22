@@ -90,6 +90,8 @@ def generate_launch_description():
     spawn_z = LaunchConfiguration('spawn_z')
     spawn_yaw = LaunchConfiguration('spawn_yaw')
     bridge_config = LaunchConfiguration('bridge_config')
+    door_slider = LaunchConfiguration('door_slider')
+    door2_slider = LaunchConfiguration('door2_slider')
     gz_world_name = LaunchConfiguration('gz_world_name')
 
     robot_description = ParameterValue(
@@ -147,6 +149,16 @@ def generate_launch_description():
             ),
             description='ROS-Gazebo bridge configuration file',
         ),
+        DeclareLaunchArgument(
+            'door_slider',
+            default_value='false',
+            description='Open a simple GUI slider that commands fuse_3rd door_1.',
+        ),
+        DeclareLaunchArgument(
+            'door2_slider',
+            default_value='false',
+            description='Open a simple GUI slider that commands fuse_3rd door_2.',
+        ),
         SetEnvironmentVariable(
             name='GZ_SIM_RESOURCE_PATH',
             value=[
@@ -199,6 +211,11 @@ def generate_launch_description():
             executable='parameter_bridge',
             name='ros_gz_bridge',
             output='screen',
+            arguments=[[
+                '/world/',
+                gz_world_name,
+                '/set_pose@ros_gz_interfaces/srv/SetEntityPose',
+            ]],
             parameters=[{'config_file': bridge_config}],
         ),
         TimerAction(
@@ -227,5 +244,41 @@ def generate_launch_description():
             name='scoutmini_topic_relay',
             output='screen',
             parameters=[{'use_sim_time': use_sim_time}],
+        ),
+        Node(
+            condition=IfCondition(door_slider),
+            package='scoutmini_sim',
+            executable='door_slider',
+            name='door_1_slider',
+            output='screen',
+            parameters=[{
+                'world_name': gz_world_name,
+                'model_name': 'door_1',
+                'hinge_x': 23.52884,
+                'hinge_y': 7.0,
+                'hinge_z': 0.0,
+                'closed_yaw': 2.55,
+                'min_angle': -1.5708,
+                'max_angle': 1.5708,
+                'initial_angle': 0.0,
+            }],
+        ),
+        Node(
+            condition=IfCondition(door2_slider),
+            package='scoutmini_sim',
+            executable='door_slider',
+            name='door_2_slider',
+            output='screen',
+            parameters=[{
+                'world_name': gz_world_name,
+                'model_name': 'door_2',
+                'hinge_x': 2.5,
+                'hinge_y': 1.0,
+                'hinge_z': 0.0,
+                'closed_yaw': 0.9792,
+                'min_angle': -1.5708,
+                'max_angle': 1.5708,
+                'initial_angle': 0.0,
+            }],
         ),
     ])

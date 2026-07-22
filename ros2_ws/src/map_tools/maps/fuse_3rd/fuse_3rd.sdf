@@ -91,5 +91,59 @@
         </visual>
       </link>
     </model>
+
+    <model name="door_1">
+      <static>true</static>
+      <pose>23.52884 7.0 0.0 0 0 2.55</pose>
+      <link name="panel">
+        <collision name="collision">
+          <pose>0 0.5 1.0 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>0.1 1.0 2.0</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <pose>0 0.5 1.0 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>0.1 1.0 2.0</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.45 0.25 0.12 1</ambient>
+            <diffuse>0.45 0.25 0.12 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="door_2">
+      <static>true</static>
+      <pose>2.5 1.0 0.0 0 0 0.9792</pose>
+      <link name="panel">
+        <collision name="collision">
+          <pose>0 0.5 1.0 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>0.1 1.2 2.0</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <pose>0 0.5 1.0 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>0.1 1.2 2.0</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.45 0.25 0.12 1</ambient>
+            <diffuse>0.45 0.25 0.12 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
   </world>
 </sdf>

@@ -8,6 +8,8 @@
   <license>Apache-2.0</license>
 
   <depend>rclpy</depend>
+  <depend>geometry_msgs</depend>
+  <depend>ros_gz_interfaces</depend>
 
   <exec_depend>launch</exec_depend>
   <exec_depend>launch_ros</exec_depend>
@@ -26,6 +28,7 @@
   <exec_depend>map_tools</exec_depend>
   <exec_depend>controller_manager</exec_depend>
   <exec_depend>scoutmini_tasks</exec_depend>
+  <exec_depend>python3-tk</exec_depend>
 
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>

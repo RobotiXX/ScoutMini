@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+
 <!--
   Adapted from:
   https://github.com/agilexrobotics/scout_ros/scout_description/urdf/scout_mini.gazebo
@@ -5,8 +7,6 @@
   Original work Copyright (c) AgileX Robotics.
   Licensed under the BSD License.
 -->
-
-<?xml version="1.0"?>
 
 <!--
 Reference:

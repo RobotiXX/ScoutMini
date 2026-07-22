@@ -1,0 +1,6 @@
+map_name: fuse_3rd
+loop: true
+repeat_delay_sec: 1.0
+waypoints:
+  - "door2_pre"
+  - "door2_post"
