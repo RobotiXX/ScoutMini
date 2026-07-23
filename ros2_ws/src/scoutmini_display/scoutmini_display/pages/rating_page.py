@@ -217,7 +217,9 @@ class RatingPage(QWidget):
             self.reached_location,
             self.help_rating,
             comment
-        )  
+        )
+
+        self.reset_page()  
 
     # Saves all information submitted by user in a csv file
     def save_feedback(self, reached_location, rating, comment):
@@ -240,4 +242,23 @@ class RatingPage(QWidget):
                 rating,
                 comment
             ])
+
+    #Resets the page for the next user to use
+    def reset_page(self):
+
+        self.reached_location = None
+        self.help_rating = 0
+
+        self.location_status.setText(
+            "Please select an option"
+        )
+
+        self.rating_status.setText(
+            "Select a rating from 1-5"
+        )
+
+        self.comment_box.clear()
+
+        for button in self.star_buttons:
+            button.setText("☆")
 

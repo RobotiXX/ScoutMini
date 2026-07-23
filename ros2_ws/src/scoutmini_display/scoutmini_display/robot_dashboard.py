@@ -210,7 +210,7 @@ class RobotDashboard(QWidget):
 
     @Slot(bool, int, str)
     def show_room_page_after_feedback(self, reached, rating, comment) :
-        self._rod_node.get_logger().info(
+        self._ros_node.get_logger().info(
             f"Feedback received: reached={reached}, rating={rating}, comment={comment}"
         )
 
