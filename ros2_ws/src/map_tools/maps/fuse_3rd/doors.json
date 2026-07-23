@@ -2,31 +2,41 @@
   "map_name": "fuse_3rd",
   "doors": [
     {
-      "name": "door_1",
-      "sdf_model": "door_1",
+      "name": "door_3300",
       "frame_id": "map",
-      "closed_pose": {
-        "x": 23.52884,
-        "y": 7.0,
-        "z": 0.0,
-        "yaw": 2.55
-      },
-      "leaf": {
-        "length": 1.0,
-        "thickness": 0.1,
-        "height": 2.0,
-        "hinge_to_center_y": 0.5
+      "route_gate": {
+        "pre_waypoint": "door3300_pre",
+        "post_waypoint": "door3300_post",
+        "path_crossing_tolerance": 0.6
       },
       "detection": {
         "enabled": true,
-        "hit_tolerance": 0.18,
+        "mode": "segment",
+        "hit_tolerance": 0.2,
         "min_hits": 3,
-        "max_range": 8.0,
-        "max_abs_scan_angle": 0.261799
+        "max_range": 4.0,
+        "max_abs_scan_angle": 0.261799,
+        "front_scan_fallback": true,
+        "forward_min": 0.05,
+        "forward_max": 2.8,
+        "half_width": 1.0
+      },
+      "sdf_model": "door_3300",
+      "closed_pose": {
+        "x": 10.575,
+        "y": -12.475,
+        "z": 0.0,
+        "yaw": 0.9792
+      },
+      "leaf": {
+        "length": 0.8,
+        "thickness": 0.1,
+        "height": 2.0,
+        "hinge_to_center_y": 0.4
       }
     },
     {
-      "name": "door2",
+      "name": "door_2",
       "frame_id": "map",
       "route_gate": {
         "pre_waypoint": "door2_pre",
@@ -47,16 +57,16 @@
       },
       "sdf_model": "door_2",
       "closed_pose": {
-        "x": 2.5,
-        "y": 1.0,
+        "x": -5.0,
+        "y": -5.0,
         "z": 0.0,
         "yaw": 0.9792
       },
       "leaf": {
-        "length": 1.6,
+        "length": 0.8,
         "thickness": 0.1,
         "height": 2.0,
-        "hinge_to_center_y": 0.8
+        "hinge_to_center_y": 0.4
       }
     }
   ]

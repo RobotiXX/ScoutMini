@@ -110,8 +110,8 @@ def generate_launch_description():
         DeclareLaunchArgument('port_name', default_value='can2'),
         DeclareLaunchArgument(
             'world',
-            default_value='fuse_3rd',
-            choices=['warehouse', 'empty', 'default_warehouse', 'tb3_sandbox', 'fuse_3rd'],
+            default_value='fuse_3rd_no_doors',
+            choices=['warehouse', 'empty', 'default_warehouse', 'tb3_sandbox', 'fuse_3rd', 'fuse_3rd_no_doors'],
             description='Gazebo world to launch',
         ),
         DeclareLaunchArgument(

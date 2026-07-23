@@ -32,6 +32,7 @@ def launch_setup(context, *args, **kwargs):
         'default_warehouse': 'warehouse',
         'tb3_sandbox': 'default',
         'fuse_3rd': 'fuse_3rd',
+        'fuse_3rd_no_doors': 'fuse_3rd_no_doors',
     }
 
     if world_file:
@@ -64,6 +65,12 @@ def launch_setup(context, *args, **kwargs):
                 'maps',
                 'fuse_3rd',
                 'fuse_3rd.sdf',
+            ]),
+            'fuse_3rd_no_doors': PathJoinSubstitution([
+                FindPackageShare('map_tools'),
+                'maps',
+                'fuse_3rd_no_doors',
+                'fuse_3rd_no_doors.sdf',
             ]),
         }
         selected_world = worlds[world].perform(context)
@@ -120,7 +127,7 @@ def generate_launch_description():
         DeclareLaunchArgument(
             'world',
             default_value='warehouse',
-            choices=['warehouse', 'empty', 'default_warehouse', 'tb3_sandbox', 'fuse_3rd'],
+            choices=['warehouse', 'empty', 'default_warehouse', 'tb3_sandbox', 'fuse_3rd', 'fuse_3rd_no_doors'],
             description='Gazebo world to launch: warehouse, empty, default_warehouse, tb3_sandbox, or fuse_3rd',
         ),
         DeclareLaunchArgument(
@@ -152,7 +159,7 @@ def generate_launch_description():
         DeclareLaunchArgument(
             'door_slider',
             default_value='false',
-            description='Open a simple GUI slider that commands fuse_3rd door_1.',
+            description='Open a simple GUI slider that commands fuse_3rd door_3300.',
         ),
         DeclareLaunchArgument(
             'door2_slider',
@@ -167,6 +174,8 @@ def generate_launch_description():
                 PathJoinSubstitution([description_share, 'meshes']),
                 ':',
                 PathJoinSubstitution([FindPackageShare('map_tools'), 'maps', 'fuse_3rd']),
+                ':',
+                PathJoinSubstitution([FindPackageShare('map_tools'), 'maps', 'fuse_3rd_no_doors']),
                 ':',
                 EnvironmentVariable('GZ_SIM_RESOURCE_PATH', default_value=''),
             ],
@@ -249,15 +258,15 @@ def generate_launch_description():
             condition=IfCondition(door_slider),
             package='scoutmini_sim',
             executable='door_slider',
-            name='door_1_slider',
+            name='door_3300_slider',
             output='screen',
             parameters=[{
                 'world_name': gz_world_name,
-                'model_name': 'door_1',
-                'hinge_x': 23.52884,
-                'hinge_y': 7.0,
+                'model_name': 'door_3300',
+                'hinge_x': 10.575,
+                'hinge_y': -12.475,
                 'hinge_z': 0.0,
-                'closed_yaw': 2.55,
+                'closed_yaw': 0.9792,
                 'min_angle': -1.5708,
                 'max_angle': 1.5708,
                 'initial_angle': 0.0,
@@ -272,8 +281,8 @@ def generate_launch_description():
             parameters=[{
                 'world_name': gz_world_name,
                 'model_name': 'door_2',
-                'hinge_x': 2.5,
-                'hinge_y': 1.0,
+                'hinge_x': -5.0,
+                'hinge_y': -5.0,
                 'hinge_z': 0.0,
                 'closed_yaw': 0.9792,
                 'min_angle': -1.5708,

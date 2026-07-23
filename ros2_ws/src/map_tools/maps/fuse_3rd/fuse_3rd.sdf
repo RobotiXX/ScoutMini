@@ -92,15 +92,15 @@
       </link>
     </model>
 
-    <model name="door_1">
+    <model name="door_3300">
       <static>true</static>
-      <pose>23.52884 7.0 0.0 0 0 2.55</pose>
+      <pose>10.575 -12.475 0.0 0 0 0.9792</pose>
       <link name="panel">
         <collision name="collision">
           <pose>0 0.5 1.0 0 0 0</pose>
           <geometry>
             <box>
-              <size>0.1 1.0 2.0</size>
+              <size>0.1 0.8 2.0</size>
             </box>
           </geometry>
         </collision>
@@ -108,7 +108,7 @@
           <pose>0 0.5 1.0 0 0 0</pose>
           <geometry>
             <box>
-              <size>0.1 1.0 2.0</size>
+              <size>0.1 0.8 2.0</size>
             </box>
           </geometry>
           <material>
@@ -121,13 +121,13 @@
 
     <model name="door_2">
       <static>true</static>
-      <pose>2.5 1.0 0.0 0 0 0.9792</pose>
+      <pose>-5.0 -5.0 0.0 0 0 0.9792</pose>
       <link name="panel">
         <collision name="collision">
           <pose>0 0.5 1.0 0 0 0</pose>
           <geometry>
             <box>
-              <size>0.1 1.6 2.0</size>
+              <size>0.1 0.8 2.0</size>
             </box>
           </geometry>
         </collision>
@@ -135,7 +135,7 @@
           <pose>0 0.5 1.0 0 0 0</pose>
           <geometry>
             <box>
-              <size>0.1 1.6 2.0</size>
+              <size>0.1 0.8 2.0</size>
             </box>
           </geometry>
           <material>

@@ -170,7 +170,7 @@ def generate_launch_description():
                 'nav2_default_view.rviz',
             ]),
         ),
-        DeclareLaunchArgument('door_slider', default_value='false'),
+        DeclareLaunchArgument('door_slider', default_value='true'),
         DeclareLaunchArgument('door2_slider', default_value='true'),
         DeclareLaunchArgument('use_door_aware_route', default_value='true'),
         DeclareLaunchArgument('route_name', default_value='sim_route_test'),

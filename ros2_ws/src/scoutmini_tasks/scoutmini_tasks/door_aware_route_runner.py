@@ -383,18 +383,19 @@ class RouteNavigator(py_trees.behaviour.Behaviour):
                 self.plan_check_path = None
                 door = self._door_for_failed_plan(step)
                 self.plan_checked_step_index = self.step_index
-                if door is not None and self._insert_door_before_step(step, door):
+                if door is not None and self._insert_door_before_step(step, door, None):
                     self.plan_checked_step_index = -1
                     return True
                 return False
 
-            door = self._door_crossed_by_planned_path(self.plan_check_path, step)
+            crossed_door = self._door_crossed_by_planned_path(self.plan_check_path, step)
             self.plan_check_path = None
             self.plan_checked_step_index = self.step_index
-            if door is None:
+            if crossed_door is None:
                 return False
 
-            if self._insert_door_before_step(step, door):
+            door, crossing_segment = crossed_door
+            if self._insert_door_before_step(step, door, crossing_segment):
                 self.plan_checked_step_index = -1
                 return True
             return False
@@ -470,15 +471,7 @@ class RouteNavigator(py_trees.behaviour.Behaviour):
     def _step_already_enters_door_exit(self, step: RouteStep, door: DoorGeometry) -> bool:
         if not step.poses:
             return False
-        if step.name == door.post_waypoint or step.name.startswith(f'{door.post_waypoint} ->'):
-            return True
-        post_waypoint = self.node.waypoints_by_name.get(door.post_waypoint)
-        if post_waypoint is None:
-            return False
-        post_x = float(post_waypoint.get('x', 0.0))
-        post_y = float(post_waypoint.get('y', 0.0))
-        first_pose = step.poses[0].pose.position
-        return math.hypot(first_pose.x - post_x, first_pose.y - post_y) <= 0.05
+        return step.name in (door.pre_waypoint, door.post_waypoint)
 
     def _pose_named_like(self, template_pose: PoseStamped, waypoint_name: str) -> Optional[PoseStamped]:
         waypoint = self.node.waypoints_by_name.get(waypoint_name)
@@ -488,7 +481,11 @@ class RouteNavigator(py_trees.behaviour.Behaviour):
         pose.header.stamp = template_pose.header.stamp
         return pose
 
-    def _door_crossed_by_planned_path(self, path, step: RouteStep) -> Optional[DoorGeometry]:
+    def _door_crossed_by_planned_path(
+        self,
+        path,
+        step: RouteStep,
+    ) -> Optional[Tuple[DoorGeometry, Tuple[Tuple[float, float], Tuple[float, float]]]]:
         poses = getattr(path, 'poses', [])
         if len(poses) < 2:
             return None
@@ -507,15 +504,28 @@ class RouteNavigator(py_trees.behaviour.Behaviour):
 
                 crossed_segment = self._crossed_door_segment(path_segment, door)
                 if crossed_segment:
+                    direction_segment, direction_indices = self._direction_segment_around_crossing(poses, index)
                     self.node.get_logger().info(
                         f'Nav2 planned path crosses {door.name} {crossed_segment} '
-                        f'between path point {index} and {index + 1}'
+                        f'between path point {index} and {index + 1}; '
+                        f'direction check uses path point {direction_indices[0]} and {direction_indices[1]}'
                     )
-                    return door
+                    return door, direction_segment
         self.node.get_logger().info(
             f'Nav2 planned path to {step.name} with {len(poses)} point(s) did not cross a configured door'
         )
         return None
+
+    @staticmethod
+    def _direction_segment_around_crossing(
+        poses,
+        crossing_index: int,
+    ) -> Tuple[Tuple[Tuple[float, float], Tuple[float, float]], Tuple[int, int]]:
+        start_index = max(0, crossing_index - 2)
+        end_index = min(len(poses) - 1, crossing_index + 3)
+        start = poses[start_index].pose.position
+        end = poses[end_index].pose.position
+        return ((start.x, start.y), (end.x, end.y)), (start_index, end_index)
 
     def _crossed_door_segment(
         self,
@@ -579,7 +589,12 @@ class RouteNavigator(py_trees.behaviour.Behaviour):
         )
         return door
 
-    def _door_steps_for_step(self, step: RouteStep, door: DoorGeometry) -> List[RouteStep]:
+    def _door_steps_for_step(
+        self,
+        step: RouteStep,
+        door: DoorGeometry,
+        crossing_segment: Optional[Tuple[Tuple[float, float], Tuple[float, float]]],
+    ) -> List[RouteStep]:
         pre_pose = self._pose_named_like(step.poses[0], door.pre_waypoint)
         post_pose = self._pose_named_like(step.poses[0], door.post_waypoint)
         if pre_pose is None or post_pose is None:
@@ -587,20 +602,102 @@ class RouteNavigator(py_trees.behaviour.Behaviour):
                 f'Planned path crosses {door.name}, but pre/post poses are unavailable; continuing original step'
             )
             return []
+
+        first_name = door.pre_waypoint
+        second_name = door.post_waypoint
+        first_pose = pre_pose
+        second_pose = post_pose
+        reverse = self._should_enter_from_post_side(step, door, crossing_segment)
+        if reverse:
+            first_name = door.post_waypoint
+            second_name = door.pre_waypoint
+            first_pose = self._pose_with_yaw_offset(post_pose, math.pi)
+            second_pose = self._pose_with_yaw_offset(pre_pose, math.pi)
+
         return [
-            RouteStep(kind='navigate', name=door.pre_waypoint, poses=[pre_pose], door_name=door.name),
-            RouteStep(kind='door_check', name=door.pre_waypoint, poses=[], door_name=door.name),
-            RouteStep(kind='navigate', name=door.post_waypoint, poses=[post_pose]),
+            RouteStep(kind='navigate', name=first_name, poses=[first_pose], door_name=door.name),
+            RouteStep(kind='door_check', name=first_name, poses=[], door_name=door.name),
+            RouteStep(kind='navigate', name=second_name, poses=[second_pose]),
             step,
         ]
 
-    def _insert_door_before_step(self, step: RouteStep, door: DoorGeometry) -> bool:
-        inserted_steps = self._door_steps_for_step(step, door)
+    def _should_enter_from_post_side(
+        self,
+        step: RouteStep,
+        door: DoorGeometry,
+        crossing_segment: Optional[Tuple[Tuple[float, float], Tuple[float, float]]],
+    ) -> bool:
+        pre_waypoint = self.node.waypoints_by_name.get(door.pre_waypoint)
+        post_waypoint = self.node.waypoints_by_name.get(door.post_waypoint)
+        if pre_waypoint is None or post_waypoint is None:
+            return False
+        pre_xy = (float(pre_waypoint.get('x', 0.0)), float(pre_waypoint.get('y', 0.0)))
+        post_xy = (float(post_waypoint.get('x', 0.0)), float(post_waypoint.get('y', 0.0)))
+        if crossing_segment is not None:
+            start_xy, end_xy = crossing_segment
+        else:
+            start_xy = self._route_start_xy_for_step(step)
+            end = step.poses[-1].pose.position
+            end_xy = (end.x, end.y)
+
+        path_vector = (end_xy[0] - start_xy[0], end_xy[1] - start_xy[1])
+        door_vector = (post_xy[0] - pre_xy[0], post_xy[1] - pre_xy[1])
+        dot = path_vector[0] * door_vector[0] + path_vector[1] * door_vector[1]
+        reverse = dot < 0.0
+        self.node.get_logger().info(
+            f'Door {door.name} direction check: '
+            f'path_start=({start_xy[0]:.2f}, {start_xy[1]:.2f}), '
+            f'path_end=({end_xy[0]:.2f}, {end_xy[1]:.2f}), '
+            f'pre=({pre_xy[0]:.2f}, {pre_xy[1]:.2f}), '
+            f'post=({post_xy[0]:.2f}, {post_xy[1]:.2f}), '
+            f'path_vector=({path_vector[0]:.2f}, {path_vector[1]:.2f}), '
+            f'door_vector=({door_vector[0]:.2f}, {door_vector[1]:.2f}), '
+            f'dot={dot:.3f}; using '
+            f'{door.post_waypoint if reverse else door.pre_waypoint} first'
+        )
+        return reverse
+
+    def _route_start_xy_for_step(self, step: RouteStep) -> Tuple[float, float]:
+        for previous_index in range(self.step_index - 1, -1, -1):
+            previous_step = self.route_steps[previous_index]
+            if previous_step.poses:
+                point = previous_step.poses[-1].pose.position
+                return point.x, point.y
+        point = step.poses[0].pose.position
+        return point.x, point.y
+
+    @staticmethod
+    def _pose_with_yaw_offset(pose: PoseStamped, yaw_offset: float) -> PoseStamped:
+        adjusted = PoseStamped()
+        adjusted.header = pose.header
+        adjusted.pose.position.x = pose.pose.position.x
+        adjusted.pose.position.y = pose.pose.position.y
+        adjusted.pose.position.z = pose.pose.position.z
+        q = pose.pose.orientation
+        yaw = math.atan2(
+            2.0 * (q.w * q.z + q.x * q.y),
+            1.0 - 2.0 * (q.y * q.y + q.z * q.z),
+        ) + yaw_offset
+        adjusted.pose.orientation.x = 0.0
+        adjusted.pose.orientation.y = 0.0
+        adjusted.pose.orientation.z = math.sin(yaw / 2.0)
+        adjusted.pose.orientation.w = math.cos(yaw / 2.0)
+        return adjusted
+
+    def _insert_door_before_step(
+        self,
+        step: RouteStep,
+        door: DoorGeometry,
+        crossing_segment: Optional[Tuple[Tuple[float, float], Tuple[float, float]]],
+    ) -> bool:
+        inserted_steps = self._door_steps_for_step(step, door, crossing_segment)
         if not inserted_steps:
             return False
         self.route_steps[self.step_index:self.step_index + 1] = inserted_steps
+        first = inserted_steps[0].name
+        second = inserted_steps[2].name
         self.node.get_logger().warn(
-            f'Inserted {door.pre_waypoint}->{door.post_waypoint} before {step.name} '
+            f'Inserted {first}->{second} before {step.name} '
             f'from Nav2 planned path crossing of {door.name}'
         )
         return True
@@ -647,7 +744,7 @@ class RouteNavigator(py_trees.behaviour.Behaviour):
         if clear_elapsed_sec < self.clear_delay_sec:
             return py_trees.common.Status.RUNNING
 
-        self.node.get_logger().info(f'Door {step.door_name} is clear; continuing to post waypoint')
+        self.node.get_logger().info(f'Door {step.door_name} is clear; continuing through doorway')
         self.cleared_doors.add(step.door_name)
         self.door_state.active_door_name = ''
         self.waiting_started_ns = 0

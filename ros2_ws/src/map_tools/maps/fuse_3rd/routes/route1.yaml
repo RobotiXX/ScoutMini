@@ -2,8 +2,7 @@ map_name: fuse_3rd
 loop: true
 repeat_delay_sec: 1.0
 waypoints:
-  - "origin"
-  - "test"
+  - "3333"
   - "3200"
   - "3333"
   - "3331"
