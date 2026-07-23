@@ -34,6 +34,8 @@ setup(
             'example_no_ros_hello_world = scoutmini_display.example_no_ros_hello_world:main',
             'example_no_ros_multi_page = scoutmini_display.example_no_ros_multi_page:main',
             'robot_dashboard = scoutmini_display.robot_dashboard:main',
+            'sensor_rate_monitor = scoutmini_display.sensor_rate_monitor:main',
+            'dummy_publisher = scoutmini_display.dummy_publisher:main',
         ],
     },
 )
