@@ -1,4 +1,5 @@
 import math
+import signal
 import tkinter as tk
 from tkinter import ttk
 
@@ -75,6 +76,7 @@ def main(args=None):
     angle_var = tk.DoubleVar(value=node.initial_angle)
     degrees_var = tk.StringVar()
     pending = {'job': None}
+    closing = {'value': False}
 
     def apply_angle():
         pending['job'] = None
@@ -82,6 +84,8 @@ def main(args=None):
         rclpy.spin_once(node, timeout_sec=0.0)
 
     def poll_service():
+        if closing['value']:
+            return
         if node.pending_angle is not None and node.client.service_is_ready():
             node.set_angle(node.pending_angle)
         rclpy.spin_once(node, timeout_sec=0.0)
@@ -112,10 +116,23 @@ def main(args=None):
     slider.grid(row=1, column=0, columnspan=2, pady=(8, 0), sticky='ew')
 
     def close():
+        if closing['value']:
+            return
+        closing['value'] = True
+        if pending['job'] is not None:
+            root.after_cancel(pending['job'])
+            pending['job'] = None
         node.destroy_node()
-        rclpy.shutdown()
+        if rclpy.ok():
+            rclpy.shutdown()
+        root.quit()
         root.destroy()
 
+    def handle_signal(signum, frame):
+        root.after(0, close)
+
+    signal.signal(signal.SIGINT, handle_signal)
+    signal.signal(signal.SIGTERM, handle_signal)
     root.protocol('WM_DELETE_WINDOW', close)
     set_angle(node.initial_angle)
     poll_service()

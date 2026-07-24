@@ -1,5 +1,5 @@
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, TimerAction
 from launch.conditions import IfCondition, UnlessCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
@@ -26,6 +26,9 @@ def generate_launch_description():
             'spawn_y': LaunchConfiguration('spawn_y'),
             'spawn_z': LaunchConfiguration('spawn_z'),
             'spawn_yaw': LaunchConfiguration('spawn_yaw'),
+            'spawn_start_delay_sec': LaunchConfiguration('spawn_start_delay_sec'),
+            'spawn_timeout_sec': LaunchConfiguration('spawn_timeout_sec'),
+            'controller_start_delay_sec': LaunchConfiguration('controller_start_delay_sec'),
             'door_slider': LaunchConfiguration('door_slider'),
             'door2_slider': LaunchConfiguration('door2_slider'),
         }.items(),
@@ -78,6 +81,11 @@ def generate_launch_description():
         }],
     )
 
+    delayed_navigation = TimerAction(
+        period=LaunchConfiguration('nav_start_delay_sec'),
+        actions=[navigation],
+    )
+
     static_map_to_odom = Node(
         condition=UnlessCondition(LaunchConfiguration('amcl_tf_broadcast')),
         package='tf2_ros',
@@ -118,6 +126,11 @@ def generate_launch_description():
         DeclareLaunchArgument('use_sim_time', default_value='true'),
         DeclareLaunchArgument('port_name', default_value='can2'),
         DeclareLaunchArgument(
+            'nav_start_delay_sec',
+            default_value='22.0',
+            description='Delay Nav2 startup so sim robot TF/controllers are available before costmaps activate.',
+        ),
+        DeclareLaunchArgument(
             'world',
             default_value='fuse_3rd',
             choices=['warehouse', 'empty', 'default_warehouse', 'tb3_sandbox', 'fuse_3rd'],
@@ -142,6 +155,9 @@ def generate_launch_description():
         DeclareLaunchArgument('spawn_y', default_value='0.0'),
         DeclareLaunchArgument('spawn_z', default_value='0.05'),
         DeclareLaunchArgument('spawn_yaw', default_value='0.0'),
+        DeclareLaunchArgument('spawn_start_delay_sec', default_value='8.0'),
+        DeclareLaunchArgument('spawn_timeout_sec', default_value='60.0'),
+        DeclareLaunchArgument('controller_start_delay_sec', default_value='16.0'),
         DeclareLaunchArgument('map_name', default_value='fuse_3rd'),
         DeclareLaunchArgument('base_frame', default_value='base_footprint'),
         DeclareLaunchArgument('initial_pose_x', default_value='0.0'),
@@ -215,5 +231,5 @@ def generate_launch_description():
         static_map_to_odom,
         door_scan_filter,
         door_aware_route_runner,
-        navigation,
+        delayed_navigation,
     ])

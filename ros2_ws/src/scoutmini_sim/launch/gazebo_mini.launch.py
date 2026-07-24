@@ -96,6 +96,9 @@ def generate_launch_description():
     spawn_y = LaunchConfiguration('spawn_y')
     spawn_z = LaunchConfiguration('spawn_z')
     spawn_yaw = LaunchConfiguration('spawn_yaw')
+    spawn_start_delay_sec = LaunchConfiguration('spawn_start_delay_sec')
+    spawn_timeout_sec = LaunchConfiguration('spawn_timeout_sec')
+    controller_start_delay_sec = LaunchConfiguration('controller_start_delay_sec')
     bridge_config = LaunchConfiguration('bridge_config')
     door_slider = LaunchConfiguration('door_slider')
     door2_slider = LaunchConfiguration('door2_slider')
@@ -145,6 +148,21 @@ def generate_launch_description():
             default_value='true',
             description='Spawn the Scout Mini robot and supporting ROS nodes into the selected world.',
         ),
+        DeclareLaunchArgument(
+            'spawn_start_delay_sec',
+            default_value='8.0',
+            description='Delay robot spawn until Gazebo world services are ready.',
+        ),
+        DeclareLaunchArgument(
+            'spawn_timeout_sec',
+            default_value='60.0',
+            description='Timeout for the Gazebo create-entity service request.',
+        ),
+        DeclareLaunchArgument(
+            'controller_start_delay_sec',
+            default_value='16.0',
+            description='Delay controller spawners until after the robot has been inserted.',
+        ),
         DeclareLaunchArgument('spawn_x', default_value='0.0'),
         DeclareLaunchArgument('spawn_y', default_value='0.0'),
         DeclareLaunchArgument('spawn_z', default_value='0.05'),
@@ -193,7 +211,7 @@ def generate_launch_description():
             }],
         ),
         TimerAction(
-            period=3.0,
+            period=spawn_start_delay_sec,
             actions=[
                 Node(
                     condition=IfCondition(spawn_robot),
@@ -208,6 +226,7 @@ def generate_launch_description():
                         '-y', spawn_y,
                         '-z', spawn_z,
                         '-Y', spawn_yaw,
+                        '-timeout', spawn_timeout_sec,
                     ],
                     output='screen',
                     parameters=[{'robot_description': robot_description}],
@@ -228,7 +247,7 @@ def generate_launch_description():
             parameters=[{'config_file': bridge_config}],
         ),
         TimerAction(
-            period=8.0,
+            period=controller_start_delay_sec,
             actions=[
                 Node(
                     condition=IfCondition(spawn_robot),

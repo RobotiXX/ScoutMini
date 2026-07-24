@@ -904,6 +904,25 @@ class RouteNavigator(py_trees.behaviour.Behaviour):
         timer_ref['timer'] = self.node.create_timer(self.door_redetect_delay_sec, redetect_cb)
         self.door_redetect_timers.append(timer_ref['timer'])
 
+    def cancel_active_goal(self, timeout_sec: float = 2.0) -> None:
+        if not self.goal_active or self.goal_handle is None:
+            return
+        self.node.get_logger().warn('Cancelling active Nav2 goal before door-aware runner exits')
+        try:
+            cancel_future = self.goal_handle.cancel_goal_async()
+            rclpy.spin_until_future_complete(self.node, cancel_future, timeout_sec=timeout_sec)
+            if cancel_future.done():
+                self.node.get_logger().info('Active Nav2 goal cancel request completed')
+            else:
+                self.node.get_logger().warn('Timed out waiting for active Nav2 goal cancel response')
+        except Exception as exc:
+            self.node.get_logger().warn(f'Failed to cancel active Nav2 goal: {exc}')
+        finally:
+            self.goal_active = False
+            self.goal_handle = None
+            self.active_step_index = -1
+            self.door_state.active_door_name = ''
+
     def _result_cb(self, future) -> None:
         self.goal_active = False
         try:
@@ -956,6 +975,7 @@ class DoorAwareRouteRunner(Node):
             f'base_frame={self.get_parameter("base_frame").value}, action={self.get_parameter("action_name").value}'
         )
 
+        self.route_navigator: Optional[RouteNavigator] = None
         root = self._make_tree_root()
         self.tree = py_trees_ros.trees.BehaviourTree(root=root)
         self._setup_tree()
@@ -1102,6 +1122,20 @@ class DoorAwareRouteRunner(Node):
         return pose
 
     def _make_tree_root(self):
+        self.route_navigator = RouteNavigator(
+            node=self,
+            door_state=self.door_state,
+            route_steps=self.route_steps,
+            action_name=str(self.get_parameter('action_name').value),
+            planner_action_name=str(self.get_parameter('planner_action_name').value),
+            auto_insert_door_waypoints=self._param_bool('auto_insert_door_waypoints'),
+            start_delay_sec=float(self.get_parameter('start_delay_sec').value),
+            wait_for_server_sec=float(self.get_parameter('wait_for_server_sec').value),
+            door_settle_sec=float(self.get_parameter('door_settle_sec').value),
+            clear_hit_fraction=float(self.get_parameter('door_clear_hit_fraction').value),
+            clear_delay_sec=float(self.get_parameter('door_clear_delay_sec').value),
+            doors=self.doors,
+        )
         try:
             root = py_trees.composites.Sequence(name='DoorAwareRoute', memory=False)
         except TypeError:
@@ -1114,20 +1148,7 @@ class DoorAwareRouteRunner(Node):
                 scan_topic=str(self.get_parameter('scan_topic').value),
                 target_frame=str(self.get_parameter('target_frame').value),
             ),
-            RouteNavigator(
-                node=self,
-                door_state=self.door_state,
-                route_steps=self.route_steps,
-                action_name=str(self.get_parameter('action_name').value),
-                planner_action_name=str(self.get_parameter('planner_action_name').value),
-                auto_insert_door_waypoints=self._param_bool('auto_insert_door_waypoints'),
-                start_delay_sec=float(self.get_parameter('start_delay_sec').value),
-                wait_for_server_sec=float(self.get_parameter('wait_for_server_sec').value),
-                door_settle_sec=float(self.get_parameter('door_settle_sec').value),
-                clear_hit_fraction=float(self.get_parameter('door_clear_hit_fraction').value),
-                clear_delay_sec=float(self.get_parameter('door_clear_delay_sec').value),
-                doors=self.doors,
-            ),
+            self.route_navigator,
         ])
         return root
 
@@ -1140,6 +1161,10 @@ class DoorAwareRouteRunner(Node):
     def _tick_tree(self) -> None:
         self.tree.tick()
 
+    def cancel_active_nav2_goal(self) -> None:
+        if self.route_navigator is not None:
+            self.route_navigator.cancel_active_goal()
+
 
 def main(args=None) -> None:
     rclpy.init(args=args)
@@ -1149,6 +1174,8 @@ def main(args=None) -> None:
     except (KeyboardInterrupt, ExternalShutdownException):
         pass
     finally:
+        if rclpy.ok():
+            node.cancel_active_nav2_goal()
         node.destroy_node()
         if rclpy.ok():
             rclpy.shutdown()
