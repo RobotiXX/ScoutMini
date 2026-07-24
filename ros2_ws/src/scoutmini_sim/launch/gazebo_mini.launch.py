@@ -32,6 +32,7 @@ def launch_setup(context, *args, **kwargs):
         'default_warehouse': 'warehouse',
         'tb3_sandbox': 'default',
         'fuse_3rd': 'fuse_3rd',
+        'fuse_3rd_no_doors': 'fuse_3rd_no_doors',
     }
 
     if world_file:
@@ -65,6 +66,12 @@ def launch_setup(context, *args, **kwargs):
                 'fuse_3rd',
                 'fuse_3rd.sdf',
             ]),
+            'fuse_3rd_no_doors': PathJoinSubstitution([
+                FindPackageShare('map_tools'),
+                'maps',
+                'fuse_3rd_no_doors',
+                'fuse_3rd_no_doors.sdf',
+            ]),
         }
         selected_world = worlds[world].perform(context)
         selected_world_name = world_name or world_names[world]
@@ -89,7 +96,12 @@ def generate_launch_description():
     spawn_y = LaunchConfiguration('spawn_y')
     spawn_z = LaunchConfiguration('spawn_z')
     spawn_yaw = LaunchConfiguration('spawn_yaw')
+    spawn_start_delay_sec = LaunchConfiguration('spawn_start_delay_sec')
+    spawn_timeout_sec = LaunchConfiguration('spawn_timeout_sec')
+    controller_start_delay_sec = LaunchConfiguration('controller_start_delay_sec')
     bridge_config = LaunchConfiguration('bridge_config')
+    door_slider = LaunchConfiguration('door_slider')
+    door2_slider = LaunchConfiguration('door2_slider')
     gz_world_name = LaunchConfiguration('gz_world_name')
 
     robot_description = ParameterValue(
@@ -118,7 +130,7 @@ def generate_launch_description():
         DeclareLaunchArgument(
             'world',
             default_value='warehouse',
-            choices=['warehouse', 'empty', 'default_warehouse', 'tb3_sandbox', 'fuse_3rd'],
+            choices=['warehouse', 'empty', 'default_warehouse', 'tb3_sandbox', 'fuse_3rd', 'fuse_3rd_no_doors'],
             description='Gazebo world to launch: warehouse, empty, default_warehouse, tb3_sandbox, or fuse_3rd',
         ),
         DeclareLaunchArgument(
@@ -136,6 +148,21 @@ def generate_launch_description():
             default_value='true',
             description='Spawn the Scout Mini robot and supporting ROS nodes into the selected world.',
         ),
+        DeclareLaunchArgument(
+            'spawn_start_delay_sec',
+            default_value='8.0',
+            description='Delay robot spawn until Gazebo world services are ready.',
+        ),
+        DeclareLaunchArgument(
+            'spawn_timeout_sec',
+            default_value='60.0',
+            description='Timeout for the Gazebo create-entity service request.',
+        ),
+        DeclareLaunchArgument(
+            'controller_start_delay_sec',
+            default_value='16.0',
+            description='Delay controller spawners until after the robot has been inserted.',
+        ),
         DeclareLaunchArgument('spawn_x', default_value='0.0'),
         DeclareLaunchArgument('spawn_y', default_value='0.0'),
         DeclareLaunchArgument('spawn_z', default_value='0.05'),
@@ -147,6 +174,16 @@ def generate_launch_description():
             ),
             description='ROS-Gazebo bridge configuration file',
         ),
+        DeclareLaunchArgument(
+            'door_slider',
+            default_value='false',
+            description='Open a simple GUI slider that commands fuse_3rd door_3300.',
+        ),
+        DeclareLaunchArgument(
+            'door2_slider',
+            default_value='false',
+            description='Open a simple GUI slider that commands fuse_3rd door_2.',
+        ),
         SetEnvironmentVariable(
             name='GZ_SIM_RESOURCE_PATH',
             value=[
@@ -155,6 +192,8 @@ def generate_launch_description():
                 PathJoinSubstitution([description_share, 'meshes']),
                 ':',
                 PathJoinSubstitution([FindPackageShare('map_tools'), 'maps', 'fuse_3rd']),
+                ':',
+                PathJoinSubstitution([FindPackageShare('map_tools'), 'maps', 'fuse_3rd_no_doors']),
                 ':',
                 EnvironmentVariable('GZ_SIM_RESOURCE_PATH', default_value=''),
             ],
@@ -172,7 +211,7 @@ def generate_launch_description():
             }],
         ),
         TimerAction(
-            period=3.0,
+            period=spawn_start_delay_sec,
             actions=[
                 Node(
                     condition=IfCondition(spawn_robot),
@@ -187,6 +226,7 @@ def generate_launch_description():
                         '-y', spawn_y,
                         '-z', spawn_z,
                         '-Y', spawn_yaw,
+                        '-timeout', spawn_timeout_sec,
                     ],
                     output='screen',
                     parameters=[{'robot_description': robot_description}],
@@ -199,10 +239,15 @@ def generate_launch_description():
             executable='parameter_bridge',
             name='ros_gz_bridge',
             output='screen',
+            arguments=[[
+                '/world/',
+                gz_world_name,
+                '/set_pose@ros_gz_interfaces/srv/SetEntityPose',
+            ]],
             parameters=[{'config_file': bridge_config}],
         ),
         TimerAction(
-            period=8.0,
+            period=controller_start_delay_sec,
             actions=[
                 Node(
                     condition=IfCondition(spawn_robot),
@@ -227,5 +272,41 @@ def generate_launch_description():
             name='scoutmini_topic_relay',
             output='screen',
             parameters=[{'use_sim_time': use_sim_time}],
+        ),
+        Node(
+            condition=IfCondition(door_slider),
+            package='scoutmini_sim',
+            executable='door_slider',
+            name='door_3300_slider',
+            output='screen',
+            parameters=[{
+                'world_name': gz_world_name,
+                'model_name': 'door_3300',
+                'hinge_x': 10.575,
+                'hinge_y': -12.575,
+                'hinge_z': 0.0,
+                'closed_yaw': 1.118826,
+                'min_angle': -1.5708,
+                'max_angle': 1.5708,
+                'initial_angle': 0.0,
+            }],
+        ),
+        Node(
+            condition=IfCondition(door2_slider),
+            package='scoutmini_sim',
+            executable='door_slider',
+            name='door_2_slider',
+            output='screen',
+            parameters=[{
+                'world_name': gz_world_name,
+                'model_name': 'door_2',
+                'hinge_x': -4.675,
+                'hinge_y': -4.975,
+                'hinge_z': 0.0,
+                'closed_yaw': 1.118826,
+                'min_angle': -1.5708,
+                'max_angle': 1.5708,
+                'initial_angle': 0.0,
+            }],
         ),
     ])

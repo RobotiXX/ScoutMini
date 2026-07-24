@@ -246,15 +246,18 @@ global_costmap:
         plugin: 'nav2_costmap_2d::StaticLayer'
         map_subscribe_transient_local: true
 
+
       obstacle_layer:
         plugin: 'nav2_costmap_2d::ObstacleLayer'
         observation_sources: scan
         scan:
-          topic: /scan
+          topic: /scan_global_filtered
           data_type: LaserScan
           clearing: true
           marking: true
+          inf_is_valid: true
           max_obstacle_height: 1.5
+
 
       inflation_layer:
         plugin: 'nav2_costmap_2d::InflationLayer'

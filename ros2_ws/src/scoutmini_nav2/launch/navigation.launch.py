@@ -75,6 +75,30 @@ def generate_launch_description():
         }],
     )
 
+    doors_file = PathJoinSubstitution([
+        FindPackageShare('map_tools'),
+        'maps',
+        map_name,
+        'doors.json',
+    ])
+
+    door_scan_filter = Node(
+        condition=IfCondition(LaunchConfiguration('start_door_scan_filter')),
+        package='scoutmini_tasks',
+        executable='door_scan_filter',
+        name='door_scan_filter',
+        output='screen',
+        parameters=[{
+            'use_sim_time': use_sim_time,
+            'map_name': map_name,
+            'doors_file': doors_file,
+            'input_scan_topic': LaunchConfiguration('scan_topic'),
+            'output_scan_topic': LaunchConfiguration('global_scan_topic'),
+            'target_frame': 'map',
+            'filter_radius': LaunchConfiguration('door_global_filter_radius'),
+        }],
+    )
+
     nav2 = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             PathJoinSubstitution([
@@ -174,6 +198,10 @@ def generate_launch_description():
             ])
         ),
         DeclareLaunchArgument('rviz', default_value='false'),
+        DeclareLaunchArgument('scan_topic', default_value='/scan'),
+        DeclareLaunchArgument('global_scan_topic', default_value='/scan_global_filtered'),
+        DeclareLaunchArgument('door_global_filter_radius', default_value='0.2'),
+        DeclareLaunchArgument('start_door_scan_filter', default_value='true'),
         DeclareLaunchArgument(
             'rviz_config_file',
             default_value=PathJoinSubstitution([
@@ -200,6 +228,7 @@ def generate_launch_description():
         ),
         sensors_odometry,
         initial_pose_publisher,
+        door_scan_filter,
         nav2,
         map_name_publisher_node,
         waypoint_server_node,

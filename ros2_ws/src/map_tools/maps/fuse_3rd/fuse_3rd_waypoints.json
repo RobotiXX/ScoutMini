@@ -772,5 +772,77 @@
       "sec": 0,
       "nanosec": 0
     }
+  },
+  {
+    "name": "door2_pre",
+    "description": "",
+    "frame_id": "map",
+    "x": -4.325,
+    "y": -3.125,
+    "z": 0.0,
+    "orientation": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.847567,
+      "w": -0.530689
+    },
+    "stamp": {
+      "sec": 0,
+      "nanosec": 0
+    }
+  },
+  {
+    "name": "door2_post",
+    "description": "",
+    "frame_id": "map",
+    "x": -5.875,
+    "y": -6.225,
+    "z": 0.0,
+    "orientation": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.847567,
+      "w": -0.530689
+    },
+    "stamp": {
+      "sec": 0,
+      "nanosec": 0
+    }
+  },
+  {
+    "name": "door3300_pre",
+    "description": "",
+    "frame_id": "map",
+    "x": 11.025,
+    "y": -10.675,
+    "z": 0.0,
+    "orientation": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.847567,
+      "w": -0.530689
+    },
+    "stamp": {
+      "sec": 0,
+      "nanosec": 0
+    }
+  },
+  {
+    "name": "door3300_post",
+    "description": "",
+    "frame_id": "map",
+    "x": 9.425,
+    "y": -13.825,
+    "z": 0.0,
+    "orientation": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.847567,
+      "w": -0.530689
+    },
+    "stamp": {
+      "sec": 0,
+      "nanosec": 0
+    }
   }
 ]

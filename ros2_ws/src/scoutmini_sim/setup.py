@@ -29,6 +29,7 @@ setup(
     },
     entry_points={
         'console_scripts': [
+            'door_slider = scoutmini_sim.door_slider:main',
         ],
     },
 )

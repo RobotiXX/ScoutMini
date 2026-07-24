@@ -1,0 +1,73 @@
+{
+  "map_name": "fuse_3rd",
+  "doors": [
+    {
+      "name": "door_3300",
+      "frame_id": "map",
+      "route_gate": {
+        "pre_waypoint": "door3300_pre",
+        "post_waypoint": "door3300_post",
+        "path_crossing_tolerance": 0.6
+      },
+      "detection": {
+        "enabled": true,
+        "mode": "segment",
+        "hit_tolerance": 0.2,
+        "min_hits": 3,
+        "max_range": 4.0,
+        "max_abs_scan_angle": 0.261799,
+        "front_scan_fallback": true,
+        "forward_min": 0.05,
+        "forward_max": 2.8,
+        "half_width": 1.0
+      },
+      "sdf_model": "door_3300",
+      "closed_pose": {
+        "x": 10.575,
+        "y": -12.575,
+        "z": 0.0,
+        "yaw": 1.118826
+      },
+      "leaf": {
+        "length": 0.9144,
+        "thickness": 0.1,
+        "height": 2.0,
+        "hinge_to_center_y": 0.4572
+      }
+    },
+    {
+      "name": "door_2",
+      "frame_id": "map",
+      "route_gate": {
+        "pre_waypoint": "door2_pre",
+        "post_waypoint": "door2_post",
+        "path_crossing_tolerance": 0.6
+      },
+      "detection": {
+        "enabled": true,
+        "mode": "segment",
+        "hit_tolerance": 0.2,
+        "min_hits": 3,
+        "max_range": 4.0,
+        "max_abs_scan_angle": 0.261799,
+        "front_scan_fallback": true,
+        "forward_min": 0.05,
+        "forward_max": 2.8,
+        "half_width": 1.0
+      },
+      "sdf_model": "door_2",
+      "closed_pose": {
+        "x": -4.675,
+        "y": -4.975,
+        "z": 0.0,
+        "yaw": 1.118826
+      },
+      "leaf": {
+        "length": 0.9144,
+        "thickness": 0.1,
+        "height": 2.0,
+        "hinge_to_center_y": 0.4572
+      }
+    }
+  ]
+}
