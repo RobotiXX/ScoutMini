@@ -68,6 +68,117 @@
         "height": 2.0,
         "hinge_to_center_y": 0.4572
       }
+    },
+    {
+      "name": "elevator_a_door",
+      "frame_id": "map",
+      "detection": {
+        "enabled": false,
+        "mode": "segment"
+      },
+      "sdf_model": "elevator_a_door",
+      "motion": {
+        "type": "sliding",
+        "axis": "leaf",
+        "min_position": 0.0,
+        "max_position": 1.2,
+        "initial_position": 0.0
+      },
+      "closed_pose": {
+        "x": -7.925,
+        "y": -31.325,
+        "z": 0.0,
+        "yaw": 2.68962233
+      },
+      "leaf": {
+        "length": 1.2,
+        "thickness": 0.1,
+        "height": 2.0,
+        "hinge_to_center_y": 0.6
+      }
+    },
+    {
+      "name": "elevator_b_door",
+      "frame_id": "map",
+      "detection": {
+        "enabled": false,
+        "mode": "segment"
+      },
+      "sdf_model": "elevator_b_door",
+      "motion": {
+        "type": "sliding",
+        "axis": "leaf",
+        "min_position": 0.0,
+        "max_position": 1.2,
+        "initial_position": 0.0
+      },
+      "closed_pose": {
+        "x": -9.125,
+        "y": -33.925,
+        "z": 0.0,
+        "yaw": 2.68962233
+      },
+      "leaf": {
+        "length": 1.2,
+        "thickness": 0.1,
+        "height": 2.0,
+        "hinge_to_center_y": 0.6
+      }
+    },
+    {
+      "name": "elevator_c_door",
+      "frame_id": "map",
+      "detection": {
+        "enabled": false,
+        "mode": "segment"
+      },
+      "sdf_model": "elevator_c_door",
+      "motion": {
+        "type": "sliding",
+        "axis": "leaf",
+        "min_position": 0.0,
+        "max_position": 1.2,
+        "initial_position": 0.0
+      },
+      "closed_pose": {
+        "x": -10.475,
+        "y": -36.625,
+        "z": 0.0,
+        "yaw": 2.68962233
+      },
+      "leaf": {
+        "length": 1.2,
+        "thickness": 0.1,
+        "height": 2.0,
+        "hinge_to_center_y": 0.6
+      }
+    },
+    {
+      "name": "elevator_d_door",
+      "frame_id": "map",
+      "detection": {"enabled": false, "mode": "segment"},
+      "sdf_model": "elevator_d_door",
+      "motion": {"type": "sliding", "axis": "leaf", "min_position": 0.0, "max_position": 1.2, "initial_position": 0.0},
+      "closed_pose": {"x": -11.625, "y": -29.475, "z": 0.0, "yaw": 2.68962233},
+      "leaf": {"length": 1.2, "thickness": 0.1, "height": 2.0, "hinge_to_center_y": 0.6}
+    },
+    {
+      "name": "elevator_e_door",
+      "frame_id": "map",
+      "detection": {"enabled": false, "mode": "segment"},
+      "sdf_model": "elevator_e_door",
+      "motion": {"type": "sliding", "axis": "leaf", "min_position": 0.0, "max_position": 1.2, "initial_position": 0.0},
+      "closed_pose": {"x": -12.825, "y": -32.125, "z": 0.0, "yaw": 2.68962233},
+      "leaf": {"length": 1.2, "thickness": 0.1, "height": 2.0, "hinge_to_center_y": 0.6}
+    },
+    {
+      "name": "elevator_f_door",
+      "frame_id": "map",
+      "detection": {"enabled": false, "mode": "segment"},
+      "sdf_model": "elevator_f_door",
+      "motion": {"type": "sliding", "axis": "leaf", "min_position": 0.0, "max_position": 1.2, "initial_position": 0.0},
+      "closed_pose": {"x": -14.175, "y": -34.825, "z": 0.0, "yaw": 2.68962233},
+      "leaf": {"length": 1.2, "thickness": 0.1, "height": 2.0, "hinge_to_center_y": 0.6}
     }
   ]
 }

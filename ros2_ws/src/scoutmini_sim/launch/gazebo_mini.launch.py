@@ -102,6 +102,7 @@ def generate_launch_description():
     bridge_config = LaunchConfiguration('bridge_config')
     door_slider = LaunchConfiguration('door_slider')
     door2_slider = LaunchConfiguration('door2_slider')
+    elevator_door_slider = LaunchConfiguration('elevator_door_slider')
     gz_world_name = LaunchConfiguration('gz_world_name')
 
     robot_description = ParameterValue(
@@ -183,6 +184,11 @@ def generate_launch_description():
             'door2_slider',
             default_value='false',
             description='Open a simple GUI slider that commands fuse_3rd door_2.',
+        ),
+        DeclareLaunchArgument(
+            'elevator_door_slider',
+            default_value='false',
+            description='Open one GUI window controlling all fuse_3rd elevator doors.',
         ),
         SetEnvironmentVariable(
             name='GZ_SIM_RESOURCE_PATH',
@@ -307,6 +313,25 @@ def generate_launch_description():
                 'min_angle': -1.5708,
                 'max_angle': 1.5708,
                 'initial_angle': 0.0,
+            }],
+        ),
+        Node(
+            condition=IfCondition(elevator_door_slider),
+            package='scoutmini_sim',
+            executable='elevator_door_sliders',
+            name='elevator_door_sliders',
+            output='screen',
+            parameters=[{
+                'world_name': gz_world_name,
+                'model_names': [
+                    'elevator_a_door', 'elevator_b_door', 'elevator_c_door',
+                    'elevator_d_door', 'elevator_e_door', 'elevator_f_door',
+                ],
+                'closed_x': [-7.925, -9.125, -10.475, -11.625, -12.825, -14.175],
+                'closed_y': [-31.325, -33.925, -36.625, -29.475, -32.125, -34.825],
+                'closed_yaw': 2.68962233,
+                'min_position': 0.0,
+                'max_position': 1.2,
             }],
         ),
     ])

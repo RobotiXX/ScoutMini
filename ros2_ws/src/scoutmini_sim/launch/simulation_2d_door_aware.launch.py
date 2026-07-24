@@ -31,6 +31,7 @@ def generate_launch_description():
             'controller_start_delay_sec': LaunchConfiguration('controller_start_delay_sec'),
             'door_slider': LaunchConfiguration('door_slider'),
             'door2_slider': LaunchConfiguration('door2_slider'),
+            'elevator_door_slider': LaunchConfiguration('elevator_door_slider'),
         }.items(),
     )
 
@@ -188,6 +189,7 @@ def generate_launch_description():
         ),
         DeclareLaunchArgument('door_slider', default_value='true'),
         DeclareLaunchArgument('door2_slider', default_value='true'),
+        DeclareLaunchArgument('elevator_door_slider', default_value='true'),
         DeclareLaunchArgument('use_door_aware_route', default_value='true'),
         DeclareLaunchArgument('route_name', default_value='sim_route_test'),
         DeclareLaunchArgument('route_start_delay_sec', default_value='12.0'),

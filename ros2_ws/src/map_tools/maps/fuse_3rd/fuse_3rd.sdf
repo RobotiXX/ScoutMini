@@ -145,5 +145,65 @@
         </visual>
       </link>
     </model>
+    <model name="elevator_a_door">
+      <static>true</static>
+      <pose>-7.925 -31.325 0.0 0 0 2.68962233</pose>
+      <link name="panel">
+        <collision name="collision">
+          <pose>0 0.6 1.0 0 0 0</pose>
+          <geometry><box><size>0.1 1.2 2.0</size></box></geometry>
+        </collision>
+        <visual name="visual">
+          <pose>0 0.6 1.0 0 0 0</pose>
+          <geometry><box><size>0.1 1.2 2.0</size></box></geometry>
+          <material>
+            <ambient>0.55 0.57 0.60 1</ambient>
+            <diffuse>0.65 0.67 0.70 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="elevator_b_door">
+      <static>true</static>
+      <pose>-9.125 -33.925 0.0 0 0 2.68962233</pose>
+      <link name="panel">
+        <collision name="collision">
+          <pose>0 0.6 1.0 0 0 0</pose>
+          <geometry><box><size>0.1 1.2 2.0</size></box></geometry>
+        </collision>
+        <visual name="visual">
+          <pose>0 0.6 1.0 0 0 0</pose>
+          <geometry><box><size>0.1 1.2 2.0</size></box></geometry>
+          <material>
+            <ambient>0.55 0.57 0.60 1</ambient>
+            <diffuse>0.65 0.67 0.70 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="elevator_c_door">
+      <static>true</static>
+      <pose>-10.475 -36.625 0.0 0 0 2.68962233</pose>
+      <link name="panel">
+        <collision name="collision">
+          <pose>0 0.6 1.0 0 0 0</pose>
+          <geometry><box><size>0.1 1.2 2.0</size></box></geometry>
+        </collision>
+        <visual name="visual">
+          <pose>0 0.6 1.0 0 0 0</pose>
+          <geometry><box><size>0.1 1.2 2.0</size></box></geometry>
+          <material>
+            <ambient>0.55 0.57 0.60 1</ambient>
+            <diffuse>0.65 0.67 0.70 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="elevator_d_door"><static>true</static><pose>-11.625 -29.475 0 0 0 2.68962233</pose><link name="panel"><collision name="collision"><pose>0 0.6 1 0 0 0</pose><geometry><box><size>0.1 1.2 2.0</size></box></geometry></collision><visual name="visual"><pose>0 0.6 1 0 0 0</pose><geometry><box><size>0.1 1.2 2.0</size></box></geometry><material><ambient>0.55 0.57 0.60 1</ambient><diffuse>0.65 0.67 0.70 1</diffuse></material></visual></link></model>
+    <model name="elevator_e_door"><static>true</static><pose>-12.825 -32.125 0 0 0 2.68962233</pose><link name="panel"><collision name="collision"><pose>0 0.6 1 0 0 0</pose><geometry><box><size>0.1 1.2 2.0</size></box></geometry></collision><visual name="visual"><pose>0 0.6 1 0 0 0</pose><geometry><box><size>0.1 1.2 2.0</size></box></geometry><material><ambient>0.55 0.57 0.60 1</ambient><diffuse>0.65 0.67 0.70 1</diffuse></material></visual></link></model>
+    <model name="elevator_f_door"><static>true</static><pose>-14.175 -34.825 0 0 0 2.68962233</pose><link name="panel"><collision name="collision"><pose>0 0.6 1 0 0 0</pose><geometry><box><size>0.1 1.2 2.0</size></box></geometry></collision><visual name="visual"><pose>0 0.6 1 0 0 0</pose><geometry><box><size>0.1 1.2 2.0</size></box></geometry><material><ambient>0.55 0.57 0.60 1</ambient><diffuse>0.65 0.67 0.70 1</diffuse></material></visual></link></model>
   </world>
 </sdf>

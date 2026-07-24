@@ -29,6 +29,8 @@ from rclpy.qos import qos_profile_sensor_data
 from sensor_msgs.msg import LaserScan
 from tf2_ros import Buffer, TransformException, TransformListener
 
+from scoutmini_tasks.elevator_sequence import ElevatorSequence
+
 
 @dataclass
 class DoorDetectionState:
@@ -934,9 +936,14 @@ class RouteNavigator(py_trees.behaviour.Behaviour):
         self.node.get_logger().info(f'Route segment finished with Nav2 status code {result.status}')
         if self.active_step_index == self.step_index:
             step = self.route_steps[self.step_index]
-            if result.status == 4 and step.clear_door_name:
-                self._schedule_door_redetect(step.clear_door_name)
-            self.step_index += 1
+            if result.status == 4:
+                if step.clear_door_name:
+                    self._schedule_door_redetect(step.clear_door_name)
+                self.step_index += 1
+            else:
+                self.node.get_logger().error(
+                    f'Route segment {step.name} did not succeed; it will be retried'
+                )
         self.active_step_index = -1
 
 
@@ -960,6 +967,8 @@ class DoorAwareRouteRunner(Node):
         self.declare_parameter('door_clear_delay_sec', 1.0)
         self.declare_parameter('auto_insert_door_waypoints', True)
         self.declare_parameter('tick_period_sec', 0.2)
+        self.declare_parameter('elevator_open_distance_margin', 0.1)
+        self.declare_parameter('elevator_open_ray_fraction', 0.5)
 
         self.map_name = str(self.get_parameter('map_name').value)
         self.route_name = str(self.get_parameter('route_name').value)
@@ -976,6 +985,8 @@ class DoorAwareRouteRunner(Node):
         )
 
         self.route_navigator: Optional[RouteNavigator] = None
+        self.route_navigators: List[RouteNavigator] = []
+        self.elevator_sequence: Optional[ElevatorSequence] = None
         root = self._make_tree_root()
         self.tree = py_trees_ros.trees.BehaviourTree(root=root)
         self._setup_tree()
@@ -1122,25 +1133,53 @@ class DoorAwareRouteRunner(Node):
         return pose
 
     def _make_tree_root(self):
-        self.route_navigator = RouteNavigator(
-            node=self,
-            door_state=self.door_state,
-            route_steps=self.route_steps,
-            action_name=str(self.get_parameter('action_name').value),
-            planner_action_name=str(self.get_parameter('planner_action_name').value),
-            auto_insert_door_waypoints=self._param_bool('auto_insert_door_waypoints'),
-            start_delay_sec=float(self.get_parameter('start_delay_sec').value),
-            wait_for_server_sec=float(self.get_parameter('wait_for_server_sec').value),
-            door_settle_sec=float(self.get_parameter('door_settle_sec').value),
-            clear_hit_fraction=float(self.get_parameter('door_clear_hit_fraction').value),
-            clear_delay_sec=float(self.get_parameter('door_clear_delay_sec').value),
-            doors=self.doors,
+        action_name = str(self.get_parameter('action_name').value)
+
+        def make_navigator(name: str, steps: List[RouteStep]) -> RouteNavigator:
+            navigator = RouteNavigator(
+                node=self,
+                door_state=self.door_state,
+                route_steps=steps,
+                action_name=action_name,
+                planner_action_name=str(self.get_parameter('planner_action_name').value),
+                auto_insert_door_waypoints=self._param_bool('auto_insert_door_waypoints'),
+                start_delay_sec=float(self.get_parameter('start_delay_sec').value),
+                wait_for_server_sec=float(self.get_parameter('wait_for_server_sec').value),
+                door_settle_sec=float(self.get_parameter('door_settle_sec').value),
+                clear_hit_fraction=float(self.get_parameter('door_clear_hit_fraction').value),
+                clear_delay_sec=float(self.get_parameter('door_clear_delay_sec').value),
+                doors=self.doors,
+            )
+            navigator.name = name
+            self.route_navigators.append(navigator)
+            return navigator
+
+        lobby_index = next(
+            (
+                index
+                for index, step in enumerate(self.route_steps)
+                if step.name == 'elevator_lobby'
+            ),
+            None,
         )
+        if lobby_index is None:
+            pre_steps = self.route_steps
+            post_steps: List[RouteStep] = []
+        else:
+            pre_steps = self.route_steps[:lobby_index + 1]
+            elevator_waypoints = {f'elevator_{letter}' for letter in 'abcdef'}
+            post_steps = [
+                step
+                for step in self.route_steps[lobby_index + 1:]
+                if step.name not in elevator_waypoints
+            ]
+
+        self.route_navigator = make_navigator('NavigateToElevatorLobby', pre_steps)
         try:
             root = py_trees.composites.Sequence(name='DoorAwareRoute', memory=False)
         except TypeError:
             root = py_trees.composites.Sequence(name='DoorAwareRoute')
-        root.add_children([
+        children = [
             DoorMonitor(
                 node=self,
                 state=self.door_state,
@@ -1149,7 +1188,26 @@ class DoorAwareRouteRunner(Node):
                 target_frame=str(self.get_parameter('target_frame').value),
             ),
             self.route_navigator,
-        ])
+        ]
+        if lobby_index is not None:
+            self.elevator_sequence = ElevatorSequence(
+                node=self,
+                doors_file=self.doors_file,
+                waypoints=self.waypoints_by_name,
+                scan_topic=str(self.get_parameter('scan_topic').value),
+                target_frame=str(self.get_parameter('target_frame').value),
+                action_name=action_name,
+                open_distance_margin=float(
+                    self.get_parameter('elevator_open_distance_margin').value
+                ),
+                open_ray_fraction=float(
+                    self.get_parameter('elevator_open_ray_fraction').value
+                ),
+            )
+            children.append(self.elevator_sequence)
+            if post_steps:
+                children.append(make_navigator('NavigateAfterElevator', post_steps))
+        root.add_children(children)
         return root
 
     def _setup_tree(self) -> None:
@@ -1162,8 +1220,10 @@ class DoorAwareRouteRunner(Node):
         self.tree.tick()
 
     def cancel_active_nav2_goal(self) -> None:
-        if self.route_navigator is not None:
-            self.route_navigator.cancel_active_goal()
+        for navigator in self.route_navigators:
+            navigator.cancel_active_goal()
+        if self.elevator_sequence is not None:
+            self.elevator_sequence.cancel_active_goal()
 
 
 def main(args=None) -> None:

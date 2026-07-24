@@ -30,6 +30,7 @@ setup(
     entry_points={
         'console_scripts': [
             'door_slider = scoutmini_sim.door_slider:main',
+            'elevator_door_sliders = scoutmini_sim.elevator_door_sliders:main',
         ],
     },
 )
