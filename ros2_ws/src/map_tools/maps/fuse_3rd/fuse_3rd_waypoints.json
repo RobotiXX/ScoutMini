@@ -880,5 +880,23 @@
       "sec": 0,
       "nanosec": 0
     }
+  },
+  {
+    "name": "elevator_lobby",
+    "description": "",
+    "frame_id": "map",
+    "x": -11.225,
+    "y": -33.625,
+    "z": 0.0,
+    "orientation": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.999124,
+      "w": -0.041838
+    },
+    "stamp": {
+      "sec": 0,
+      "nanosec": 0
+    }
   }
 ]
