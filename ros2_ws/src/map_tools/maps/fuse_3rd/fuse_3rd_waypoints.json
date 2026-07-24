@@ -772,5 +772,203 @@
       "sec": 0,
       "nanosec": 0
     }
+  },
+  {
+    "name": "door2_pre",
+    "description": "",
+    "frame_id": "map",
+    "x": -4.325,
+    "y": -3.125,
+    "z": 0.0,
+    "orientation": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.847567,
+      "w": -0.530689
+    },
+    "stamp": {
+      "sec": 0,
+      "nanosec": 0
+    }
+  },
+  {
+    "name": "door2_post",
+    "description": "",
+    "frame_id": "map",
+    "x": -5.875,
+    "y": -6.225,
+    "z": 0.0,
+    "orientation": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.847567,
+      "w": -0.530689
+    },
+    "stamp": {
+      "sec": 0,
+      "nanosec": 0
+    }
+  },
+  {
+    "name": "door3300_pre",
+    "description": "",
+    "frame_id": "map",
+    "x": 11.025,
+    "y": -10.675,
+    "z": 0.0,
+    "orientation": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.847567,
+      "w": -0.530689
+    },
+    "stamp": {
+      "sec": 0,
+      "nanosec": 0
+    }
+  },
+  {
+    "name": "door3300_post",
+    "description": "",
+    "frame_id": "map",
+    "x": 9.425,
+    "y": -13.825,
+    "z": 0.0,
+    "orientation": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.847567,
+      "w": -0.530689
+    },
+    "stamp": {
+      "sec": 0,
+      "nanosec": 0
+    }
+  },
+  {
+    "name": "elevator_lobby",
+    "description": "",
+    "frame_id": "map",
+    "x": -11.225,
+    "y": -33.625,
+    "z": 0.0,
+    "orientation": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.974567,
+      "w": 0.224097
+    },
+    "stamp": {
+      "sec": 0,
+      "nanosec": 0
+    }
+  },
+  {
+    "name": "elevator_a",
+    "description": "",
+    "frame_id": "map",
+    "x": -7.125,
+    "y": -32.275,
+    "z": 0.0,
+    "orientation": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.974567,
+      "w": 0.224097
+    },
+    "stamp": {
+      "sec": 0,
+      "nanosec": 0
+    }
+  },
+  {
+    "name": "elevator_b",
+    "description": "",
+    "frame_id": "map",
+    "x": -8.425,
+    "y": -34.825,
+    "z": 0.0,
+    "orientation": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.974567,
+      "w": 0.224097
+    },
+    "stamp": {
+      "sec": 0,
+      "nanosec": 0
+    }
+  },
+  {
+    "name": "elevator_c",
+    "description": "",
+    "frame_id": "map",
+    "x": -9.675,
+    "y": -37.575,
+    "z": 0.0,
+    "orientation": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.974567,
+      "w": 0.224097
+    },
+    "stamp": {
+      "sec": 0,
+      "nanosec": 0
+    }
+  },
+  {
+    "name": "elevator_d",
+    "description": "",
+    "frame_id": "map",
+    "x": -12.875,
+    "y": -29.575,
+    "z": 0.0,
+    "orientation": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": -0.224097,
+      "w": 0.974567
+    },
+    "stamp": {
+      "sec": 0,
+      "nanosec": 0
+    }
+  },
+  {
+    "name": "elevator_e",
+    "description": "",
+    "frame_id": "map",
+    "x": -14.275,
+    "y": -32.175,
+    "z": 0.0,
+    "orientation": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": -0.224097,
+      "w": 0.974567
+    },
+    "stamp": {
+      "sec": 0,
+      "nanosec": 0
+    }
+  },
+  {
+    "name": "elevator_f",
+    "description": "",
+    "frame_id": "map",
+    "x": -15.525,
+    "y": -34.875,
+    "z": 0.0,
+    "orientation": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": -0.224097,
+      "w": 0.974567
+    },
+    "stamp": {
+      "sec": 0,
+      "nanosec": 0
+    }
   }
 ]

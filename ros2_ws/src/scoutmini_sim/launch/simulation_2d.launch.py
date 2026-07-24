@@ -1,5 +1,5 @@
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, TimerAction
 from launch.conditions import IfCondition, UnlessCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
@@ -26,6 +26,9 @@ def generate_launch_description():
             'spawn_y': LaunchConfiguration('spawn_y'),
             'spawn_z': LaunchConfiguration('spawn_z'),
             'spawn_yaw': LaunchConfiguration('spawn_yaw'),
+            'spawn_start_delay_sec': LaunchConfiguration('spawn_start_delay_sec'),
+            'spawn_timeout_sec': LaunchConfiguration('spawn_timeout_sec'),
+            'controller_start_delay_sec': LaunchConfiguration('controller_start_delay_sec'),
         }.items(),
     )
 
@@ -53,7 +56,33 @@ def generate_launch_description():
             'amcl_tf_broadcast': LaunchConfiguration('amcl_tf_broadcast'),
             'nav_to_pose_bt_xml': LaunchConfiguration('nav_to_pose_bt_xml'),
             'nav_through_poses_bt_xml': LaunchConfiguration('nav_through_poses_bt_xml'),
+            'scan_topic': LaunchConfiguration('scan_topic'),
+            'global_scan_topic': LaunchConfiguration('global_scan_topic'),
+            'door_global_filter_radius': LaunchConfiguration('door_global_filter_radius'),
+            'start_door_scan_filter': 'false',
         }.items(),
+    )
+
+
+    door_scan_filter = Node(
+        package='scoutmini_tasks',
+        executable='door_scan_filter',
+        name='door_scan_filter',
+        output='screen',
+        parameters=[{
+            'use_sim_time': LaunchConfiguration('use_sim_time'),
+            'map_name': LaunchConfiguration('map_name'),
+            'doors_file': LaunchConfiguration('doors_file'),
+            'input_scan_topic': LaunchConfiguration('scan_topic'),
+            'output_scan_topic': LaunchConfiguration('global_scan_topic'),
+            'target_frame': 'map',
+            'filter_radius': LaunchConfiguration('door_global_filter_radius'),
+        }],
+    )
+
+    delayed_navigation = TimerAction(
+        period=LaunchConfiguration('nav_start_delay_sec'),
+        actions=[navigation],
     )
 
     static_map_to_odom = Node(
@@ -88,9 +117,14 @@ def generate_launch_description():
         DeclareLaunchArgument('use_sim_time', default_value='true'),
         DeclareLaunchArgument('port_name', default_value='can2'),
         DeclareLaunchArgument(
+            'nav_start_delay_sec',
+            default_value='22.0',
+            description='Delay Nav2 startup so sim robot TF/controllers are available before costmaps activate.',
+        ),
+        DeclareLaunchArgument(
             'world',
-            default_value='fuse_3rd',
-            choices=['warehouse', 'empty', 'default_warehouse', 'tb3_sandbox', 'fuse_3rd'],
+            default_value='fuse_3rd_no_doors',
+            choices=['warehouse', 'empty', 'default_warehouse', 'tb3_sandbox', 'fuse_3rd', 'fuse_3rd_no_doors'],
             description='Gazebo world to launch',
         ),
         DeclareLaunchArgument(
@@ -112,7 +146,23 @@ def generate_launch_description():
         DeclareLaunchArgument('spawn_y', default_value='0.0'),
         DeclareLaunchArgument('spawn_z', default_value='0.05'),
         DeclareLaunchArgument('spawn_yaw', default_value='0.0'),
+        DeclareLaunchArgument('spawn_start_delay_sec', default_value='8.0'),
+        DeclareLaunchArgument('spawn_timeout_sec', default_value='60.0'),
+        DeclareLaunchArgument('controller_start_delay_sec', default_value='16.0'),
         DeclareLaunchArgument('map_name', default_value='fuse_3rd'),
+        DeclareLaunchArgument('scan_topic', default_value='/scan'),
+        DeclareLaunchArgument('global_scan_topic', default_value='/scan_global_filtered'),
+        DeclareLaunchArgument('door_global_filter_radius', default_value='0.2'),
+        DeclareLaunchArgument(
+            'doors_file',
+            default_value=PathJoinSubstitution([
+                FindPackageShare('map_tools'),
+                'maps',
+                LaunchConfiguration('map_name'),
+                'doors.json',
+            ]),
+            description='JSON file containing closed-door geometry for global scan filtering.',
+        ),
         DeclareLaunchArgument('initial_pose_x', default_value='0.0'),
         DeclareLaunchArgument('initial_pose_y', default_value='0.0'),
         DeclareLaunchArgument('initial_pose_z', default_value='0.0'),
@@ -164,6 +214,7 @@ def generate_launch_description():
         ),
         gazebo,
         static_map_to_odom,
+        door_scan_filter,
         nav_to_pose_runner,
-        navigation,
+        delayed_navigation,
     ])
