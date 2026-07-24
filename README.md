@@ -61,6 +61,11 @@ Notes:
 - `zed_debug` is skipped by default. Use `./scripts/build_ros2_ws.sh --with-zed-debug` if needed.
 - If another workspace on your machine also contains `ugv_sdk`, the version from the workspace you source last is the one ROS 2 will use.
 
+
+## Door-Aware Navigation
+
+Door-aware route execution is implemented in `scoutmini_tasks`. It lets Nav2 follow normal route files while pausing at configured closed doors detected by LiDAR, then continuing when the door opens. See `ros2_ws/src/scoutmini_tasks/README.md` for setup, launch commands, and door configuration details.
+
 ## Teleoperation
 ### AgileX Remote Controller
 Refer to [online](https://agilexrobotics.gitbook.io/scout-mini/1-scout-mini-introduction) or [downloadable](https://global.agilex.ai/pages/download-manual) documentation.
