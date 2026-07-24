@@ -25,6 +25,7 @@ from nav2_msgs.action import ComputePathThroughPoses, NavigateThroughPoses
 from rclpy.action import ActionClient
 from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
+from rclpy.qos import qos_profile_sensor_data
 from sensor_msgs.msg import LaserScan
 from tf2_ros import Buffer, TransformException, TransformListener
 
@@ -140,7 +141,7 @@ class DoorMonitor(py_trees.behaviour.Behaviour):
         self.doors_by_name = {door.name: door for door in self.doors}
         self.tf_buffer = Buffer()
         self.tf_listener = TransformListener(self.tf_buffer, node)
-        self.scan_sub = node.create_subscription(LaserScan, scan_topic, self._scan_cb, 10)
+        self.scan_sub = node.create_subscription(LaserScan, scan_topic, self._scan_cb, qos_profile_sensor_data)
         self._last_closed_name = ''
 
     def _scan_cb(self, msg: LaserScan) -> None:
@@ -173,6 +174,20 @@ class DoorMonitor(py_trees.behaviour.Behaviour):
             self._set_state(False, '', hits)
 
     def _front_scan_hits(self, door: DoorGeometry, scan: LaserScan) -> int:
+        try:
+            transform = self.tf_buffer.lookup_transform(
+                self.target_frame,
+                scan.header.frame_id,
+                rclpy.time.Time(),
+            )
+        except TransformException as exc:
+            self.node.get_logger().debug(f'No transform {scan.header.frame_id}->{self.target_frame}: {exc}')
+            return 0
+
+        angle_window = self._door_angle_window(door, scan, transform)
+        if angle_window is None:
+            return 0
+
         hits = 0
         angle = scan.angle_min
         for scan_range in scan.ranges:
@@ -183,7 +198,7 @@ class DoorMonitor(py_trees.behaviour.Behaviour):
                     door.forward_min <= x <= door.forward_max
                     and abs(y) <= door.half_width
                     and scan_range <= door.max_range
-                    and abs(angle) <= door.max_abs_scan_angle
+                    and self._angle_in_window(angle, angle_window)
                 ):
                     hits += 1
             angle += scan.angle_increment
@@ -200,13 +215,17 @@ class DoorMonitor(py_trees.behaviour.Behaviour):
             self.node.get_logger().debug(f'No transform {scan.header.frame_id}->{self.target_frame}: {exc}')
             return 0
 
+        angle_window = self._door_angle_window(door, scan, transform)
+        if angle_window is None:
+            return 0
+
         hits = 0
         angle = scan.angle_min
         for scan_range in scan.ranges:
             if (
                 math.isfinite(scan_range)
                 and scan_range <= door.max_range
-                and abs(angle) <= door.max_abs_scan_angle
+                and self._angle_in_window(angle, angle_window)
             ):
                 point = self._scan_point_to_target(scan_range, angle, transform)
                 if self._point_near_segment(point, door.segment, door.hit_tolerance):
@@ -229,6 +248,55 @@ class DoorMonitor(py_trees.behaviour.Behaviour):
                     f'Door no longer detected: {self._last_closed_name}; route can resume'
                 )
         self._last_closed_name = door_name if closed else ''
+
+    def _door_angle_window(
+        self,
+        door: DoorGeometry,
+        scan: LaserScan,
+        transform: TransformStamped,
+    ) -> Optional[Tuple[float, float]]:
+        start, end = door.segment
+        start_local = self._target_point_to_scan(start, transform)
+        end_local = self._target_point_to_scan(end, transform)
+        start_distance = math.hypot(start_local[0], start_local[1])
+        end_distance = math.hypot(end_local[0], end_local[1])
+        nearest_distance = min(start_distance, end_distance)
+        if nearest_distance <= 1e-6:
+            return None
+
+        start_angle = math.atan2(start_local[1], start_local[0])
+        end_angle = math.atan2(end_local[1], end_local[0])
+        delta = self._normalize_angle(end_angle - start_angle)
+        center = self._normalize_angle(start_angle + 0.5 * delta)
+        padding = 0.0
+        half_width = min(math.pi, abs(delta) * 0.5 + padding)
+        return center, half_width
+
+    @staticmethod
+    def _target_point_to_scan(
+        point: Tuple[float, float],
+        transform: TransformStamped,
+    ) -> Tuple[float, float]:
+        yaw = DoorMonitor._yaw_from_quaternion(transform.transform.rotation)
+        dx = point[0] - transform.transform.translation.x
+        dy = point[1] - transform.transform.translation.y
+        cos_yaw = math.cos(yaw)
+        sin_yaw = math.sin(yaw)
+        return (
+            cos_yaw * dx + sin_yaw * dy,
+            -sin_yaw * dx + cos_yaw * dy,
+        )
+
+    @classmethod
+    def _angle_in_window(cls, angle: float, window: Tuple[float, float]) -> bool:
+        center, half_width = window
+        if half_width >= math.pi:
+            return True
+        return abs(cls._normalize_angle(angle - center)) <= half_width
+
+    @staticmethod
+    def _normalize_angle(angle: float) -> float:
+        return math.atan2(math.sin(angle), math.cos(angle))
 
     @staticmethod
     def _scan_point_to_target(
@@ -313,6 +381,8 @@ class RouteNavigator(py_trees.behaviour.Behaviour):
         self.last_wait_log_ns = 0
         self.max_wait_hit_count = 0
         self.clear_started_ns = 0
+        self.initial_wait_hit_counts: List[int] = []
+        self.initial_wait_average_hits = 0.0
         self.last_action_wait_log_ns = 0
         self.plan_check_active = False
         self.plan_check_complete = False
@@ -709,6 +779,8 @@ class RouteNavigator(py_trees.behaviour.Behaviour):
             self.waiting_started_ns = now_ns
             self.last_wait_log_ns = 0
             self.max_wait_hit_count = self.door_state.hit_count
+            self.initial_wait_hit_counts = []
+            self.initial_wait_average_hits = 0.0
             self.node.get_logger().info(
                 f'Stopped at {step.name}; checking LiDAR for door {step.door_name}'
             )
@@ -718,25 +790,37 @@ class RouteNavigator(py_trees.behaviour.Behaviour):
         if (now_ns - self.waiting_started_ns) / 1e9 < self.door_settle_sec:
             return py_trees.common.Status.RUNNING
 
-        self.max_wait_hit_count = max(self.max_wait_hit_count, self.door_state.hit_count)
-        clear_threshold = self.max_wait_hit_count * self.clear_hit_fraction
-        if self.max_wait_hit_count > 0 and self.door_state.hit_count > clear_threshold:
+        if len(self.initial_wait_hit_counts) < 5:
+            self.initial_wait_hit_counts.append(self.door_state.hit_count)
+            self.max_wait_hit_count = max(self.max_wait_hit_count, self.door_state.hit_count)
+            if len(self.initial_wait_hit_counts) == 5:
+                sorted_hits = sorted(self.initial_wait_hit_counts)
+                self.initial_wait_average_hits = float(sorted_hits[2])
+                self.node.get_logger().info(
+                    f'Door {step.door_name} baseline from median of first 5 scan checks: '
+                    f'{self.initial_wait_hit_counts}, median={self.initial_wait_average_hits:.1f}, '
+                    f'open at <= {self.initial_wait_average_hits * 0.5:.1f}'
+                )
+            return py_trees.common.Status.RUNNING
+
+        clear_threshold = self.initial_wait_average_hits * 0.5
+        if self.initial_wait_average_hits > 0.0 and self.door_state.hit_count > clear_threshold:
             self.clear_started_ns = 0
             if now_ns - self.last_wait_log_ns > 1_000_000_000:
                 self.last_wait_log_ns = now_ns
                 self.node.get_logger().info(
                     f'Waiting for {step.door_name} to clear '
-                    f'({self.door_state.hit_count}/{self.max_wait_hit_count} scan hit(s), '
-                    f'clear at <= {clear_threshold:.1f})'
+                    f'({self.door_state.hit_count} scan hit(s), baseline median={self.initial_wait_average_hits:.1f}, '
+                    f'open at <= {clear_threshold:.1f})'
                 )
             return py_trees.common.Status.RUNNING
 
         if self.clear_started_ns == 0:
             self.clear_started_ns = now_ns
             self.node.get_logger().info(
-                f'Door {step.door_name} is below clear threshold '
-                f'({self.door_state.hit_count}/{self.max_wait_hit_count} scan hit(s)); '
-                f'waiting {self.clear_delay_sec:.1f}s before continuing'
+                f'Door {step.door_name} is below open threshold '
+                f'({self.door_state.hit_count} scan hit(s), baseline median={self.initial_wait_average_hits:.1f}, '
+                f'open at <= {clear_threshold:.1f}); waiting {self.clear_delay_sec:.1f}s before continuing'
             )
             return py_trees.common.Status.RUNNING
 
@@ -751,6 +835,8 @@ class RouteNavigator(py_trees.behaviour.Behaviour):
         self.last_wait_log_ns = 0
         self.max_wait_hit_count = 0
         self.clear_started_ns = 0
+        self.initial_wait_hit_counts = []
+        self.initial_wait_average_hits = 0.0
         self.step_index += 1
         return py_trees.common.Status.RUNNING
 

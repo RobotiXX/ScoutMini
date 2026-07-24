@@ -15,7 +15,7 @@ class DoorSlider(Node):
         self.declare_parameter('world_name', 'fuse_3rd')
         self.declare_parameter('model_name', 'door_3300')
         self.declare_parameter('hinge_x', 10.575)
-        self.declare_parameter('hinge_y', -12.475)
+        self.declare_parameter('hinge_y', -12.575)
         self.declare_parameter('hinge_z', 0.0)
         self.declare_parameter('closed_yaw', 0.9792)
         self.declare_parameter('min_angle', -math.pi / 2.0)

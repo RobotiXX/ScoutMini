@@ -24,15 +24,15 @@
       "sdf_model": "door_3300",
       "closed_pose": {
         "x": 10.575,
-        "y": -12.475,
+        "y": -12.575,
         "z": 0.0,
-        "yaw": 0.9792
+        "yaw": 1.118826
       },
       "leaf": {
-        "length": 0.8,
+        "length": 0.9144,
         "thickness": 0.1,
         "height": 2.0,
-        "hinge_to_center_y": 0.4
+        "hinge_to_center_y": 0.4572
       }
     },
     {
@@ -57,16 +57,16 @@
       },
       "sdf_model": "door_2",
       "closed_pose": {
-        "x": -5.0,
-        "y": -5.0,
+        "x": -4.675,
+        "y": -4.975,
         "z": 0.0,
-        "yaw": 0.9792
+        "yaw": 1.118826
       },
       "leaf": {
-        "length": 0.8,
+        "length": 0.9144,
         "thickness": 0.1,
         "height": 2.0,
-        "hinge_to_center_y": 0.4
+        "hinge_to_center_y": 0.4572
       }
     }
   ]
