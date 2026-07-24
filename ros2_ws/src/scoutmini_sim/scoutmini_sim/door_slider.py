@@ -1,5 +1,6 @@
 import math
 import signal
+import time
 import tkinter as tk
 from tkinter import ttk
 
@@ -80,6 +81,8 @@ def main(args=None):
 
     def apply_angle():
         pending['job'] = None
+        if closing['value']:
+            return
         node.set_angle(angle_var.get())
         rclpy.spin_once(node, timeout_sec=0.0)
 
@@ -116,27 +119,39 @@ def main(args=None):
     slider.grid(row=1, column=0, columnspan=2, pady=(8, 0), sticky='ew')
 
     def close():
-        if closing['value']:
-            return
         closing['value'] = True
-        if pending['job'] is not None:
-            root.after_cancel(pending['job'])
-            pending['job'] = None
-        node.destroy_node()
-        if rclpy.ok():
-            rclpy.shutdown()
-        root.quit()
-        root.destroy()
 
     def handle_signal(signum, frame):
-        root.after(0, close)
+        closing['value'] = True
 
     signal.signal(signal.SIGINT, handle_signal)
     signal.signal(signal.SIGTERM, handle_signal)
     root.protocol('WM_DELETE_WINDOW', close)
     set_angle(node.initial_angle)
     poll_service()
-    root.mainloop()
+
+    try:
+        while not closing['value']:
+            try:
+                root.update()
+            except tk.TclError:
+                closing['value'] = True
+                break
+            time.sleep(0.02)
+    finally:
+        if pending['job'] is not None:
+            try:
+                root.after_cancel(pending['job'])
+            except tk.TclError:
+                pass
+            pending['job'] = None
+        node.destroy_node()
+        if rclpy.ok():
+            rclpy.shutdown()
+        try:
+            root.destroy()
+        except tk.TclError:
+            pass
 
 
 if __name__ == '__main__':
