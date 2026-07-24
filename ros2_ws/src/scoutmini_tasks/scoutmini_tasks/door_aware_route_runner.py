@@ -72,6 +72,7 @@ class RouteStep:
     name: str
     poses: List[PoseStamped]
     door_name: str = ''
+    clear_door_name: str = ''
 
 
 
@@ -392,6 +393,8 @@ class RouteNavigator(py_trees.behaviour.Behaviour):
         self.plan_checked_step_index = -1
         self.last_planner_wait_log_ns = 0
         self.cleared_doors: Set[str] = set()
+        self.door_redetect_delay_sec = 5.0
+        self.door_redetect_timers = []
 
     def update(self) -> py_trees.common.Status:
         if self.done:
@@ -687,7 +690,7 @@ class RouteNavigator(py_trees.behaviour.Behaviour):
         return [
             RouteStep(kind='navigate', name=first_name, poses=[first_pose], door_name=door.name),
             RouteStep(kind='door_check', name=first_name, poses=[], door_name=door.name),
-            RouteStep(kind='navigate', name=second_name, poses=[second_pose]),
+            RouteStep(kind='navigate', name=second_name, poses=[second_pose], clear_door_name=door.name),
             step,
         ]
 
@@ -880,6 +883,27 @@ class RouteNavigator(py_trees.behaviour.Behaviour):
         result_future = self.goal_handle.get_result_async()
         result_future.add_done_callback(self._result_cb)
 
+    def _schedule_door_redetect(self, door_name: str) -> None:
+        self.node.get_logger().info(
+            f'Door {door_name} crossing waypoint reached; door can be detected again in '
+            f'{self.door_redetect_delay_sec:.1f}s'
+        )
+        timer_ref = {'timer': None}
+
+        def redetect_cb() -> None:
+            self.cleared_doors.discard(door_name)
+            timer = timer_ref['timer']
+            if timer is not None:
+                timer.cancel()
+                try:
+                    self.door_redetect_timers.remove(timer)
+                except ValueError:
+                    pass
+            self.node.get_logger().info(f'Door {door_name} can be detected again')
+
+        timer_ref['timer'] = self.node.create_timer(self.door_redetect_delay_sec, redetect_cb)
+        self.door_redetect_timers.append(timer_ref['timer'])
+
     def _result_cb(self, future) -> None:
         self.goal_active = False
         try:
@@ -890,6 +914,9 @@ class RouteNavigator(py_trees.behaviour.Behaviour):
 
         self.node.get_logger().info(f'Route segment finished with Nav2 status code {result.status}')
         if self.active_step_index == self.step_index:
+            step = self.route_steps[self.step_index]
+            if result.status == 4 and step.clear_door_name:
+                self._schedule_door_redetect(step.clear_door_name)
             self.step_index += 1
         self.active_step_index = -1
 
